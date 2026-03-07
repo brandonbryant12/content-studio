@@ -1,7 +1,6 @@
-import { getCurrentUser } from '@repo/auth/policy';
 import { Storage } from '@repo/storage';
 import { Effect } from 'effect';
-import { annotateUseCaseSpan, withUseCaseSpan } from '../../shared';
+import { defineAuthedUseCase } from '../../shared';
 import { InfographicRepo } from '../repos';
 
 // =============================================================================
@@ -16,44 +15,44 @@ export interface DeleteInfographicInput {
 // Use Case
 // =============================================================================
 
-export const deleteInfographic = (input: DeleteInfographicInput) =>
-  Effect.gen(function* () {
-    const user = yield* getCurrentUser;
-    const repo = yield* InfographicRepo;
-    const storage = yield* Storage;
+export const deleteInfographic = defineAuthedUseCase<DeleteInfographicInput>()({
+  name: 'useCase.deleteInfographic',
+  span: ({ input }) => ({
+    resourceId: input.id,
+    attributes: { 'infographic.id': input.id },
+  }),
+  run: ({ input, user }) =>
+    Effect.gen(function* () {
+      const repo = yield* InfographicRepo;
+      const storage = yield* Storage;
+      const existing = yield* repo.findByIdForUser(input.id, user.id);
 
-    yield* annotateUseCaseSpan({
-      userId: user.id,
-      resourceId: input.id,
-      attributes: { 'infographic.id': input.id },
-    });
-    const existing = yield* repo.findByIdForUser(input.id, user.id);
+      // Clean up storage for all versions
+      const versions = yield* repo.listVersions(input.id);
+      yield* Effect.all(
+        versions.flatMap((v) => {
+          const effects: Effect.Effect<void, never, never>[] = [];
+          if (v.imageStorageKey) {
+            effects.push(storage.delete(v.imageStorageKey).pipe(Effect.ignore));
+          }
+          if (v.thumbnailStorageKey) {
+            effects.push(
+              storage.delete(v.thumbnailStorageKey).pipe(Effect.ignore),
+            );
+          }
+          return effects;
+        }),
+        { concurrency: 5 },
+      );
 
-    // Clean up storage for all versions
-    const versions = yield* repo.listVersions(input.id);
-    yield* Effect.all(
-      versions.flatMap((v) => {
-        const effects: Effect.Effect<void, never, never>[] = [];
-        if (v.imageStorageKey) {
-          effects.push(storage.delete(v.imageStorageKey).pipe(Effect.ignore));
-        }
-        if (v.thumbnailStorageKey) {
-          effects.push(
-            storage.delete(v.thumbnailStorageKey).pipe(Effect.ignore),
-          );
-        }
-        return effects;
-      }),
-      { concurrency: 5 },
-    );
+      // Clean up main image
+      if (existing.imageStorageKey) {
+        yield* storage.delete(existing.imageStorageKey).pipe(Effect.ignore);
+      }
+      if (existing.thumbnailStorageKey) {
+        yield* storage.delete(existing.thumbnailStorageKey).pipe(Effect.ignore);
+      }
 
-    // Clean up main image
-    if (existing.imageStorageKey) {
-      yield* storage.delete(existing.imageStorageKey).pipe(Effect.ignore);
-    }
-    if (existing.thumbnailStorageKey) {
-      yield* storage.delete(existing.thumbnailStorageKey).pipe(Effect.ignore);
-    }
-
-    yield* repo.delete(input.id);
-  }).pipe(withUseCaseSpan('useCase.deleteInfographic'));
+      yield* repo.delete(input.id);
+    }),
+});

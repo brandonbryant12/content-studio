@@ -1,12 +1,6 @@
-import { getCurrentUser } from '@repo/auth/policy';
-import { Effect } from 'effect';
 import type { JobId } from '@repo/db/schema';
 import type { Job } from '@repo/queue';
-import {
-  annotateUseCaseSpan,
-  getOwnedJobOrNotFound,
-  withUseCaseSpan,
-} from '../../shared';
+import { defineAuthedUseCase, getOwnedJobOrNotFound } from '../../shared';
 
 // =============================================================================
 // Types
@@ -39,13 +33,11 @@ export interface GetVoiceoverJobResult {
  * @example
  * const result = yield* getVoiceoverJob({ jobId: 'job_xxx' });
  */
-export const getVoiceoverJob = (input: GetVoiceoverJobInput) =>
-  Effect.gen(function* () {
-    const user = yield* getCurrentUser;
-    yield* annotateUseCaseSpan({
-      userId: user.id,
-      resourceId: input.jobId,
-      attributes: { 'job.id': input.jobId },
-    });
-    return yield* getOwnedJobOrNotFound(input.jobId as JobId);
-  }).pipe(withUseCaseSpan('useCase.getVoiceoverJob'));
+export const getVoiceoverJob = defineAuthedUseCase<GetVoiceoverJobInput>()({
+  name: 'useCase.getVoiceoverJob',
+  span: ({ input }) => ({
+    resourceId: input.jobId,
+    attributes: { 'job.id': input.jobId },
+  }),
+  run: ({ input }) => getOwnedJobOrNotFound(input.jobId as JobId),
+});

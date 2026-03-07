@@ -1,7 +1,6 @@
-import { getCurrentUser } from '@repo/auth/policy';
 import { Effect } from 'effect';
 import type { Persona } from '@repo/db/schema';
-import { annotateUseCaseSpan, withUseCaseSpan } from '../../shared';
+import { defineAuthedUseCase } from '../../shared';
 import { PersonaRepo, type PersonaListOptions } from '../repos';
 
 export interface ListPersonasInput {
@@ -15,36 +14,39 @@ export interface ListPersonasResult {
   hasMore: boolean;
 }
 
-export const listPersonas = (input: ListPersonasInput) =>
-  Effect.gen(function* () {
-    const user = yield* getCurrentUser;
-    const personaRepo = yield* PersonaRepo;
-    const limit = input.limit ?? 50;
-    const offset = input.offset ?? 0;
+const DEFAULT_LIST_PERSONAS_LIMIT = 50;
+const DEFAULT_LIST_PERSONAS_OFFSET = 0;
 
-    yield* annotateUseCaseSpan({
-      userId: user.id,
-      collection: 'personas',
-      attributes: {
-        'owner.id': user.id,
-        'pagination.limit': limit,
-        'pagination.offset': offset,
-      },
-    });
-    const options: PersonaListOptions = {
-      createdBy: user.id,
-      limit,
-      offset,
-    };
+export const listPersonas = defineAuthedUseCase<ListPersonasInput>()({
+  name: 'useCase.listPersonas',
+  span: ({ input, user }) => ({
+    collection: 'personas',
+    attributes: {
+      'owner.id': user.id,
+      'pagination.limit': input.limit ?? DEFAULT_LIST_PERSONAS_LIMIT,
+      'pagination.offset': input.offset ?? DEFAULT_LIST_PERSONAS_OFFSET,
+    },
+  }),
+  run: ({ input, user }) =>
+    Effect.gen(function* () {
+      const personaRepo = yield* PersonaRepo;
+      const limit = input.limit ?? DEFAULT_LIST_PERSONAS_LIMIT;
+      const offset = input.offset ?? DEFAULT_LIST_PERSONAS_OFFSET;
+      const options: PersonaListOptions = {
+        createdBy: user.id,
+        limit,
+        offset,
+      };
 
-    const [personas, total] = yield* Effect.all(
-      [personaRepo.list(options), personaRepo.count(options)],
-      { concurrency: 'unbounded' },
-    );
+      const [personas, total] = yield* Effect.all(
+        [personaRepo.list(options), personaRepo.count(options)],
+        { concurrency: 'unbounded' },
+      );
 
-    return {
-      personas,
-      total,
-      hasMore: offset + personas.length < total,
-    };
-  }).pipe(withUseCaseSpan('useCase.listPersonas'));
+      return {
+        personas,
+        total,
+        hasMore: offset + personas.length < total,
+      };
+    }),
+});

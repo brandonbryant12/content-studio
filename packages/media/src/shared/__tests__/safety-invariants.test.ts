@@ -47,8 +47,8 @@ const usesExplicitUseCaseSpanPattern = (source: string): boolean =>
   source.includes('withUseCaseSpan(') &&
   source.includes('annotateUseCaseSpan(');
 
-const usesAuthedUseCaseHelper = (source: string): boolean =>
-  /defineAuthedUseCase(?:<[^>]+>)?\(\)/m.test(source);
+const usesUseCaseHelper = (source: string): boolean =>
+  /define(?:Authed|Role)UseCase(?:<[^>]+>)?\(\)/m.test(source);
 
 const usesAuthedUseCaseSpanMetadata = (source: string): boolean =>
   source.includes('span:') || source.includes('annotateSpan(');
@@ -93,16 +93,13 @@ describe('safety invariants', () => {
       if (!/useCase\./.test(source)) return false;
       return (
         !usesExplicitUseCaseSpanPattern(source) &&
-        !(
-          usesAuthedUseCaseHelper(source) &&
-          usesAuthedUseCaseSpanMetadata(source)
-        )
+        !(usesUseCaseHelper(source) && usesAuthedUseCaseSpanMetadata(source))
       );
     });
 
     expect(
       offenders.map((file) => path.relative(srcRoot, file)),
-      'Use defineAuthedUseCase() or withUseCaseSpan + annotateUseCaseSpan to include user.id and resource metadata.',
+      'Use defineAuthedUseCase(), defineRoleUseCase(), or withUseCaseSpan + annotateUseCaseSpan to include user.id and resource metadata.',
     ).toEqual([]);
   });
 
@@ -115,10 +112,12 @@ describe('safety invariants', () => {
     expect(source).toContain("'resource.name'");
   });
 
-  it('requires defineAuthedUseCase to preserve auth + span primitives', () => {
+  it('requires use-case helpers to preserve auth + span primitives', () => {
     const source = read('shared/use-case.ts');
 
     expect(source).toContain('getCurrentUser');
+    expect(source).toContain('requireRole(');
+    expect(source).toContain('defineRoleUseCase');
     expect(source).toContain('annotateUseCaseSpan(');
     expect(source).toContain('withUseCaseSpan(');
     expect(source).toContain('userId: user.id');
@@ -146,16 +145,13 @@ describe('safety invariants', () => {
       const source = fs.readFileSync(file, 'utf-8');
       return (
         !source.includes('annotateUseCaseSpan(') &&
-        !(
-          usesAuthedUseCaseHelper(source) &&
-          usesAuthedUseCaseSpanMetadata(source)
-        )
+        !(usesUseCaseHelper(source) && usesAuthedUseCaseSpanMetadata(source))
       );
     });
 
     expect(
       missing.map((file) => path.relative(srcRoot, file)),
-      'Use defineAuthedUseCase() or annotateUseCaseSpan() to attach user.id and resource metadata to use-case spans.',
+      'Use defineAuthedUseCase(), defineRoleUseCase(), or annotateUseCaseSpan() to attach user.id and resource metadata to use-case spans.',
     ).toEqual([]);
   });
 

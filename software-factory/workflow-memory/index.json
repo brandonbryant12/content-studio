@@ -1,5 +1,21 @@
 [
   {
+    "id": "2026-03-07-docs-knowledge-drift-standardize-request-bound-protocol-helper-guidance",
+    "date": "2026-03-07",
+    "month": "2026-03",
+    "workflow": "Docs + Knowledge Drift",
+    "title": "Standardize request-bound protocol helper guidance",
+    "severity": "medium",
+    "status": "closed",
+    "tags": [
+      "docs",
+      "api",
+      "protocol",
+      "fiberref"
+    ],
+    "eventFile": "events/2026-03.jsonl"
+  },
+  {
     "id": "2026-03-07-feature-delivery-added-inline-denied-sso-callback-ux-on-login",
     "date": "2026-03-07",
     "month": "2026-03",
@@ -159,6 +175,42 @@
     "eventFile": "events/2026-03.jsonl"
   },
   {
+    "id": "2026-03-07-self-improvement-added-role-helper-admin-coverage-and-drizzle-peer-alignment",
+    "date": "2026-03-07",
+    "month": "2026-03",
+    "workflow": "Self-Improvement",
+    "title": "Added role helper coverage and aligned workspace type/test guardrails",
+    "severity": "medium",
+    "status": "closed",
+    "tags": [
+      "self-improvement",
+      "docs",
+      "testing",
+      "admin",
+      "drizzle",
+      "dependency-alignment",
+      "use-case"
+    ],
+    "eventFile": "events/2026-03.jsonl"
+  },
+  {
+    "id": "2026-03-07-self-improvement-aligned-remaining-straightforward-media-use-cases-with-defineaut",
+    "date": "2026-03-07",
+    "month": "2026-03",
+    "workflow": "Self-Improvement",
+    "title": "Aligned remaining straightforward media use cases with defineAuthedUseCase docs pattern",
+    "severity": "medium",
+    "status": "closed",
+    "tags": [
+      "self-improvement",
+      "skill:code-simplifier",
+      "domain:media",
+      "use-case",
+      "docs-alignment"
+    ],
+    "eventFile": "events/2026-03.jsonl"
+  },
+  {
     "id": "2026-03-07-self-improvement-guard-cli-against-repo-ai-api-drift-and-clean-main-validation",
     "date": "2026-03-07",
     "month": "2026-03",
@@ -193,6 +245,77 @@
     ],
     "importance": 0.77,
     "confidence": 0.95,
+    "eventFile": "events/2026-03.jsonl"
+  },
+  {
+    "id": "2026-03-07-self-improvement-simplified-media-get-job-use-cases-onto-defineauthedusecase",
+    "date": "2026-03-07",
+    "month": "2026-03",
+    "workflow": "Self-Improvement",
+    "title": "Simplified media get-job use cases onto defineAuthedUseCase",
+    "severity": "low",
+    "status": "closed",
+    "tags": [
+      "self-improvement",
+      "skill:code-simplifier",
+      "domain:media",
+      "use-case",
+      "simplification"
+    ],
+    "eventFile": "events/2026-03.jsonl"
+  },
+  {
+    "id": "2026-03-07-self-improvement-simplified-persona-crud-and-read-wrappers-onto-defineautheduseca",
+    "date": "2026-03-07",
+    "month": "2026-03",
+    "workflow": "Self-Improvement",
+    "title": "Simplified persona CRUD and read wrappers onto defineAuthedUseCase",
+    "severity": "low",
+    "status": "closed",
+    "tags": [
+      "self-improvement",
+      "skill:code-simplifier",
+      "domain:media",
+      "persona",
+      "use-case",
+      "simplification"
+    ],
+    "eventFile": "events/2026-03.jsonl"
+  },
+  {
+    "id": "2026-03-07-self-improvement-simplified-source-list-and-update-use-cases-onto-defineautheduse",
+    "date": "2026-03-07",
+    "month": "2026-03",
+    "workflow": "Self-Improvement",
+    "title": "Simplified source list and update use cases onto defineAuthedUseCase",
+    "severity": "low",
+    "status": "closed",
+    "tags": [
+      "self-improvement",
+      "skill:code-simplifier",
+      "domain:media",
+      "source",
+      "use-case",
+      "simplification"
+    ],
+    "eventFile": "events/2026-03.jsonl"
+  },
+  {
+    "id": "2026-03-07-self-improvement-simplified-voiceover-get-list-reads-onto-defineauthedusecase",
+    "date": "2026-03-07",
+    "month": "2026-03",
+    "workflow": "Self-Improvement",
+    "title": "Simplified voiceover get/list reads onto defineAuthedUseCase",
+    "severity": "low",
+    "status": "closed",
+    "tags": [
+      "self-improvement",
+      "skill:code-simplifier",
+      "domain:media",
+      "voiceover",
+      "use-case",
+      "simplification"
+    ],
     "eventFile": "events/2026-03.jsonl"
   },
   {

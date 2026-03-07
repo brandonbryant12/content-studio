@@ -21,7 +21,7 @@ sequenceDiagram
 
 1. **Call exactly one use case per handler** <!-- enforced-by: manual-review -->
 2. **Serialize in the handler, not the use case** <!-- enforced-by: invariant-test -->
-3. **Pass `requestId` to `handleEffectWithProtocol`** for correlation and trace metadata <!-- enforced-by: manual-review -->
+3. **Bind or pass `requestId` into the protocol helper** for correlation and trace metadata <!-- enforced-by: manual-review -->
 4. **Keep streaming contracts concretely typed** end-to-end <!-- enforced-by: lint -->
 5. **Prefer Effect-based serializers** so serialization work is traced consistently <!-- enforced-by: manual-review -->
 
@@ -32,13 +32,9 @@ sequenceDiagram
 ```typescript
 get: protectedProcedure.sources.get.handler(
   async ({ context, input, errors }) => {
-    return handleEffectWithProtocol(
-      context.runtime,
-      context.user,
+    return bindEffectProtocol({ context, errors }).run(
       getSource({ id: input.id }).pipe(Effect.flatMap(serializeSourceEffect)),
-      errors,
       {
-        requestId: context.requestId,
         attributes: { 'source.id': input.id },
       },
     );
@@ -49,10 +45,20 @@ get: protectedProcedure.sources.get.handler(
 ## Handler Pipeline
 
 ```
-handler -> one use case -> Effect.flatMap(serializeXxxEffect) -> handleEffectWithProtocol(...)
+handler -> bindEffectProtocol({ context, errors }) -> one use case -> Effect.flatMap(serializeXxxEffect) -> handleEffectWithProtocol(...)
 ```
 
-Most handlers follow that exact shape. Use custom error overrides only when protocol behavior truly needs to differ from the typed domain error mapping.
+Most handlers should bind the request context once, then call `.run(...)` or `.stream(...)`. Use direct `handleEffectWithProtocol(...)` only when you truly need a lower-level escape hatch. Use custom error overrides only when protocol behavior truly needs to differ from the typed domain error mapping.
+
+## Request Context Binding
+
+`bindEffectProtocol({ context, errors })` is the preferred router-level wrapper. It keeps the handler concise while still routing through `handleEffectWithProtocol(...)`, which is where:
+
+- `requestId` is attached to the active span
+- the authenticated user is scoped into Effect via `withCurrentUser(...)`
+- tagged domain/app errors are mapped to oRPC protocol errors
+
+This keeps FiberRef usage at the boundary where HTTP context enters Effect. Use cases should continue to read the user via `yield* getCurrentUser`, never from router context directly.
 
 ## Span Naming <!-- enforced-by: invariant-test -->
 
@@ -117,13 +123,11 @@ createSource(input).pipe(
 
 ## Protocol-Based Errors <!-- enforced-by: invariant-test -->
 
-Use `handleEffectWithProtocol`. Domain errors already carry their protocol mapping; avoid hand-written status mapping unless the behavior is intentionally exceptional.
+Use `bindEffectProtocol(...).run(...)` in routers so request context is bound once, or `handleEffectWithProtocol(...)` directly when you need lower-level control. Domain errors already carry their protocol mapping; avoid hand-written status mapping unless the behavior is intentionally exceptional.
 
 ```typescript
 // Correct
-return handleEffectWithProtocol(runtime, user, effect, errors, {
-  requestId: context.requestId,
-});
+return bindEffectProtocol({ context, errors }).run(effect);
 ```
 
 ## Streaming Handlers
@@ -133,3 +137,4 @@ For chat and SSE-like endpoints:
 - Contract output must use concrete chunk types.
 - Handler should return the typed stream directly, not `unknown`.
 - Client code should not need manual casts to consume stream payloads.
+- Prefer `bindEffectProtocol({ context, errors }).stream(effect)` so stream handlers use the same request-bound protocol path as non-stream handlers.

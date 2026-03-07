@@ -53,8 +53,7 @@ interface ErrorLike {
 const MICROSOFT_SSO_ERROR_TOKEN_TO_CODE: Record<string, MicrosoftSSOErrorCode> =
   {
     sso_group_membership_required: 'SSO_GROUP_MEMBERSHIP_REQUIRED',
-    microsoft_sso_group_membership_is_required:
-      'SSO_GROUP_MEMBERSHIP_REQUIRED',
+    microsoft_sso_group_membership_is_required: 'SSO_GROUP_MEMBERSHIP_REQUIRED',
     sso_authorization_failed: 'SSO_AUTHORIZATION_FAILED',
     microsoft_sso_authorization_failed: 'SSO_AUTHORIZATION_FAILED',
   };
@@ -96,7 +95,10 @@ const normalizeString = (value: unknown): string | undefined => {
 };
 
 const normalizeErrorToken = (value: string): string =>
-  value.trim().toLowerCase().replace(/[\s-]+/g, '_');
+  value
+    .trim()
+    .toLowerCase()
+    .replace(/[\s-]+/g, '_');
 
 const resolveMicrosoftSSOErrorCode = ({
   code,
@@ -173,9 +175,7 @@ export const buildMicrosoftSSOErrorRedirectUrl = ({
     return null;
   }
 
-  const redirectUrl = new URL(
-    buildWebAppUrl(webUrl, MICROSOFT_SSO_LOGIN_PATH),
-  );
+  const redirectUrl = new URL(buildWebAppUrl(webUrl, MICROSOFT_SSO_LOGIN_PATH));
   redirectUrl.searchParams.set('authFlow', MICROSOFT_SSO_AUTH_FLOW);
   redirectUrl.searchParams.set('error', resolvedCode);
 

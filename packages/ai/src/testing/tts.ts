@@ -10,6 +10,7 @@ import {
   type PreviewVoiceResult,
   TTSError,
   type TTSQuotaExceededError,
+  VoiceNotFoundError,
 } from '..';
 
 export const MOCK_VOICES: readonly VoiceInfo[] = [
@@ -108,6 +109,7 @@ export function createMockTTS(options: MockTTSOptions = {}): Layer.Layer<TTS> {
   const audioBuffer = useSampleAudio
     ? loadSampleAudio()
     : createSilentAudioBuffer(options.audioDurationSeconds ?? 30);
+  const availableVoices = options.voices ?? MOCK_VOICES;
 
   const service: TTSService = {
     listVoices: () =>
@@ -115,15 +117,25 @@ export function createMockTTS(options: MockTTSOptions = {}): Layer.Layer<TTS> {
         if (options.delay) {
           yield* Effect.sleep(options.delay);
         }
-        return options.voices ?? MOCK_VOICES;
+        return availableVoices;
       }),
 
     previewVoice: ({
       voiceId,
-    }): Effect.Effect<PreviewVoiceResult, TTSError | TTSQuotaExceededError> =>
+    }): Effect.Effect<
+      PreviewVoiceResult,
+      TTSError | TTSQuotaExceededError | VoiceNotFoundError
+    > =>
       Effect.gen(function* () {
         if (options.delay) {
           yield* Effect.sleep(options.delay);
+        }
+
+        const voiceExists = availableVoices.some(
+          (voice) => voice.id === voiceId,
+        );
+        if (!voiceExists) {
+          return yield* Effect.fail(new VoiceNotFoundError({ voiceId }));
         }
 
         if (options.errorMessage) {

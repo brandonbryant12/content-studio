@@ -1,6 +1,5 @@
-import { getCurrentUser } from '@repo/auth/policy';
 import { Effect } from 'effect';
-import { annotateUseCaseSpan, withUseCaseSpan } from '../../shared';
+import { defineAuthedUseCase } from '../../shared';
 import { VoiceoverRepo } from '../repos/voiceover-repo';
 
 // =============================================================================
@@ -15,17 +14,17 @@ export interface DeleteVoiceoverInput {
 // Use Case
 // =============================================================================
 
-export const deleteVoiceover = (input: DeleteVoiceoverInput) =>
-  Effect.gen(function* () {
-    const user = yield* getCurrentUser;
-    const voiceoverRepo = yield* VoiceoverRepo;
+export const deleteVoiceover = defineAuthedUseCase<DeleteVoiceoverInput>()({
+  name: 'useCase.deleteVoiceover',
+  span: ({ input }) => ({
+    resourceId: input.voiceoverId,
+    attributes: { 'voiceover.id': input.voiceoverId },
+  }),
+  run: ({ input, user }) =>
+    Effect.gen(function* () {
+      const voiceoverRepo = yield* VoiceoverRepo;
+      yield* voiceoverRepo.findByIdForUser(input.voiceoverId, user.id);
 
-    yield* annotateUseCaseSpan({
-      userId: user.id,
-      resourceId: input.voiceoverId,
-      attributes: { 'voiceover.id': input.voiceoverId },
-    });
-    yield* voiceoverRepo.findByIdForUser(input.voiceoverId, user.id);
-
-    yield* voiceoverRepo.delete(input.voiceoverId);
-  }).pipe(withUseCaseSpan('useCase.deleteVoiceover'));
+      yield* voiceoverRepo.delete(input.voiceoverId);
+    }),
+});

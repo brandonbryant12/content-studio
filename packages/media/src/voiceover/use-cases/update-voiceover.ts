@@ -1,7 +1,6 @@
-import { getCurrentUser } from '@repo/auth/policy';
 import { Effect } from 'effect';
 import type { UpdateVoiceover } from '@repo/db/schema';
-import { annotateUseCaseSpan, withUseCaseSpan } from '../../shared';
+import { defineAuthedUseCase } from '../../shared';
 import { VoiceoverRepo } from '../repos/voiceover-repo';
 
 // =============================================================================
@@ -17,17 +16,17 @@ export interface UpdateVoiceoverInput {
 // Use Case
 // =============================================================================
 
-export const updateVoiceover = (input: UpdateVoiceoverInput) =>
-  Effect.gen(function* () {
-    const user = yield* getCurrentUser;
-    const voiceoverRepo = yield* VoiceoverRepo;
+export const updateVoiceover = defineAuthedUseCase<UpdateVoiceoverInput>()({
+  name: 'useCase.updateVoiceover',
+  span: ({ input }) => ({
+    resourceId: input.voiceoverId,
+    attributes: { 'voiceover.id': input.voiceoverId },
+  }),
+  run: ({ input, user }) =>
+    Effect.gen(function* () {
+      const voiceoverRepo = yield* VoiceoverRepo;
+      yield* voiceoverRepo.findByIdForUser(input.voiceoverId, user.id);
 
-    yield* annotateUseCaseSpan({
-      userId: user.id,
-      resourceId: input.voiceoverId,
-      attributes: { 'voiceover.id': input.voiceoverId },
-    });
-    yield* voiceoverRepo.findByIdForUser(input.voiceoverId, user.id);
-
-    return yield* voiceoverRepo.update(input.voiceoverId, input.data);
-  }).pipe(withUseCaseSpan('useCase.updateVoiceover'));
+      return yield* voiceoverRepo.update(input.voiceoverId, input.data);
+    }),
+});

@@ -1,6 +1,6 @@
-import { getCurrentUser, Role } from '@repo/auth/policy';
+import { Role } from '@repo/auth/policy';
 import { Effect } from 'effect';
-import { annotateUseCaseSpan, withUseCaseSpan } from '../../shared';
+import { defineAuthedUseCase } from '../../shared';
 import { InfographicRepo } from '../repos';
 
 // =============================================================================
@@ -15,19 +15,17 @@ export interface GetInfographicInput {
 // Use Case
 // =============================================================================
 
-export const getInfographic = (input: GetInfographicInput) =>
-  Effect.gen(function* () {
-    const user = yield* getCurrentUser;
-    const repo = yield* InfographicRepo;
-
-    yield* annotateUseCaseSpan({
-      userId: user.id,
-      resourceId: input.id,
-      attributes: { 'infographic.id': input.id },
-    });
-    const infographic = yield* user.role === Role.ADMIN
-      ? repo.findById(input.id)
-      : repo.findByIdForUser(input.id, user.id);
-
-    return infographic;
-  }).pipe(withUseCaseSpan('useCase.getInfographic'));
+export const getInfographic = defineAuthedUseCase<GetInfographicInput>()({
+  name: 'useCase.getInfographic',
+  span: ({ input }) => ({
+    resourceId: input.id,
+    attributes: { 'infographic.id': input.id },
+  }),
+  run: ({ input, user }) =>
+    Effect.gen(function* () {
+      const repo = yield* InfographicRepo;
+      return yield* user.role === Role.ADMIN
+        ? repo.findById(input.id)
+        : repo.findByIdForUser(input.id, user.id);
+    }),
+});

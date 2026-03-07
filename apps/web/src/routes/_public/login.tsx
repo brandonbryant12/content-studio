@@ -35,7 +35,10 @@ const buildPublicAppUrl = (path: string): string => {
     : `${env.PUBLIC_BASE_PATH}/`;
   const baseUrl = new URL(normalizedBasePath, globalThis.location.origin);
 
-  return new URL(path.startsWith('/') ? path.slice(1) : path, baseUrl).toString();
+  return new URL(
+    path.startsWith('/') ? path.slice(1) : path,
+    baseUrl,
+  ).toString();
 };
 
 export const Route = createFileRoute('/_public/login')({

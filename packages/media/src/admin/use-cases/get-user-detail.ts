@@ -1,4 +1,4 @@
-import { requireRole, Role } from '@repo/auth/policy';
+import { Role } from '@repo/auth/policy';
 import { Effect } from 'effect';
 import type {
   AIUsageEvent,
@@ -12,7 +12,7 @@ import type {
 import { InfographicRepo } from '../../infographic';
 import { PersonaRepo } from '../../persona';
 import { PodcastRepo } from '../../podcast';
-import { defineAuthedUseCase } from '../../shared';
+import { defineRoleUseCase } from '../../shared';
 import { SourceRepo } from '../../source';
 import { VoiceoverRepo } from '../../voiceover';
 import { AdminRepo, type UserAIUsageSummary } from '../repos/admin-repo';
@@ -70,8 +70,9 @@ const usagePeriodToDate = (
   }
 };
 
-export const getUserDetail = defineAuthedUseCase<GetUserDetailInput>()({
+export const getUserDetail = defineRoleUseCase<GetUserDetailInput>()({
   name: 'useCase.getUserDetail',
+  role: Role.ADMIN,
   span: ({ input }) => ({
     resourceId: input.userId,
     attributes: {
@@ -83,8 +84,6 @@ export const getUserDetail = defineAuthedUseCase<GetUserDetailInput>()({
   }),
   run: ({ input }) =>
     Effect.gen(function* () {
-      yield* requireRole(Role.ADMIN);
-
       const adminRepo = yield* AdminRepo;
       const sourceRepo = yield* SourceRepo;
       const podcastRepo = yield* PodcastRepo;

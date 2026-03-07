@@ -1,11 +1,11 @@
-import { getCurrentUser, requireRole, Role } from '@repo/auth/policy';
+import { Role } from '@repo/auth/policy';
 import {
   createPaginatedResponse,
   type PaginatedResponse,
   type ActivityLogWithUser,
 } from '@repo/db/schema';
 import { Effect } from 'effect';
-import { annotateUseCaseSpan, withUseCaseSpan } from '../../shared';
+import { defineRoleUseCase } from '../../shared';
 import { ActivityLogRepo } from '../repos/activity-log-repo';
 
 // =============================================================================
@@ -31,40 +31,43 @@ export type ListActivityResult = PaginatedResponse<ActivityLogWithUser>;
  * List activity log entries with pagination and filters.
  * Admin-only.
  */
-export const listActivity = (input: ListActivityInput) =>
-  Effect.gen(function* () {
-    yield* requireRole(Role.ADMIN);
-    const user = yield* getCurrentUser;
-    const repo = yield* ActivityLogRepo;
-
+export const listActivity = defineRoleUseCase<ListActivityInput>()({
+  name: 'useCase.listActivity',
+  role: Role.ADMIN,
+  span: ({ input }) => {
     const limit = input.limit ?? 25;
-    const spanAttributes: Record<string, string | number> = {
+    const attributes: Record<string, string | number> = {
       'activity.limit': limit,
       ...(input.userId ? { 'filter.userId': input.userId } : {}),
     };
     if (input.entityType) {
-      spanAttributes['activity.entityType'] = input.entityType;
+      attributes['activity.entityType'] = input.entityType;
     }
     if (input.action) {
-      spanAttributes['activity.action'] = input.action;
+      attributes['activity.action'] = input.action;
     }
 
-    yield* annotateUseCaseSpan({
-      userId: user.id,
+    return {
       collection: 'activity',
-      attributes: spanAttributes,
-    });
+      attributes,
+    };
+  },
+  run: ({ input }) =>
+    Effect.gen(function* () {
+      const repo = yield* ActivityLogRepo;
+      const limit = input.limit ?? 25;
 
-    const rows = yield* repo.list({
-      userId: input.userId,
-      entityType: input.entityType,
-      action: input.action,
-      search: input.search,
-      limit,
-      afterCursor: input.afterCursor,
-    });
+      const rows = yield* repo.list({
+        userId: input.userId,
+        entityType: input.entityType,
+        action: input.action,
+        search: input.search,
+        limit,
+        afterCursor: input.afterCursor,
+      });
 
-    return createPaginatedResponse([...rows], limit, (item) =>
-      item.createdAt.toISOString(),
-    );
-  }).pipe(withUseCaseSpan('useCase.listActivity'));
+      return createPaginatedResponse([...rows], limit, (item) =>
+        item.createdAt.toISOString(),
+      );
+    }),
+});

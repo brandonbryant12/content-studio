@@ -1,6 +1,6 @@
-import { requireRole, Role } from '@repo/auth/policy';
+import { Role } from '@repo/auth/policy';
 import { Effect } from 'effect';
-import { annotateUseCaseSpan, withUseCaseSpan } from '../../shared';
+import { defineRoleUseCase } from '../../shared';
 import { VoiceoverRepo } from '../repos/voiceover-repo';
 
 // =============================================================================
@@ -20,24 +20,26 @@ export interface ApproveVoiceoverInput {
  *
  * Records who approved it and when.
  */
-export const approveVoiceover = (input: ApproveVoiceoverInput) =>
-  Effect.gen(function* () {
-    const user = yield* requireRole(Role.ADMIN);
-    const voiceoverRepo = yield* VoiceoverRepo;
+export const approveVoiceover = defineRoleUseCase<ApproveVoiceoverInput>()({
+  name: 'useCase.approveVoiceover',
+  role: Role.ADMIN,
+  span: ({ input }) => ({
+    resourceId: input.voiceoverId,
+    attributes: { 'voiceover.id': input.voiceoverId },
+  }),
+  run: ({ input, user }) =>
+    Effect.gen(function* () {
+      const voiceoverRepo = yield* VoiceoverRepo;
 
-    yield* annotateUseCaseSpan({
-      userId: user.id,
-      resourceId: input.voiceoverId,
-      attributes: { 'voiceover.id': input.voiceoverId },
-    });
-    // Verify voiceover exists
-    yield* voiceoverRepo.findById(input.voiceoverId);
+      // Verify voiceover exists
+      yield* voiceoverRepo.findById(input.voiceoverId);
 
-    // Set approval
-    const updatedVoiceover = yield* voiceoverRepo.setApproval(
-      input.voiceoverId,
-      user.id,
-    );
+      // Set approval
+      const updatedVoiceover = yield* voiceoverRepo.setApproval(
+        input.voiceoverId,
+        user.id,
+      );
 
-    return { voiceover: updatedVoiceover };
-  }).pipe(withUseCaseSpan('useCase.approveVoiceover'));
+      return { voiceover: updatedVoiceover };
+    }),
+});

@@ -1,6 +1,5 @@
-import { getCurrentUser } from '@repo/auth/policy';
 import { Effect } from 'effect';
-import { annotateUseCaseSpan, withUseCaseSpan } from '../../shared';
+import { defineAuthedUseCase } from '../../shared';
 import { PodcastRepo } from '../repos/podcast-repo';
 
 // =============================================================================
@@ -15,17 +14,17 @@ export interface DeletePodcastInput {
 // Use Case
 // =============================================================================
 
-export const deletePodcast = (input: DeletePodcastInput) =>
-  Effect.gen(function* () {
-    const user = yield* getCurrentUser;
-    const podcastRepo = yield* PodcastRepo;
+export const deletePodcast = defineAuthedUseCase<DeletePodcastInput>()({
+  name: 'useCase.deletePodcast',
+  span: ({ input }) => ({
+    resourceId: input.podcastId,
+    attributes: { 'podcast.id': input.podcastId },
+  }),
+  run: ({ input, user }) =>
+    Effect.gen(function* () {
+      const podcastRepo = yield* PodcastRepo;
+      yield* podcastRepo.findByIdForUser(input.podcastId, user.id);
 
-    yield* annotateUseCaseSpan({
-      userId: user.id,
-      resourceId: input.podcastId,
-      attributes: { 'podcast.id': input.podcastId },
-    });
-    yield* podcastRepo.findByIdForUser(input.podcastId, user.id);
-
-    yield* podcastRepo.delete(input.podcastId);
-  }).pipe(withUseCaseSpan('useCase.deletePodcast'));
+      yield* podcastRepo.delete(input.podcastId);
+    }),
+});

@@ -1,7 +1,6 @@
-import { getCurrentUser } from '@repo/auth/policy';
 import { Effect } from 'effect';
 import type { StyleProperty } from '@repo/db/schema';
-import { annotateUseCaseSpan, withUseCaseSpan } from '../../shared';
+import { defineAuthedUseCase } from '../../shared';
 import { StylePresetRepo } from '../repos';
 import { sanitizeStyleProperties } from '../style-properties';
 
@@ -18,21 +17,22 @@ export interface CreateStylePresetInput {
 // Use Case
 // =============================================================================
 
-export const createStylePreset = (input: CreateStylePresetInput) =>
-  Effect.gen(function* () {
-    const user = yield* getCurrentUser;
-    const repo = yield* StylePresetRepo;
+export const createStylePreset = defineAuthedUseCase<CreateStylePresetInput>()({
+  name: 'useCase.createStylePreset',
+  run: ({ input, user, annotateSpan }) =>
+    Effect.gen(function* () {
+      const repo = yield* StylePresetRepo;
 
-    const preset = yield* repo.insert({
-      name: input.name,
-      properties: sanitizeStyleProperties(input.properties),
-      isBuiltIn: false,
-      createdBy: user.id,
-    });
-    yield* annotateUseCaseSpan({
-      userId: user.id,
-      resourceId: preset.id,
-      attributes: { 'stylePreset.id': preset.id },
-    });
-    return preset;
-  }).pipe(withUseCaseSpan('useCase.createStylePreset'));
+      const preset = yield* repo.insert({
+        name: input.name,
+        properties: sanitizeStyleProperties(input.properties),
+        isBuiltIn: false,
+        createdBy: user.id,
+      });
+      yield* annotateSpan({
+        resourceId: preset.id,
+        attributes: { 'stylePreset.id': preset.id },
+      });
+      return preset;
+    }),
+});

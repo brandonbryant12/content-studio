@@ -17,8 +17,9 @@ describe('chat handler invariants', () => {
   it('routes use handler pipeline helpers for protocol + spans', () => {
     const source = readChatRouter();
 
-    expect(source).toContain('handleEffectWithProtocol');
-    expect(source).toContain('handleEffectStreamWithProtocol');
+    expect(source).toContain('bindEffectProtocol');
+    expect(source).toContain('.run(');
+    expect(source).toContain('.stream(');
   });
 
   it('routes do not call runtime.runPromise directly', () => {
@@ -28,9 +29,12 @@ describe('chat handler invariants', () => {
     expect(source).not.toMatch(forbidden);
   });
 
-  it('routes pass requestId for each handler (spans auto-provided by @orpc/otel)', () => {
+  it('routes bind request protocol context for each handler', () => {
     const source = readChatRouter();
-    const matches = source.match(/requestId:\s*context\.requestId/g) ?? [];
+    const matches =
+      source.match(
+        /bindEffectProtocol\(\{ context, errors \}\)\.(run|stream)\(/g,
+      ) ?? [];
 
     expect(matches).toHaveLength(5);
   });

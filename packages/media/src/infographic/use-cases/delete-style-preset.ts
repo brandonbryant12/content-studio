@@ -1,8 +1,7 @@
 import { ForbiddenError } from '@repo/auth';
-import { getCurrentUser } from '@repo/auth/policy';
 import { Effect } from 'effect';
 import { StylePresetNotFound } from '../../errors';
-import { annotateUseCaseSpan, withUseCaseSpan } from '../../shared';
+import { defineAuthedUseCase } from '../../shared';
 import { StylePresetRepo } from '../repos';
 
 // =============================================================================
@@ -17,34 +16,34 @@ export interface DeleteStylePresetInput {
 // Use Case
 // =============================================================================
 
-export const deleteStylePreset = (input: DeleteStylePresetInput) =>
-  Effect.gen(function* () {
-    const user = yield* getCurrentUser;
-    const repo = yield* StylePresetRepo;
+export const deleteStylePreset = defineAuthedUseCase<DeleteStylePresetInput>()({
+  name: 'useCase.deleteStylePreset',
+  span: ({ input }) => ({
+    resourceId: input.id,
+    attributes: { 'preset.id': input.id },
+  }),
+  run: ({ input, user }) =>
+    Effect.gen(function* () {
+      const repo = yield* StylePresetRepo;
+      const preset = yield* repo.findById(input.id);
 
-    yield* annotateUseCaseSpan({
-      userId: user.id,
-      resourceId: input.id,
-      attributes: { 'preset.id': input.id },
-    });
-    const preset = yield* repo.findById(input.id);
+      if (preset.isBuiltIn) {
+        return yield* Effect.fail(
+          new ForbiddenError({ message: 'Cannot delete built-in presets' }),
+        );
+      }
 
-    if (preset.isBuiltIn) {
-      return yield* Effect.fail(
-        new ForbiddenError({ message: 'Cannot delete built-in presets' }),
-      );
-    }
+      if (!preset.createdBy) {
+        return yield* Effect.fail(
+          new ForbiddenError({ message: 'Cannot delete shared presets' }),
+        );
+      }
 
-    if (!preset.createdBy) {
-      return yield* Effect.fail(
-        new ForbiddenError({ message: 'Cannot delete shared presets' }),
-      );
-    }
+      if (preset.createdBy !== user.id) {
+        return yield* Effect.fail(new StylePresetNotFound({ id: input.id }));
+      }
 
-    if (preset.createdBy !== user.id) {
-      return yield* Effect.fail(new StylePresetNotFound({ id: input.id }));
-    }
-
-    yield* repo.delete(input.id);
-    return { deleted: true };
-  }).pipe(withUseCaseSpan('useCase.deleteStylePreset'));
+      yield* repo.delete(input.id);
+      return { deleted: true };
+    }),
+});

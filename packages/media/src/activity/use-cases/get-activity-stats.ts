@@ -1,6 +1,6 @@
-import { getCurrentUser, requireRole, Role } from '@repo/auth/policy';
+import { Role } from '@repo/auth/policy';
 import { Effect } from 'effect';
-import { annotateUseCaseSpan, withUseCaseSpan } from '../../shared';
+import { defineRoleUseCase } from '../../shared';
 import { ActivityLogRepo } from '../repos/activity-log-repo';
 
 // =============================================================================
@@ -42,31 +42,36 @@ const periodToDate = (period: '24h' | '7d' | '30d'): Date => {
  * Get activity statistics for the admin dashboard.
  * Admin-only.
  */
-export const getActivityStats = (input: GetActivityStatsInput) =>
-  Effect.gen(function* () {
-    yield* requireRole(Role.ADMIN);
-    const user = yield* getCurrentUser;
-    const repo = yield* ActivityLogRepo;
+export const getActivityStats = defineRoleUseCase<GetActivityStatsInput>()({
+  name: 'useCase.getActivityStats',
+  role: Role.ADMIN,
+  span: ({ input, user }) => ({
+    collection: 'activity',
+    attributes: {
+      'owner.id': user.id,
+      'activity.period': input.period,
+    },
+  }),
+  run: ({ input }) =>
+    Effect.gen(function* () {
+      const repo = yield* ActivityLogRepo;
+      const since = periodToDate(input.period);
 
-    const since = periodToDate(input.period);
-    yield* annotateUseCaseSpan({
-      userId: user.id,
-      collection: 'activity',
-      attributes: {
-        'owner.id': user.id,
-        'activity.period': input.period,
-      },
-    });
+      const [total, byEntityType, byAction, topUsers] = yield* Effect.all(
+        [
+          repo.countTotal(since),
+          repo.countByEntityType(since),
+          repo.countByAction(since),
+          repo.countByUser(since, 10),
+        ],
+        { concurrency: 'unbounded' },
+      );
 
-    const [total, byEntityType, byAction, topUsers] = yield* Effect.all(
-      [
-        repo.countTotal(since),
-        repo.countByEntityType(since),
-        repo.countByAction(since),
-        repo.countByUser(since, 10),
-      ],
-      { concurrency: 'unbounded' },
-    );
-
-    return { total, byEntityType, byAction, topUsers } satisfies ActivityStats;
-  }).pipe(withUseCaseSpan('useCase.getActivityStats'));
+      return {
+        total,
+        byEntityType,
+        byAction,
+        topUsers,
+      } satisfies ActivityStats;
+    }),
+});

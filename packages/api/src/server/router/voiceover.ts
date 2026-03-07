@@ -15,75 +15,58 @@ import {
   revokeVoiceoverApproval,
 } from '@repo/media';
 import { Effect } from 'effect';
-import { handleEffectWithProtocol } from '../effect-handler';
+import { bindEffectProtocol } from '../effect-handler';
 import { protectedProcedure } from '../orpc';
 import { tapLogActivity, tapSyncTitle } from './log-activity';
 
 const voiceoverRouter = {
   list: protectedProcedure.voiceovers.list.handler(
-    async ({ context, input, errors }) => {
-      return handleEffectWithProtocol(
-        context.runtime,
-        context.user,
+    async ({ context, input, errors }) =>
+      bindEffectProtocol({ context, errors }).run(
         listVoiceovers(input).pipe(
           Effect.flatMap((result) =>
             serializeVoiceoverListItemsEffect([...result.voiceovers]),
           ),
         ),
-        errors,
         {
-          requestId: context.requestId,
           attributes: {
             'pagination.limit': input.limit ?? 50,
             'pagination.offset': input.offset ?? 0,
           },
         },
-      );
-    },
+      ),
   ),
 
   get: protectedProcedure.voiceovers.get.handler(
-    async ({ context, input, errors }) => {
-      return handleEffectWithProtocol(
-        context.runtime,
-        context.user,
+    async ({ context, input, errors }) =>
+      bindEffectProtocol({ context, errors }).run(
         getVoiceover({ voiceoverId: input.id }).pipe(
           Effect.flatMap(serializeVoiceoverEffect),
         ),
-        errors,
         {
-          requestId: context.requestId,
           attributes: { 'voiceover.id': input.id },
         },
-      );
-    },
+      ),
   ),
 
   create: protectedProcedure.voiceovers.create.handler(
-    async ({ context, input, errors }) => {
-      return handleEffectWithProtocol(
-        context.runtime,
-        context.user,
+    async ({ context, input, errors }) =>
+      bindEffectProtocol({ context, errors }).run(
         createVoiceover(input).pipe(
           Effect.flatMap(serializeVoiceoverEffect),
           tapLogActivity(context.runtime, context.user, 'created', 'voiceover'),
         ),
-        errors,
         {
-          requestId: context.requestId,
           attributes: { 'voiceover.title': input.title },
         },
-      );
-    },
+      ),
   ),
 
   update: protectedProcedure.voiceovers.update.handler(
     async ({ context, input, errors }) => {
       const { id, ...data } = input;
 
-      return handleEffectWithProtocol(
-        context.runtime,
-        context.user,
+      return bindEffectProtocol({ context, errors }).run(
         updateVoiceover({
           voiceoverId: id,
           data,
@@ -91,9 +74,7 @@ const voiceoverRouter = {
           Effect.flatMap(serializeVoiceoverEffect),
           tapSyncTitle(context.runtime, context.user),
         ),
-        errors,
         {
-          requestId: context.requestId,
           attributes: { 'voiceover.id': id },
         },
       );
@@ -101,10 +82,8 @@ const voiceoverRouter = {
   ),
 
   delete: protectedProcedure.voiceovers.delete.handler(
-    async ({ context, input, errors }) => {
-      return handleEffectWithProtocol(
-        context.runtime,
-        context.user,
+    async ({ context, input, errors }) =>
+      bindEffectProtocol({ context, errors }).run(
         deleteVoiceover({
           voiceoverId: input.id,
         }).pipe(
@@ -117,85 +96,62 @@ const voiceoverRouter = {
             input.id,
           ),
         ),
-        errors,
         {
-          requestId: context.requestId,
           attributes: { 'voiceover.id': input.id },
         },
-      );
-    },
+      ),
   ),
 
   generate: protectedProcedure.voiceovers.generate.handler(
-    async ({ context, input, errors }) => {
-      return handleEffectWithProtocol(
-        context.runtime,
-        context.user,
+    async ({ context, input, errors }) =>
+      bindEffectProtocol({ context, errors }).run(
         startVoiceoverGeneration({
           voiceoverId: input.id,
         }),
-        errors,
         {
-          requestId: context.requestId,
           attributes: { 'voiceover.id': input.id },
         },
-      );
-    },
+      ),
   ),
 
   getJob: protectedProcedure.voiceovers.getJob.handler(
-    async ({ context, input, errors }) => {
-      return handleEffectWithProtocol(
-        context.runtime,
-        context.user,
+    async ({ context, input, errors }) =>
+      bindEffectProtocol({ context, errors }).run(
         getVoiceoverJob({ jobId: input.jobId }).pipe(
           Effect.flatMap(serializeJobEffect),
         ),
-        errors,
         {
-          requestId: context.requestId,
           attributes: { 'job.id': input.jobId },
         },
-      );
-    },
+      ),
   ),
 
   approve: protectedProcedure.voiceovers.approve.handler(
-    async ({ context, input, errors }) => {
-      return handleEffectWithProtocol(
-        context.runtime,
-        context.user,
+    async ({ context, input, errors }) =>
+      bindEffectProtocol({ context, errors }).run(
         approveVoiceover({ voiceoverId: input.id }).pipe(
           Effect.flatMap((result) =>
             serializeVoiceoverEffect(result.voiceover),
           ),
         ),
-        errors,
         {
-          requestId: context.requestId,
           attributes: { 'voiceover.id': input.id },
         },
-      );
-    },
+      ),
   ),
 
   revokeApproval: protectedProcedure.voiceovers.revokeApproval.handler(
-    async ({ context, input, errors }) => {
-      return handleEffectWithProtocol(
-        context.runtime,
-        context.user,
+    async ({ context, input, errors }) =>
+      bindEffectProtocol({ context, errors }).run(
         revokeVoiceoverApproval({ voiceoverId: input.id }).pipe(
           Effect.flatMap((result) =>
             serializeVoiceoverEffect(result.voiceover),
           ),
         ),
-        errors,
         {
-          requestId: context.requestId,
           attributes: { 'voiceover.id': input.id },
         },
-      );
-    },
+      ),
   ),
 };
 

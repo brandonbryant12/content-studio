@@ -1,10 +1,10 @@
-import { requireRole, Role } from '@repo/auth/policy';
+import { Role } from '@repo/auth/policy';
 import { Effect } from 'effect';
 import type {
   AdminUserEntityRecord,
   AdminUserEntityType,
 } from '../repos/admin-repo';
-import { defineAuthedUseCase } from '../../shared';
+import { defineRoleUseCase } from '../../shared';
 import { AdminRepo } from '../repos/admin-repo';
 
 export interface ListUserEntitiesInput {
@@ -23,8 +23,9 @@ export interface ListUserEntitiesResult {
 
 const DEFAULT_LIMIT = 12;
 
-export const listUserEntities = defineAuthedUseCase<ListUserEntitiesInput>()({
+export const listUserEntities = defineRoleUseCase<ListUserEntitiesInput>()({
   name: 'useCase.listUserEntities',
+  role: Role.ADMIN,
   span: ({ input }) => ({
     resourceId: input.userId,
     attributes: {
@@ -37,8 +38,6 @@ export const listUserEntities = defineAuthedUseCase<ListUserEntitiesInput>()({
   }),
   run: ({ input }) =>
     Effect.gen(function* () {
-      yield* requireRole(Role.ADMIN);
-
       const adminRepo = yield* AdminRepo;
       const limit = input.limit ?? DEFAULT_LIMIT;
       const offset = input.offset ?? 0;

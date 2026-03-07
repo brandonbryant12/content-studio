@@ -96,7 +96,7 @@ sequenceDiagram
   end
   rect rgb(236, 253, 243)
     S->>O: Route to protected procedure
-    O->>R: handleEffectWithProtocol(runtime, user, effect, ...)
+    O->>R: bindEffectProtocol({ context, errors }).run(effect)
     R->>U: withCurrentUser(user)(effect)
     U->>P: Domain operation
   end

@@ -1,6 +1,6 @@
-import { getCurrentUser, Role } from '@repo/auth/policy';
+import { Role } from '@repo/auth/policy';
 import { Effect } from 'effect';
-import { annotateUseCaseSpan, withUseCaseSpan } from '../../shared';
+import { defineAuthedUseCase } from '../../shared';
 import { VoiceoverRepo } from '../repos/voiceover-repo';
 
 // =============================================================================
@@ -21,17 +21,17 @@ export interface GetVoiceoverInput {
  * @example
  * const voiceover = yield* getVoiceover({ voiceoverId: 'voc_xxx' });
  */
-export const getVoiceover = (input: GetVoiceoverInput) =>
-  Effect.gen(function* () {
-    const user = yield* getCurrentUser;
-    const voiceoverRepo = yield* VoiceoverRepo;
-    yield* annotateUseCaseSpan({
-      userId: user.id,
-      resourceId: input.voiceoverId,
-      attributes: { 'voiceover.id': input.voiceoverId },
-    });
-    const voiceover = yield* user.role === Role.ADMIN
-      ? voiceoverRepo.findById(input.voiceoverId)
-      : voiceoverRepo.findByIdForUser(input.voiceoverId, user.id);
-    return voiceover;
-  }).pipe(withUseCaseSpan('useCase.getVoiceover'));
+export const getVoiceover = defineAuthedUseCase<GetVoiceoverInput>()({
+  name: 'useCase.getVoiceover',
+  span: ({ input }) => ({
+    resourceId: input.voiceoverId,
+    attributes: { 'voiceover.id': input.voiceoverId },
+  }),
+  run: ({ input, user }) =>
+    Effect.gen(function* () {
+      const voiceoverRepo = yield* VoiceoverRepo;
+      return yield* user.role === Role.ADMIN
+        ? voiceoverRepo.findById(input.voiceoverId)
+        : voiceoverRepo.findByIdForUser(input.voiceoverId, user.id);
+    }),
+});

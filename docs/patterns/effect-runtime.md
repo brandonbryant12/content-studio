@@ -11,7 +11,7 @@ sequenceDiagram
 
   Client->>Hono: HTTP request
   Hono->>Handler: context { runtime, user }
-  Handler->>RT: handleEffectWithProtocol(runtime, user, effect, ...)
+  Handler->>RT: bindEffectProtocol({ context, errors }).run(effect)
   RT->>RT: withCurrentUser(user)(effect)
   RT->>UC: Effect.gen
   UC->>UC: yield* getCurrentUser
@@ -58,17 +58,14 @@ export const withCurrentUser = (user: User) =>
     Effect.locally(CurrentUserRef, user)(effect);
 ```
 
-`handleEffectWithProtocol` applies `withCurrentUser(...)` before running the effect, so use cases can simply call `yield* getCurrentUser`.
+`handleEffectWithProtocol` applies `withCurrentUser(...)` before running the effect, and `bindEffectProtocol(...)` is the preferred router wrapper around that boundary, so use cases can simply call `yield* getCurrentUser`.
 
 ## Handler Integration
 
 ```typescript
-return handleEffectWithProtocol(
-  context.runtime,
-  context.user,
+return bindEffectProtocol({ context, errors }).run(
   createSource(input).pipe(Effect.flatMap(serializeSourceEffect)),
-  errors,
-  { requestId: context.requestId },
+  { attributes: { 'source.title': input.title } },
 );
 ```
 

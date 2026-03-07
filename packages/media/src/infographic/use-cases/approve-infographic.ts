@@ -1,6 +1,6 @@
-import { requireRole, Role } from '@repo/auth/policy';
+import { Role } from '@repo/auth/policy';
 import { Effect } from 'effect';
-import { annotateUseCaseSpan, withUseCaseSpan } from '../../shared';
+import { defineRoleUseCase } from '../../shared';
 import { InfographicRepo } from '../repos/infographic-repo';
 
 // =============================================================================
@@ -20,24 +20,26 @@ export interface ApproveInfographicInput {
  *
  * Records who approved it and when.
  */
-export const approveInfographic = (input: ApproveInfographicInput) =>
-  Effect.gen(function* () {
-    const user = yield* requireRole(Role.ADMIN);
-    const infographicRepo = yield* InfographicRepo;
+export const approveInfographic = defineRoleUseCase<ApproveInfographicInput>()({
+  name: 'useCase.approveInfographic',
+  role: Role.ADMIN,
+  span: ({ input }) => ({
+    resourceId: input.infographicId,
+    attributes: { 'infographic.id': input.infographicId },
+  }),
+  run: ({ input, user }) =>
+    Effect.gen(function* () {
+      const infographicRepo = yield* InfographicRepo;
 
-    yield* annotateUseCaseSpan({
-      userId: user.id,
-      resourceId: input.infographicId,
-      attributes: { 'infographic.id': input.infographicId },
-    });
-    // Verify infographic exists
-    yield* infographicRepo.findById(input.infographicId);
+      // Verify infographic exists
+      yield* infographicRepo.findById(input.infographicId);
 
-    // Set approval
-    const updated = yield* infographicRepo.setApproval(
-      input.infographicId,
-      user.id,
-    );
+      // Set approval
+      const updated = yield* infographicRepo.setApproval(
+        input.infographicId,
+        user.id,
+      );
 
-    return { infographic: updated };
-  }).pipe(withUseCaseSpan('useCase.approveInfographic'));
+      return { infographic: updated };
+    }),
+});

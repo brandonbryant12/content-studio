@@ -1,6 +1,6 @@
-import { requireRole, Role } from '@repo/auth/policy';
+import { Role } from '@repo/auth/policy';
 import { Effect } from 'effect';
-import { annotateUseCaseSpan, withUseCaseSpan } from '../../shared';
+import { defineRoleUseCase } from '../../shared';
 import { PodcastRepo } from '../repos/podcast-repo';
 
 // =============================================================================
@@ -20,21 +20,23 @@ export interface RevokeApprovalInput {
  *
  * Clears approvedBy and approvedAt.
  */
-export const revokeApproval = (input: RevokeApprovalInput) =>
-  Effect.gen(function* () {
-    const user = yield* requireRole(Role.ADMIN);
-    const podcastRepo = yield* PodcastRepo;
+export const revokeApproval = defineRoleUseCase<RevokeApprovalInput>()({
+  name: 'useCase.revokeApproval',
+  role: Role.ADMIN,
+  span: ({ input }) => ({
+    resourceId: input.podcastId,
+    attributes: { 'podcast.id': input.podcastId },
+  }),
+  run: ({ input }) =>
+    Effect.gen(function* () {
+      const podcastRepo = yield* PodcastRepo;
 
-    yield* annotateUseCaseSpan({
-      userId: user.id,
-      resourceId: input.podcastId,
-      attributes: { 'podcast.id': input.podcastId },
-    });
-    // Verify podcast exists
-    yield* podcastRepo.findById(input.podcastId);
+      // Verify podcast exists
+      yield* podcastRepo.findById(input.podcastId);
 
-    // Clear approval
-    const updatedPodcast = yield* podcastRepo.clearApproval(input.podcastId);
+      // Clear approval
+      const updatedPodcast = yield* podcastRepo.clearApproval(input.podcastId);
 
-    return { podcast: updatedPodcast };
-  }).pipe(withUseCaseSpan('useCase.revokeApproval'));
+      return { podcast: updatedPodcast };
+    }),
+});

@@ -1,15 +1,13 @@
 import { serializeActivityLogsEffect } from '@repo/db/schema';
 import { listActivity, getActivityStats } from '@repo/media';
 import { Effect } from 'effect';
-import { handleEffectWithProtocol } from '../effect-handler';
+import { bindEffectProtocol } from '../effect-handler';
 import { protectedProcedure } from '../orpc';
 
 const activityRouter = {
   list: protectedProcedure.admin.activity.list.handler(
-    async ({ context, input, errors }) => {
-      return handleEffectWithProtocol(
-        context.runtime,
-        context.user,
+    async ({ context, input, errors }) =>
+      bindEffectProtocol({ context, errors }).run(
         listActivity(input).pipe(
           Effect.flatMap((result) =>
             serializeActivityLogsEffect(result.data).pipe(
@@ -21,28 +19,20 @@ const activityRouter = {
             ),
           ),
         ),
-        errors,
         {
-          requestId: context.requestId,
           attributes: { 'pagination.limit': input.limit ?? 25 },
         },
-      );
-    },
+      ),
   ),
 
   stats: protectedProcedure.admin.activity.stats.handler(
-    async ({ context, input, errors }) => {
-      return handleEffectWithProtocol(
-        context.runtime,
-        context.user,
+    async ({ context, input, errors }) =>
+      bindEffectProtocol({ context, errors }).run(
         getActivityStats({ period: input.period }),
-        errors,
         {
-          requestId: context.requestId,
           attributes: { 'activity.period': input.period },
         },
-      );
-    },
+      ),
   ),
 };
 

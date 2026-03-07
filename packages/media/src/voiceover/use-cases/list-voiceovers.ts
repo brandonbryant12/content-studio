@@ -1,7 +1,6 @@
-import { getCurrentUser } from '@repo/auth/policy';
 import { Effect } from 'effect';
 import type { Voiceover } from '@repo/db/schema';
-import { annotateUseCaseSpan, withUseCaseSpan } from '../../shared';
+import { defineAuthedUseCase } from '../../shared';
 import { VoiceoverRepo, type ListOptions } from '../repos/voiceover-repo';
 
 // =============================================================================
@@ -23,36 +22,39 @@ export interface ListVoiceoversResult {
 // Use Case
 // =============================================================================
 
-export const listVoiceovers = (input: ListVoiceoversInput) =>
-  Effect.gen(function* () {
-    const user = yield* getCurrentUser;
-    const voiceoverRepo = yield* VoiceoverRepo;
+const DEFAULT_LIST_VOICEOVERS_LIMIT = 50;
+const DEFAULT_LIST_VOICEOVERS_OFFSET = 0;
 
-    const limit = input.limit ?? 50;
-    const offset = input.offset ?? 0;
-    yield* annotateUseCaseSpan({
-      userId: user.id,
-      collection: 'voiceovers',
-      attributes: {
-        'owner.id': user.id,
-        'pagination.limit': limit,
-        'pagination.offset': offset,
-      },
-    });
-    const options: ListOptions = {
-      userId: user.id,
-      limit,
-      offset,
-    };
+export const listVoiceovers = defineAuthedUseCase<ListVoiceoversInput>()({
+  name: 'useCase.listVoiceovers',
+  span: ({ input, user }) => ({
+    collection: 'voiceovers',
+    attributes: {
+      'owner.id': user.id,
+      'pagination.limit': input.limit ?? DEFAULT_LIST_VOICEOVERS_LIMIT,
+      'pagination.offset': input.offset ?? DEFAULT_LIST_VOICEOVERS_OFFSET,
+    },
+  }),
+  run: ({ input, user }) =>
+    Effect.gen(function* () {
+      const voiceoverRepo = yield* VoiceoverRepo;
+      const limit = input.limit ?? DEFAULT_LIST_VOICEOVERS_LIMIT;
+      const offset = input.offset ?? DEFAULT_LIST_VOICEOVERS_OFFSET;
+      const options: ListOptions = {
+        userId: user.id,
+        limit,
+        offset,
+      };
 
-    const [voiceovers, total] = yield* Effect.all(
-      [voiceoverRepo.list(options), voiceoverRepo.count(options)],
-      { concurrency: 'unbounded' },
-    );
+      const [voiceovers, total] = yield* Effect.all(
+        [voiceoverRepo.list(options), voiceoverRepo.count(options)],
+        { concurrency: 'unbounded' },
+      );
 
-    return {
-      voiceovers,
-      total,
-      hasMore: offset + voiceovers.length < total,
-    };
-  }).pipe(withUseCaseSpan('useCase.listVoiceovers'));
+      return {
+        voiceovers,
+        total,
+        hasMore: offset + voiceovers.length < total,
+      };
+    }),
+});

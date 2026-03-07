@@ -1,8 +1,7 @@
-import { getCurrentUser } from '@repo/auth/policy';
 import { Storage } from '@repo/storage';
 import { Effect } from 'effect';
 import { SourceNotFound } from '../../errors';
-import { annotateUseCaseSpan, withUseCaseSpan } from '../../shared';
+import { defineAuthedUseCase } from '../../shared';
 import { SourceRepo } from '../repos';
 
 // =============================================================================
@@ -17,23 +16,23 @@ export interface DeleteSourceInput {
 // Use Case
 // =============================================================================
 
-export const deleteSource = (input: DeleteSourceInput) =>
-  Effect.gen(function* () {
-    const user = yield* getCurrentUser;
-    const storage = yield* Storage;
-    const sourceRepo = yield* SourceRepo;
+export const deleteSource = defineAuthedUseCase<DeleteSourceInput>()({
+  name: 'useCase.deleteSource',
+  span: ({ input }) => ({
+    resourceId: input.id,
+    attributes: { 'source.id': input.id },
+  }),
+  run: ({ input, user }) =>
+    Effect.gen(function* () {
+      const storage = yield* Storage;
+      const sourceRepo = yield* SourceRepo;
+      const existing = yield* sourceRepo.findByIdForUser(input.id, user.id);
 
-    yield* annotateUseCaseSpan({
-      userId: user.id,
-      resourceId: input.id,
-      attributes: { 'source.id': input.id },
-    });
-    const existing = yield* sourceRepo.findByIdForUser(input.id, user.id);
+      yield* storage.delete(existing.contentKey).pipe(Effect.ignore);
 
-    yield* storage.delete(existing.contentKey).pipe(Effect.ignore);
-
-    const deleted = yield* sourceRepo.delete(input.id);
-    if (!deleted) {
-      return yield* Effect.fail(new SourceNotFound({ id: input.id }));
-    }
-  }).pipe(withUseCaseSpan('useCase.deleteSource'));
+      const deleted = yield* sourceRepo.delete(input.id);
+      if (!deleted) {
+        return yield* Effect.fail(new SourceNotFound({ id: input.id }));
+      }
+    }),
+});

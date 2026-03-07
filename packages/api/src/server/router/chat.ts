@@ -5,69 +5,46 @@ import {
   synthesizePersona,
   streamWritingAssistantChat,
 } from '@repo/ai/chat';
-import {
-  handleEffectWithProtocol,
-  handleEffectStreamWithProtocol,
-} from '../effect-handler';
+import { bindEffectProtocol } from '../effect-handler';
 import { protectedProcedure } from '../orpc';
 
 const chatRouter = {
   research: protectedProcedure.chat.research.handler(
     async ({ context, input, errors }) =>
-      handleEffectStreamWithProtocol(
-        context.runtime,
-        context.user,
+      bindEffectProtocol({ context, errors }).stream(
         streamResearchChat({ messages: input.messages }),
-        errors,
-        { requestId: context.requestId },
       ),
   ),
 
   synthesizeResearchQuery:
     protectedProcedure.chat.synthesizeResearchQuery.handler(
       async ({ context, input, errors }) =>
-        handleEffectWithProtocol(
-          context.runtime,
-          context.user,
+        bindEffectProtocol({ context, errors }).run(
           synthesizeResearchQuery({ messages: input.messages }),
-          errors,
-          { requestId: context.requestId },
         ),
     ),
 
   personaChat: protectedProcedure.chat.personaChat.handler(
     async ({ context, input, errors }) =>
-      handleEffectStreamWithProtocol(
-        context.runtime,
-        context.user,
+      bindEffectProtocol({ context, errors }).stream(
         streamPersonaChat({ messages: input.messages }),
-        errors,
-        { requestId: context.requestId },
       ),
   ),
 
   writingAssistant: protectedProcedure.chat.writingAssistant.handler(
     async ({ context, input, errors }) =>
-      handleEffectStreamWithProtocol(
-        context.runtime,
-        context.user,
+      bindEffectProtocol({ context, errors }).stream(
         streamWritingAssistantChat({
           messages: input.messages,
           transcript: input.transcript,
         }),
-        errors,
-        { requestId: context.requestId },
       ),
   ),
 
   synthesizePersona: protectedProcedure.chat.synthesizePersona.handler(
     async ({ context, input, errors }) =>
-      handleEffectWithProtocol(
-        context.runtime,
-        context.user,
+      bindEffectProtocol({ context, errors }).run(
         synthesizePersona({ messages: input.messages }),
-        errors,
-        { requestId: context.requestId },
       ),
   ),
 };

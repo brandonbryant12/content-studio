@@ -10,7 +10,7 @@ import {
 } from '@repo/db/schema';
 import { getUserDetail, listUserEntities, searchUsers } from '@repo/media';
 import { Effect } from 'effect';
-import { handleEffectWithProtocol } from '../effect-handler';
+import { bindEffectProtocol } from '../effect-handler';
 import { protectedProcedure } from '../orpc';
 import activityRouter from './activity';
 
@@ -40,16 +40,12 @@ const serializeAdminUserEntities = (
 
 const usersRouter = {
   search: protectedProcedure.admin.users.search.handler(
-    async ({ context, input, errors }) => {
-      return handleEffectWithProtocol(
-        context.runtime,
-        context.user,
+    async ({ context, input, errors }) =>
+      bindEffectProtocol({ context, errors }).run(
         searchUsers(input).pipe(
           Effect.flatMap((result) => serializeUsersEffect([...result.users])),
         ),
-        errors,
         {
-          requestId: context.requestId,
           attributes: {
             'pagination.limit': input.limit ?? 20,
             ...(input.query?.trim()
@@ -57,15 +53,12 @@ const usersRouter = {
               : {}),
           },
         },
-      );
-    },
+      ),
   ),
 
   entities: protectedProcedure.admin.users.entities.handler(
-    async ({ context, input, errors }) => {
-      return handleEffectWithProtocol(
-        context.runtime,
-        context.user,
+    async ({ context, input, errors }) =>
+      bindEffectProtocol({ context, errors }).run(
         listUserEntities(input).pipe(
           Effect.map((result) => ({
             entities: serializeAdminUserEntities(result.entities),
@@ -73,9 +66,7 @@ const usersRouter = {
             hasMore: result.hasMore,
           })),
         ),
-        errors,
         {
-          requestId: context.requestId,
           attributes: {
             'admin.targetUserId': input.userId,
             'pagination.limit': input.limit ?? 12,
@@ -88,15 +79,12 @@ const usersRouter = {
               : {}),
           },
         },
-      );
-    },
+      ),
   ),
 
   get: protectedProcedure.admin.users.get.handler(
-    async ({ context, input, errors }) => {
-      return handleEffectWithProtocol(
-        context.runtime,
-        context.user,
+    async ({ context, input, errors }) =>
+      bindEffectProtocol({ context, errors }).run(
         getUserDetail(input).pipe(
           Effect.flatMap((result) =>
             Effect.all({
@@ -146,9 +134,7 @@ const usersRouter = {
             ),
           ),
         ),
-        errors,
         {
-          requestId: context.requestId,
           attributes: {
             'admin.targetUserId': input.userId,
             'usage.period': input.usagePeriod,
@@ -156,8 +142,7 @@ const usersRouter = {
             'pagination.usageLimit': input.usageLimit ?? 25,
           },
         },
-      );
-    },
+      ),
   ),
 };
 

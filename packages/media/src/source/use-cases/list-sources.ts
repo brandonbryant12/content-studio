@@ -1,7 +1,7 @@
-import { getCurrentUser, Role } from '@repo/auth/policy';
+import { Role } from '@repo/auth/policy';
 import { Effect } from 'effect';
 import type { SourceListItem } from '@repo/db/schema';
-import { annotateUseCaseSpan, withUseCaseSpan } from '../../shared';
+import { defineAuthedUseCase } from '../../shared';
 import { SourceRepo } from '../repos';
 
 // =============================================================================
@@ -26,42 +26,51 @@ export interface ListSourcesResult {
 // Use Case
 // =============================================================================
 
-export const listSources = (input: ListSourcesInput) =>
-  Effect.gen(function* () {
-    const user = yield* getCurrentUser;
-    const sourceRepo = yield* SourceRepo;
+const DEFAULT_LIST_SOURCES_LIMIT = 50;
+const DEFAULT_LIST_SOURCES_OFFSET = 0;
 
+export const listSources = defineAuthedUseCase<ListSourcesInput>()({
+  name: 'useCase.listSources',
+  span: ({ input, user }) => {
     const createdBy = user.role === Role.ADMIN ? input.userId : user.id;
-    const limit = input.limit ?? 50;
-    const offset = input.offset ?? 0;
-    const spanAttributes: Record<string, string | number> = {
-      ...(createdBy ? { 'owner.id': createdBy } : {}),
-      'pagination.limit': limit,
-      'pagination.offset': offset,
-      ...(input.userId ? { 'filter.userId': input.userId } : {}),
-    };
-    const listOptions = {
-      createdBy,
-      source: input.source,
-      status: input.status,
-      limit,
-      offset,
-    };
-
-    yield* annotateUseCaseSpan({
-      userId: user.id,
-      collection: 'sources',
-      attributes: spanAttributes,
-    });
-
-    const [sources, total] = yield* Effect.all(
-      [sourceRepo.list(listOptions), sourceRepo.count({ createdBy })],
-      { concurrency: 'unbounded' },
-    );
+    const limit = input.limit ?? DEFAULT_LIST_SOURCES_LIMIT;
+    const offset = input.offset ?? DEFAULT_LIST_SOURCES_OFFSET;
 
     return {
-      sources,
-      total,
-      hasMore: offset + sources.length < total,
+      collection: 'sources',
+      attributes: {
+        ...(createdBy ? { 'owner.id': createdBy } : {}),
+        'pagination.limit': limit,
+        'pagination.offset': offset,
+        ...(input.userId ? { 'filter.userId': input.userId } : {}),
+      },
     };
-  }).pipe(withUseCaseSpan('useCase.listSources'));
+  },
+  run: ({ input, user }) =>
+    Effect.gen(function* () {
+      const sourceRepo = yield* SourceRepo;
+      const createdBy = user.role === Role.ADMIN ? input.userId : user.id;
+      const limit = input.limit ?? DEFAULT_LIST_SOURCES_LIMIT;
+      const offset = input.offset ?? DEFAULT_LIST_SOURCES_OFFSET;
+
+      const [sources, total] = yield* Effect.all(
+        [
+          sourceRepo.list({
+            createdBy,
+            source: input.source,
+            status: input.status,
+            limit,
+            offset,
+          }),
+          sourceRepo.count({ createdBy }),
+        ],
+        { concurrency: 'unbounded' },
+      );
+
+      return {
+        sources,
+        total,
+        hasMore: offset + sources.length < total,
+      };
+    }),
+});

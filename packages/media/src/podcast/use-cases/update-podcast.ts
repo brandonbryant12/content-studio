@@ -1,7 +1,6 @@
-import { getCurrentUser } from '@repo/auth/policy';
 import { Effect } from 'effect';
 import type { UpdatePodcast } from '@repo/db/schema';
-import { annotateUseCaseSpan, withUseCaseSpan } from '../../shared';
+import { defineAuthedUseCase } from '../../shared';
 import { PodcastRepo } from '../repos/podcast-repo';
 
 // =============================================================================
@@ -17,17 +16,17 @@ export interface UpdatePodcastInput {
 // Use Case
 // =============================================================================
 
-export const updatePodcast = (input: UpdatePodcastInput) =>
-  Effect.gen(function* () {
-    const user = yield* getCurrentUser;
-    const podcastRepo = yield* PodcastRepo;
+export const updatePodcast = defineAuthedUseCase<UpdatePodcastInput>()({
+  name: 'useCase.updatePodcast',
+  span: ({ input }) => ({
+    resourceId: input.podcastId,
+    attributes: { 'podcast.id': input.podcastId },
+  }),
+  run: ({ input, user }) =>
+    Effect.gen(function* () {
+      const podcastRepo = yield* PodcastRepo;
+      yield* podcastRepo.findByIdForUser(input.podcastId, user.id);
 
-    yield* annotateUseCaseSpan({
-      userId: user.id,
-      resourceId: input.podcastId,
-      attributes: { 'podcast.id': input.podcastId },
-    });
-    yield* podcastRepo.findByIdForUser(input.podcastId, user.id);
-
-    return yield* podcastRepo.update(input.podcastId, input.data);
-  }).pipe(withUseCaseSpan('useCase.updatePodcast'));
+      return yield* podcastRepo.update(input.podcastId, input.data);
+    }),
+});

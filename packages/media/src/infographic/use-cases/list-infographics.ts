@@ -1,6 +1,5 @@
-import { getCurrentUser } from '@repo/auth/policy';
 import { Effect } from 'effect';
-import { annotateUseCaseSpan, withUseCaseSpan } from '../../shared';
+import { defineAuthedUseCase } from '../../shared';
 import { InfographicRepo } from '../repos';
 
 // =============================================================================
@@ -16,23 +15,26 @@ export interface ListInfographicsInput {
 // Use Case
 // =============================================================================
 
-export const listInfographics = (input: ListInfographicsInput = {}) =>
-  Effect.gen(function* () {
-    const user = yield* getCurrentUser;
-    const repo = yield* InfographicRepo;
+const listInfographicsUseCase = defineAuthedUseCase<ListInfographicsInput>()({
+  name: 'useCase.listInfographics',
+  span: ({ input, user }) => ({
+    collection: 'infographics',
+    attributes: {
+      'owner.id': user.id,
+      'pagination.limit': input.limit ?? 50,
+      'pagination.offset': input.offset ?? 0,
+    },
+  }),
+  run: ({ input, user }) =>
+    Effect.gen(function* () {
+      const repo = yield* InfographicRepo;
+      return yield* repo.list({
+        createdBy: user.id,
+        limit: input.limit,
+        offset: input.offset,
+      });
+    }),
+});
 
-    yield* annotateUseCaseSpan({
-      userId: user.id,
-      collection: 'infographics',
-      attributes: {
-        'owner.id': user.id,
-        'pagination.limit': input.limit ?? 50,
-        'pagination.offset': input.offset ?? 0,
-      },
-    });
-    return yield* repo.list({
-      createdBy: user.id,
-      limit: input.limit,
-      offset: input.offset,
-    });
-  }).pipe(withUseCaseSpan('useCase.listInfographics'));
+export const listInfographics = (input: ListInfographicsInput = {}) =>
+  listInfographicsUseCase(input);

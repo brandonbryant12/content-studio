@@ -1,6 +1,5 @@
-import { getCurrentUser } from '@repo/auth/policy';
 import { Effect } from 'effect';
-import { annotateUseCaseSpan, withUseCaseSpan } from '../../shared';
+import { defineAuthedUseCase } from '../../shared';
 import { PersonaRepo } from '../repos';
 
 export interface UpdatePersonaInput {
@@ -17,17 +16,17 @@ export interface UpdatePersonaInput {
   };
 }
 
-export const updatePersona = (input: UpdatePersonaInput) =>
-  Effect.gen(function* () {
-    const user = yield* getCurrentUser;
-    const personaRepo = yield* PersonaRepo;
+export const updatePersona = defineAuthedUseCase<UpdatePersonaInput>()({
+  name: 'useCase.updatePersona',
+  span: ({ input }) => ({
+    resourceId: input.personaId,
+    attributes: { 'persona.id': input.personaId },
+  }),
+  run: ({ input, user }) =>
+    Effect.gen(function* () {
+      const personaRepo = yield* PersonaRepo;
+      yield* personaRepo.findByIdForUser(input.personaId, user.id);
 
-    yield* annotateUseCaseSpan({
-      userId: user.id,
-      resourceId: input.personaId,
-      attributes: { 'persona.id': input.personaId },
-    });
-    yield* personaRepo.findByIdForUser(input.personaId, user.id);
-
-    return yield* personaRepo.update(input.personaId, input.data);
-  }).pipe(withUseCaseSpan('useCase.updatePersona'));
+      return yield* personaRepo.update(input.personaId, input.data);
+    }),
+});

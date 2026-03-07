@@ -65,7 +65,9 @@
     "@repo/typescript-config": "workspace:*",
     "@types/node": "catalog:",
     "@types/pdf-parse": "^1.1.5",
+    "@types/pg": "catalog:",
     "eslint": "catalog:",
+    "pg": "catalog:",
     "prettier": "catalog:",
     "typescript": "catalog:",
     "vitest": "catalog:"

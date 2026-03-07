@@ -1,6 +1,5 @@
-import { getCurrentUser } from '@repo/auth/policy';
 import { Effect } from 'effect';
-import { annotateUseCaseSpan, withUseCaseSpan } from '../../shared';
+import { defineAuthedUseCase } from '../../shared';
 import { PersonaRepo } from '../repos';
 
 export interface CreatePersonaInput {
@@ -13,25 +12,26 @@ export interface CreatePersonaInput {
   voiceName?: string;
 }
 
-export const createPersona = (input: CreatePersonaInput) =>
-  Effect.gen(function* () {
-    const user = yield* getCurrentUser;
-    const personaRepo = yield* PersonaRepo;
+export const createPersona = defineAuthedUseCase<CreatePersonaInput>()({
+  name: 'useCase.createPersona',
+  run: ({ input, user, annotateSpan }) =>
+    Effect.gen(function* () {
+      const personaRepo = yield* PersonaRepo;
 
-    const persona = yield* personaRepo.insert({
-      name: input.name,
-      role: input.role,
-      personalityDescription: input.personalityDescription,
-      speakingStyle: input.speakingStyle,
-      exampleQuotes: input.exampleQuotes,
-      voiceId: input.voiceId,
-      voiceName: input.voiceName,
-      createdBy: user.id,
-    });
-    yield* annotateUseCaseSpan({
-      userId: user.id,
-      resourceId: persona.id,
-      attributes: { 'persona.id': persona.id },
-    });
-    return persona;
-  }).pipe(withUseCaseSpan('useCase.createPersona'));
+      const persona = yield* personaRepo.insert({
+        name: input.name,
+        role: input.role,
+        personalityDescription: input.personalityDescription,
+        speakingStyle: input.speakingStyle,
+        exampleQuotes: input.exampleQuotes,
+        voiceId: input.voiceId,
+        voiceName: input.voiceName,
+        createdBy: user.id,
+      });
+      yield* annotateSpan({
+        resourceId: persona.id,
+        attributes: { 'persona.id': persona.id },
+      });
+      return persona;
+    }),
+});

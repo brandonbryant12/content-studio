@@ -44,10 +44,18 @@ export interface ErrorFactory {
   [key: string]: ErrorFactoryFn | undefined;
 }
 
+export interface BoundProtocolContext {
+  runtime: ServerRuntime;
+  user: User | null;
+  requestId: string;
+}
+
 /**
  * Custom error handler type - can override the default protocol-based handling.
  */
 export type CustomErrorHandler = (error: unknown) => never;
+
+type BoundHandleEffectOptions = Omit<HandleEffectOptions, 'requestId'>;
 
 interface TaggedError {
   _tag: string;
@@ -229,26 +237,24 @@ export const handleTaggedError = <E extends TaggedError>(
  * @param options - Configuration (optional span name, attributes)
  * @param customHandlers - Optional custom handlers for specific error types
  *
+ * Router handlers should generally prefer `bindEffectProtocol({ context, errors })`
+ * and call `.run(...)` / `.stream(...)`. Use this lower-level function directly only
+ * when you need to override that default binding shape.
+ *
  * @example
  * ```typescript
  * // Simple case — span auto-provided by @orpc/otel:
- * return handleEffectWithProtocol(
- *   context.runtime,
- *   context.user,
+ * return bindEffectProtocol({ context, errors }).run(
  *   getSource({ id: input.id }).pipe(
  *     Effect.flatMap(serializeSourceEffect)
  *   ),
- *   errors,
- *   { requestId: context.requestId, attributes: { 'source.id': input.id } },
+ *   { attributes: { 'source.id': input.id } },
  * );
  *
  * // Custom override for specific error
- * return handleEffectWithProtocol(
- *   context.runtime,
- *   context.user,
+ * return bindEffectProtocol({ context, errors }).run(
  *   createSource(input),
- *   errors,
- *   { requestId: context.requestId },
+ *   undefined,
  *   {
  *     SourceQuotaExceeded: (e) => {
  *       throw errors.PAYMENT_REQUIRED({ message: 'Upgrade to create more' });
@@ -336,6 +342,45 @@ export const handleEffectStreamWithProtocol = <
     options,
     customHandlers,
   ).then((stream) => streamToEventIterator(stream));
+
+/**
+ * Bind per-request protocol context once at the handler boundary.
+ */
+export const bindEffectProtocol = ({
+  context,
+  errors,
+}: {
+  context: BoundProtocolContext;
+  errors: ErrorFactory;
+}) => ({
+  run: <A, E extends { _tag: string }>(
+    effect: Effect.Effect<A, E, SharedServices>,
+    options?: BoundHandleEffectOptions,
+    customHandlers?: Record<string, CustomErrorHandler>,
+  ) =>
+    handleEffectWithProtocol(
+      context.runtime,
+      context.user,
+      effect,
+      errors,
+      { ...options, requestId: context.requestId },
+      customHandlers,
+    ),
+
+  stream: <Chunk, E extends { _tag: string }>(
+    effect: Effect.Effect<ReadableStream<Chunk>, E, SharedServices>,
+    options?: BoundHandleEffectOptions,
+    customHandlers?: Record<string, CustomErrorHandler>,
+  ) =>
+    handleEffectStreamWithProtocol(
+      context.runtime,
+      context.user,
+      effect,
+      errors,
+      { ...options, requestId: context.requestId },
+      customHandlers,
+    ),
+});
 
 /**
  * Helper type to extract error types from an Effect.

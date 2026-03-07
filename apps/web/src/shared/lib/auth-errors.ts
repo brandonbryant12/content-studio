@@ -16,8 +16,7 @@ export const MICROSOFT_SSO_AUTH_FLOW = 'microsoft-sso';
 
 const NORMALIZED_SSO_ERROR_TOKENS: Record<string, string> = {
   sso_group_membership_required: 'SSO_GROUP_MEMBERSHIP_REQUIRED',
-  microsoft_sso_group_membership_is_required:
-    'SSO_GROUP_MEMBERSHIP_REQUIRED',
+  microsoft_sso_group_membership_is_required: 'SSO_GROUP_MEMBERSHIP_REQUIRED',
   sso_authorization_failed: 'SSO_AUTHORIZATION_FAILED',
   microsoft_sso_authorization_failed: 'SSO_AUTHORIZATION_FAILED',
   access_denied: 'access_denied',
@@ -73,9 +72,14 @@ const normalizeString = (value: unknown): string | undefined => {
 };
 
 const normalizeErrorToken = (value: string): string =>
-  value.trim().toLowerCase().replace(/[\s-]+/g, '_');
+  value
+    .trim()
+    .toLowerCase()
+    .replace(/[\s-]+/g, '_');
 
-const resolveKnownErrorToken = (value: string | undefined): string | undefined =>
+const resolveKnownErrorToken = (
+  value: string | undefined,
+): string | undefined =>
   value ? NORMALIZED_SSO_ERROR_TOKENS[normalizeErrorToken(value)] : undefined;
 
 const hasMessageFragment = (

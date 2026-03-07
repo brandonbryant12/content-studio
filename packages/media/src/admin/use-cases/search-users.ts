@@ -1,7 +1,7 @@
-import { requireRole, Role } from '@repo/auth/policy';
+import { Role } from '@repo/auth/policy';
 import { Effect } from 'effect';
 import type { DbUser } from '@repo/db/schema';
-import { defineAuthedUseCase } from '../../shared';
+import { defineRoleUseCase } from '../../shared';
 import { AdminRepo } from '../repos/admin-repo';
 
 export interface SearchUsersInput {
@@ -15,8 +15,9 @@ export interface SearchUsersResult {
 
 const DEFAULT_LIMIT = 20;
 
-export const searchUsers = defineAuthedUseCase<SearchUsersInput>()({
+export const searchUsers = defineRoleUseCase<SearchUsersInput>()({
   name: 'useCase.searchUsers',
+  role: Role.ADMIN,
   span: ({ input }) => ({
     collection: 'adminUsers',
     attributes: {
@@ -26,7 +27,6 @@ export const searchUsers = defineAuthedUseCase<SearchUsersInput>()({
   }),
   run: ({ input }) =>
     Effect.gen(function* () {
-      yield* requireRole(Role.ADMIN);
       const adminRepo = yield* AdminRepo;
       const users = yield* adminRepo.searchUsers({
         query: input.query,

@@ -1,23 +1,24 @@
-import { getCurrentUser } from '@repo/auth/policy';
 import { Effect } from 'effect';
-import { annotateUseCaseSpan, withUseCaseSpan } from '../../shared';
+import { defineAuthedUseCase } from '../../shared';
 import { StylePresetRepo } from '../repos';
 
 // =============================================================================
 // Use Case
 // =============================================================================
 
-export const listStylePresets = () =>
-  Effect.gen(function* () {
-    const user = yield* getCurrentUser;
-    const repo = yield* StylePresetRepo;
+const listStylePresetsUseCase = defineAuthedUseCase<void>()({
+  name: 'useCase.listStylePresets',
+  span: ({ user }) => ({
+    collection: 'stylePresets',
+    attributes: {
+      'owner.id': user.id,
+    },
+  }),
+  run: ({ user }) =>
+    Effect.gen(function* () {
+      const repo = yield* StylePresetRepo;
+      return yield* repo.list(user.id);
+    }),
+});
 
-    yield* annotateUseCaseSpan({
-      userId: user.id,
-      collection: 'stylePresets',
-      attributes: {
-        'owner.id': user.id,
-      },
-    });
-    return yield* repo.list(user.id);
-  }).pipe(withUseCaseSpan('useCase.listStylePresets'));
+export const listStylePresets = () => listStylePresetsUseCase(undefined);

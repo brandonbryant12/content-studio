@@ -1,4 +1,3 @@
-import { getCurrentUser } from '@repo/auth/policy';
 import {
   generateInfographicId,
   InfographicStatus,
@@ -8,7 +7,7 @@ import {
   type StyleProperty,
 } from '@repo/db/schema';
 import { Effect } from 'effect';
-import { annotateUseCaseSpan, withUseCaseSpan } from '../../shared';
+import { defineAuthedUseCase } from '../../shared';
 import { getSource } from '../../source/use-cases/get-source';
 import { getSourceContent } from '../../source/use-cases/get-source-content';
 import { InfographicRepo, type InsertInfographic } from '../repos';
@@ -77,46 +76,47 @@ const buildSourcePrompt = ({
   ].join('\n\n');
 };
 
-export const createInfographic = (input: CreateInfographicInput) =>
-  Effect.gen(function* () {
-    const user = yield* getCurrentUser;
-    const repo = yield* InfographicRepo;
-    const trimmedPrompt = input.prompt?.trim();
-    const explicitPrompt =
-      trimmedPrompt && trimmedPrompt.length > 0 ? trimmedPrompt : undefined;
+export const createInfographic = defineAuthedUseCase<CreateInfographicInput>()({
+  name: 'useCase.createInfographic',
+  run: ({ input, user, annotateSpan }) =>
+    Effect.gen(function* () {
+      const repo = yield* InfographicRepo;
+      const trimmedPrompt = input.prompt?.trim();
+      const explicitPrompt =
+        trimmedPrompt && trimmedPrompt.length > 0 ? trimmedPrompt : undefined;
 
-    const sourceId: SourceId | undefined = input.sourceId;
-    const sourceEntry = sourceId
-      ? yield* getSource({ id: sourceId })
-      : undefined;
-    const sourceContent = sourceId
-      ? (yield* getSourceContent({ id: sourceId })).content
-      : undefined;
+      const sourceId: SourceId | undefined = input.sourceId;
+      const sourceEntry = sourceId
+        ? yield* getSource({ id: sourceId })
+        : undefined;
+      const sourceContent = sourceId
+        ? (yield* getSourceContent({ id: sourceId })).content
+        : undefined;
 
-    const prompt =
-      explicitPrompt ??
-      (sourceEntry && sourceContent !== undefined
-        ? buildSourcePrompt({
-            title: sourceEntry.title,
-            content: sourceContent,
-            outline: sourceEntry.researchConfig?.outline,
-          })
-        : undefined);
+      const prompt =
+        explicitPrompt ??
+        (sourceEntry && sourceContent !== undefined
+          ? buildSourcePrompt({
+              title: sourceEntry.title,
+              content: sourceContent,
+              outline: sourceEntry.researchConfig?.outline,
+            })
+          : undefined);
 
-    const infographic = yield* repo.insert({
-      id: generateInfographicId(),
-      title: input.title,
-      prompt,
-      styleProperties: sanitizeStyleProperties(input.styleProperties),
-      format: input.format,
-      status: InfographicStatus.DRAFT,
-      createdBy: user.id,
-      ...(sourceId ? { sourceId } : {}),
-    } satisfies InsertInfographic);
-    yield* annotateUseCaseSpan({
-      userId: user.id,
-      resourceId: infographic.id,
-      attributes: { 'infographic.id': infographic.id },
-    });
-    return infographic;
-  }).pipe(withUseCaseSpan('useCase.createInfographic'));
+      const infographic = yield* repo.insert({
+        id: generateInfographicId(),
+        title: input.title,
+        prompt,
+        styleProperties: sanitizeStyleProperties(input.styleProperties),
+        format: input.format,
+        status: InfographicStatus.DRAFT,
+        createdBy: user.id,
+        ...(sourceId ? { sourceId } : {}),
+      } satisfies InsertInfographic);
+      yield* annotateSpan({
+        resourceId: infographic.id,
+        attributes: { 'infographic.id': infographic.id },
+      });
+      return infographic;
+    }),
+});

@@ -13,8 +13,8 @@ flowchart LR
 
 1. **Use safety primitives** for queue and content operations (`enqueueJob`, `replaceTextContentSafely`, and similar helpers) <!-- enforced-by: eslint, invariant-test -->
 2. **Return raw domain data** from use cases; handlers serialize it <!-- enforced-by: invariant-test -->
-3. **Prefer `defineAuthedUseCase(...)` for authenticated media use cases**; otherwise use `withUseCaseSpan(...)` and `annotateUseCaseSpan(...)` explicitly so required trace attributes are attached <!-- enforced-by: invariant-test -->
-4. **Get the user via FiberRef** — either `yield* getCurrentUser` directly or the `defineAuthedUseCase(...)` wrapper, never from direct HTTP context access <!-- enforced-by: architecture -->
+3. **Prefer `defineAuthedUseCase(...)` for standard authenticated media use cases and `defineRoleUseCase(...)` for role-gated flows**; otherwise use `withUseCaseSpan(...)` and `annotateUseCaseSpan(...)` explicitly so required trace attributes are attached <!-- enforced-by: invariant-test -->
+4. **Get the user via FiberRef** — either `yield* getCurrentUser` / `yield* requireRole(...)` directly or the `defineAuthedUseCase(...)` / `defineRoleUseCase(...)` wrappers, never from direct HTTP context access <!-- enforced-by: architecture -->
 5. **Let Effect infer types** and export derived aliases when needed <!-- enforced-by: types -->
 
 ## File Location
@@ -30,24 +30,50 @@ One file per use case, re-exported from the domain `index.ts`.
 > See `packages/media/src/source/use-cases/get-source.ts`
 
 ```typescript
-import { Effect } from 'effect';
-import { defineAuthedUseCase } from '../../shared';
-import { SourceRepo } from '../repos';
+import { Effect } from "effect";
+import { defineAuthedUseCase } from "../../shared";
+import { SourceRepo } from "../repos";
 
 export interface GetSourceInput {
   id: string;
 }
 
 export const getSource = defineAuthedUseCase<GetSourceInput>()({
-  name: 'useCase.getSource',
+  name: "useCase.getSource",
   span: ({ input }) => ({
     resourceId: input.id,
-    attributes: { 'source.id': input.id },
+    attributes: { "source.id": input.id },
   }),
   run: ({ input, user }) =>
     Effect.gen(function* () {
       const sourceRepo = yield* SourceRepo;
       return yield* sourceRepo.findByIdForUser(input.id, user.id);
+    }),
+});
+```
+
+For admin-only or other role-gated flows, use `defineRoleUseCase(...)` so the
+role check happens before use-case span annotation:
+
+```typescript
+import { Role } from "@repo/auth/policy";
+import { Effect } from "effect";
+import { defineRoleUseCase } from "../../shared";
+import { ActivityLogRepo } from "../repos/activity-log-repo";
+
+export const listActivity = defineRoleUseCase<ListActivityInput>()({
+  name: "useCase.listActivity",
+  role: Role.ADMIN,
+  span: ({ input }) => ({
+    collection: "activity",
+    attributes: {
+      "activity.limit": input.limit ?? 25,
+    },
+  }),
+  run: ({ input }) =>
+    Effect.gen(function* () {
+      const repo = yield* ActivityLogRepo;
+      return yield* repo.list({ limit: input.limit ?? 25 });
     }),
 });
 ```
@@ -70,7 +96,7 @@ export type GetSourceError = Effect.Effect.Error<ReturnType<typeof getSource>>;
 
 ### 3. Span Naming <!-- enforced-by: invariant-test -->
 
-Use `defineAuthedUseCase({ name: 'useCase.{ActionName}', ... })` for authenticated flows. For exceptions, use `withUseCaseSpan('useCase.{ActionName}')` and attach domain IDs with `annotateUseCaseSpan(...)`. Entity-scoped flows use `resourceId`; collection-scoped flows use `collection`.
+Use `defineAuthedUseCase({ name: 'useCase.{ActionName}', ... })` for standard authenticated flows and `defineRoleUseCase({ name: 'useCase.{ActionName}', role: Role.ADMIN, ... })` for role-gated flows. For exceptions, use `withUseCaseSpan('useCase.{ActionName}')` and attach domain IDs with `annotateUseCaseSpan(...)`. Entity-scoped flows use `resourceId`; collection-scoped flows use `collection`.
 
 ### 4. Compose Use Cases Carefully <!-- enforced-by: architecture -->
 
@@ -78,10 +104,10 @@ If a flow truly needs another use case, call it explicitly rather than duplicati
 
 ```typescript
 export const updateSource = defineAuthedUseCase<UpdateSourceInput>()({
-  name: 'useCase.updateSource',
+  name: "useCase.updateSource",
   span: ({ input }) => ({
     resourceId: input.id,
-    attributes: { 'source.id': input.id },
+    attributes: { "source.id": input.id },
   }),
   run: ({ input, user }) =>
     Effect.gen(function* () {
@@ -98,19 +124,23 @@ export const updateSource = defineAuthedUseCase<UpdateSourceInput>()({
 Use `Effect.all(..., { concurrency })` instead of sequential loops when work can run safely in parallel.
 
 ```typescript
-yield* Effect.all(sourceIds.map((id) => getSource({ id })), {
-  concurrency: 10,
-});
+yield *
+  Effect.all(
+    sourceIds.map((id) => getSource({ id })),
+    {
+      concurrency: 10,
+    },
+  );
 ```
 
 ### 6. Safety Primitives For High-Risk Ops <!-- enforced-by: eslint, invariant-test -->
 
-| Operation | Required primitive |
-|---|---|
-| Job polling | `getOwnedJobOrNotFound(jobId)` |
-| Enqueue | `enqueueJob({ type, payload, userId })` |
-| State + enqueue | `withTransactionalStateAndEnqueue(effect, compensate)` |
-| Content replacement | `replaceTextContentSafely(...)` |
+| Operation           | Required primitive                                     |
+| ------------------- | ------------------------------------------------------ |
+| Job polling         | `getOwnedJobOrNotFound(jobId)`                         |
+| Enqueue             | `enqueueJob({ type, payload, userId })`                |
+| State + enqueue     | `withTransactionalStateAndEnqueue(effect, compensate)` |
+| Content replacement | `replaceTextContentSafely(...)`                        |
 
 See [`docs/patterns/safety-primitives.md`](./safety-primitives.md).
 
@@ -148,7 +178,7 @@ When persisting structured user input such as metadata or style controls:
 
 ```typescript
 // packages/media/src/{domain}/use-cases/index.ts
-export * from './get-source';
-export * from './create-source';
+export * from "./get-source";
+export * from "./create-source";
 // ...
 ```

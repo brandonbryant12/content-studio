@@ -1,24 +1,18 @@
 import { listVoicesWithPreviews, previewVoice } from '@repo/ai/tts';
 import { Effect } from 'effect';
-import { handleEffectWithProtocol } from '../effect-handler';
+import { bindEffectProtocol } from '../effect-handler';
 import { protectedProcedure } from '../orpc';
 
 const voicesRouter = {
   list: protectedProcedure.voices.list.handler(async ({ context, errors }) => {
-    return handleEffectWithProtocol(
-      context.runtime,
-      context.user,
+    return bindEffectProtocol({ context, errors }).run(
       listVoicesWithPreviews({}),
-      errors,
-      { requestId: context.requestId },
     );
   }),
 
   preview: protectedProcedure.voices.preview.handler(
-    async ({ context, input, errors }) => {
-      return handleEffectWithProtocol(
-        context.runtime,
-        context.user,
+    async ({ context, input, errors }) =>
+      bindEffectProtocol({ context, errors }).run(
         previewVoice(input).pipe(
           Effect.map((result) => ({
             audioContent: result.audioContent.toString('base64'),
@@ -26,13 +20,10 @@ const voicesRouter = {
             voiceId: result.voiceId,
           })),
         ),
-        errors,
         {
-          requestId: context.requestId,
           attributes: { 'voice.id': input.voiceId },
         },
-      );
-    },
+      ),
   ),
 };
 

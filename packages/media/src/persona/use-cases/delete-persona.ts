@@ -1,23 +1,22 @@
-import { getCurrentUser } from '@repo/auth/policy';
 import { Effect } from 'effect';
-import { annotateUseCaseSpan, withUseCaseSpan } from '../../shared';
+import { defineAuthedUseCase } from '../../shared';
 import { PersonaRepo } from '../repos';
 
 export interface DeletePersonaInput {
   personaId: string;
 }
 
-export const deletePersona = (input: DeletePersonaInput) =>
-  Effect.gen(function* () {
-    const user = yield* getCurrentUser;
-    const personaRepo = yield* PersonaRepo;
+export const deletePersona = defineAuthedUseCase<DeletePersonaInput>()({
+  name: 'useCase.deletePersona',
+  span: ({ input }) => ({
+    resourceId: input.personaId,
+    attributes: { 'persona.id': input.personaId },
+  }),
+  run: ({ input, user }) =>
+    Effect.gen(function* () {
+      const personaRepo = yield* PersonaRepo;
+      yield* personaRepo.findByIdForUser(input.personaId, user.id);
 
-    yield* annotateUseCaseSpan({
-      userId: user.id,
-      resourceId: input.personaId,
-      attributes: { 'persona.id': input.personaId },
-    });
-    yield* personaRepo.findByIdForUser(input.personaId, user.id);
-
-    return yield* personaRepo.delete(input.personaId);
-  }).pipe(withUseCaseSpan('useCase.deletePersona'));
+      return yield* personaRepo.delete(input.personaId);
+    }),
+});

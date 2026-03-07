@@ -2,7 +2,7 @@
 
 ## Golden Principles
 
-1. Every media use case must use `defineAuthedUseCase(...)` or explicitly combine `withUseCaseSpan(...)` and `annotateUseCaseSpan(...)`. <!-- enforced-by: invariant-test -->
+1. Every media use case must use `defineAuthedUseCase(...)`, `defineRoleUseCase(...)`, or explicitly combine `withUseCaseSpan(...)` and `annotateUseCaseSpan(...)`. <!-- enforced-by: invariant-test -->
 2. Every handler call gets an automatic span via `@orpc/otel`. <!-- enforced-by: runtime -->
 3. Avoid `console.log` in `packages/` directories unless an explicit lint exemption is justified. <!-- enforced-by: eslint -->
 
@@ -61,16 +61,12 @@ Handlers rely on the automatic oRPC span for the outer request. Use case, repo, 
 ## Handler Span Integration
 <!-- enforced-by: @orpc/otel auto-instrumentation -->
 
-`handleEffectWithProtocol` does not need a manual outer span in standard handlers. Pass request metadata and attributes instead; they annotate the active auto-created handler span. If `span` is provided, it creates an additional child span under that handler span.
+`bindEffectProtocol(...).run(...)` does not need a manual outer span in standard handlers. Pass request metadata and attributes instead; they annotate the active auto-created handler span through `handleEffectWithProtocol(...)`. If `span` is provided, it creates an additional child span under that handler span.
 
 ```typescript
-return handleEffectWithProtocol(
-  context.runtime,
-  context.user,
+return bindEffectProtocol({ context, errors }).run(
   getSource({ id: input.id }).pipe(Effect.flatMap(serializeSourceEffect)),
-  errors,
   {
-    requestId: context.requestId,
     attributes: { 'source.id': input.id },
   },
 );
@@ -89,6 +85,25 @@ export const getSource = defineAuthedUseCase<GetSourceInput>()({
     attributes: { 'source.id': input.id },
   }),
   run: ({ input, user }) =>
+    Effect.gen(function* () {
+      // use case logic...
+    }),
+});
+```
+
+Role-gated flows should prefer `defineRoleUseCase(...)`, which runs `requireRole(...)` before the use-case span is annotated:
+
+```typescript
+export const listActivity = defineRoleUseCase<ListActivityInput>()({
+  name: 'useCase.listActivity',
+  role: Role.ADMIN,
+  span: ({ input }) => ({
+    collection: 'activity',
+    attributes: {
+      'activity.limit': input.limit ?? 25,
+    },
+  }),
+  run: ({ input }) =>
     Effect.gen(function* () {
       // use case logic...
     }),

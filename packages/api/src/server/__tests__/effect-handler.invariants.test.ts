@@ -10,6 +10,7 @@ const effectHandlerPath = path.join(
   repoRoot,
   'packages/api/src/server/effect-handler.ts',
 );
+const routerDirPath = path.join(repoRoot, 'packages/api/src/server/router');
 const readEffectHandler = () => fs.readFileSync(effectHandlerPath, 'utf-8');
 
 const createFactory = (code: string) => (options: unknown) => ({
@@ -109,6 +110,31 @@ describe('effect-handler fallback invariants', () => {
 
     expect(source).toContain('handleEffectWithProtocol(');
     expect(source).toContain('handleEffectStreamWithProtocol');
+  });
+
+  it('supports binding request protocol context once per handler', () => {
+    const source = readEffectHandler();
+
+    expect(source).toContain('export const bindEffectProtocol =');
+    expect(source).toContain('{ ...options, requestId: context.requestId }');
+    expect(source).toContain('handleEffectStreamWithProtocol(');
+  });
+
+  it('router files do not call protocol helpers directly when request binding is available', () => {
+    const routerFiles = fs
+      .readdirSync(routerDirPath)
+      .filter(
+        (file) =>
+          file.endsWith('.ts') &&
+          !['events.ts', 'index.ts', 'log-activity.ts'].includes(file),
+      );
+
+    for (const file of routerFiles) {
+      const source = fs.readFileSync(path.join(routerDirPath, file), 'utf-8');
+
+      expect(source).not.toContain('handleEffectWithProtocol(');
+      expect(source).not.toContain('handleEffectStreamWithProtocol(');
+    }
   });
 
   it('does not log response payload contents for output validation failures', () => {
