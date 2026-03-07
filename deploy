@@ -50,9 +50,24 @@ extract_host() {
   echo "$1" | sed -nE 's|^[a-zA-Z][a-zA-Z0-9+.-]*://\[?([^]/:]+)\]?.*$|\1|p'
 }
 
+default_port_for_scheme() {
+  case "$1" in
+    http) echo "80" ;;
+    https) echo "443" ;;
+    *) echo "" ;;
+  esac
+}
+
 build_url() {
   local scheme="$1" host="$2" port="$3"
-  echo "${scheme}://${host}:${port}"
+  local default_port
+  default_port=$(default_port_for_scheme "$scheme")
+
+  if [[ -z "$port" || "$port" == "$default_port" ]]; then
+    echo "${scheme}://${host}"
+  else
+    echo "${scheme}://${host}:${port}"
+  fi
 }
 
 build_web_origin() {
@@ -69,9 +84,14 @@ build_server_origin() {
   build_url "$scheme" "$host_ip" "$server_port"
 }
 
-refresh_public_urls() {
-  PUBLIC_WEB_URL="$(build_web_origin)"
-  PUBLIC_SERVER_URL="$(build_server_origin)"
+ensure_public_urls() {
+  if [[ -z "${PUBLIC_WEB_URL:-}" ]]; then
+    PUBLIC_WEB_URL="$(build_web_origin)"
+  fi
+
+  if [[ -z "${PUBLIC_SERVER_URL:-}" ]]; then
+    PUBLIC_SERVER_URL="$(build_server_origin)"
+  fi
 }
 
 normalize_host_ip() {
@@ -89,6 +109,17 @@ normalize_host_ip() {
   if [[ -z "$HOST_IP" ]]; then
     warn "HOST_IP resolved to empty value. Falling back to localhost."
     HOST_IP="localhost"
+  fi
+}
+
+validate_public_url() {
+  local name="$1" value="$2"
+  local scheme
+  scheme=$(extract_scheme "$value")
+
+  if [[ -z "$value" || -z "$scheme" ]]; then
+    error "${name} must be a full URL such as https://studio.example.com"
+    exit 1
   fi
 }
 
@@ -115,10 +146,17 @@ normalize_cors_origins() {
     fi
   done
 
+  if [[ -n "${PUBLIC_WEB_URL:-}" && ",${normalized_origins}," != *",${PUBLIC_WEB_URL},"* ]]; then
+    normalized_origins="${normalized_origins:+${normalized_origins},}${PUBLIC_WEB_URL}"
+  fi
+
   CORS_ORIGINS="${normalized_origins:-*}"
 }
 
 validate_runtime_constraints() {
+  validate_public_url "PUBLIC_WEB_URL" "${PUBLIC_WEB_URL:-}"
+  validate_public_url "PUBLIC_SERVER_URL" "${PUBLIC_SERVER_URL:-}"
+
   if [[ -n "${HTTPS_PROXY:-}" || -n "${HTTP_PROXY:-}" ]]; then
     if [[ -z "${NODE_EXTRA_CA_CERTS:-}" ]]; then
       error "NODE_EXTRA_CA_CERTS is required when HTTPS_PROXY or HTTP_PROXY is configured."
@@ -127,8 +165,13 @@ validate_runtime_constraints() {
   fi
 
   if [[ "${DEPLOY_NODE_ENV:-development}" == "production" ]]; then
-    if [[ "${PUBLIC_URL_SCHEME:-http}" != "https" ]]; then
-      error "PUBLIC_URL_SCHEME must be https when DEPLOY_NODE_ENV=production."
+    if [[ "$(extract_scheme "${PUBLIC_WEB_URL:-}")" != "https" ]]; then
+      error "PUBLIC_WEB_URL must use https when DEPLOY_NODE_ENV=production."
+      exit 1
+    fi
+
+    if [[ "$(extract_scheme "${PUBLIC_SERVER_URL:-}")" != "https" ]]; then
+      error "PUBLIC_SERVER_URL must use https when DEPLOY_NODE_ENV=production."
       exit 1
     fi
 
@@ -238,6 +281,11 @@ load_app_defaults() {
   web_url=$(read_env_value "$server_env" "PUBLIC_WEB_URL")
   [[ -z "$web_url" ]] && web_url=$(read_env_value "$web_env" "PUBLIC_WEB_URL")
   [[ -n "$web_url" ]] && _DEF_WEB_PORT=$(extract_port "$web_url")
+  _DEF_PUBLIC_WEB_URL="$web_url"
+
+  local server_public_url
+  server_public_url=$(read_env_value "$server_env" "PUBLIC_SERVER_URL")
+  _DEF_PUBLIC_SERVER_URL="$server_public_url"
 
   _DEF_HOST_IP=""
   if [[ -n "$web_url" ]]; then
@@ -249,8 +297,6 @@ load_app_defaults() {
     _DEF_PUBLIC_URL_SCHEME=$(extract_scheme "$web_url")
   fi
   if [[ -z "$_DEF_PUBLIC_URL_SCHEME" ]]; then
-    local server_public_url
-    server_public_url=$(read_env_value "$server_env" "PUBLIC_SERVER_URL")
     if [[ -n "$server_public_url" ]]; then
       _DEF_PUBLIC_URL_SCHEME=$(extract_scheme "$server_public_url")
       [[ -z "$_DEF_HOST_IP" ]] && _DEF_HOST_IP=$(extract_host "$server_public_url")
@@ -266,11 +312,15 @@ load_app_defaults() {
   [[ -z "$_DEF_CORS_ORIGINS" ]] && _DEF_CORS_ORIGINS=$(read_env_value "$existing_env" "CORS_ORIGINS")
   [[ -z "$_DEF_SERVER_PORT" ]] && _DEF_SERVER_PORT=$(read_env_value "$existing_env" "SERVER_PORT")
   [[ -z "$_DEF_WEB_PORT" ]] && _DEF_WEB_PORT=$(read_env_value "$existing_env" "WEB_PORT")
+  [[ -z "$_DEF_PUBLIC_WEB_URL" ]] && _DEF_PUBLIC_WEB_URL=$(read_env_value "$existing_env" "PUBLIC_WEB_URL")
+  [[ -z "$_DEF_PUBLIC_SERVER_URL" ]] && _DEF_PUBLIC_SERVER_URL=$(read_env_value "$existing_env" "PUBLIC_SERVER_URL")
   _DEF_COMPOSE_PROJECT_NAME=$(read_env_value "$existing_env" "COMPOSE_PROJECT_NAME")
   [[ -z "$_DEF_HTTPS_PROXY" ]] && _DEF_HTTPS_PROXY=$(read_env_value "$existing_env" "HTTPS_PROXY")
   [[ -z "$_DEF_HTTP_PROXY" ]] && _DEF_HTTP_PROXY=$(read_env_value "$existing_env" "HTTP_PROXY")
   [[ -z "$_DEF_NO_PROXY" ]] && _DEF_NO_PROXY=$(read_env_value "$existing_env" "NO_PROXY")
   [[ -z "$_DEF_NODE_EXTRA_CA_CERTS" ]] && _DEF_NODE_EXTRA_CA_CERTS=$(read_env_value "$existing_env" "NODE_EXTRA_CA_CERTS")
+  _DEF_WEB_BIND_IP=$(read_env_value "$existing_env" "WEB_BIND_IP")
+  _DEF_SERVER_BIND_IP=$(read_env_value "$existing_env" "SERVER_BIND_IP")
   _DEF_POSTGRES_BIND_IP=$(read_env_value "$existing_env" "POSTGRES_BIND_IP")
   _DEF_REDIS_BIND_IP=$(read_env_value "$existing_env" "REDIS_BIND_IP")
 }
@@ -608,10 +658,17 @@ collect_variables() {
 
   # ── Ports ────────────────────────────────────────────────────────────────
   header "Port Configuration"
-  printf "  ${DIM}Change these if you have port conflicts.${RESET}\n\n"
+  printf "  ${DIM}Change these if you have port conflicts.${RESET}\n"
+  printf "  ${DIM}For Nginx/reverse-proxy setups, bind web/server to 127.0.0.1.${RESET}\n\n"
 
   prompt WEB_PORT        "Web app port"         "${_DEF_WEB_PORT:-8086}"
   prompt SERVER_PORT     "API server port"      "${_DEF_SERVER_PORT:-3036}"
+  local web_bind_default="${_DEF_WEB_BIND_IP:-}"
+  [[ -z "$web_bind_default" ]] && web_bind_default=$([[ "$TRUST_PROXY" == "true" ]] && echo "127.0.0.1" || echo "0.0.0.0")
+  local server_bind_default="${_DEF_SERVER_BIND_IP:-}"
+  [[ -z "$server_bind_default" ]] && server_bind_default=$([[ "$TRUST_PROXY" == "true" ]] && echo "127.0.0.1" || echo "0.0.0.0")
+  prompt WEB_BIND_IP     "Web app bind IP (0.0.0.0 public, 127.0.0.1 reverse-proxy only)" "$web_bind_default"
+  prompt SERVER_BIND_IP  "API server bind IP (0.0.0.0 public, 127.0.0.1 reverse-proxy only)" "$server_bind_default"
   prompt POSTGRES_PORT   "PostgreSQL port"      "5432"
   prompt POSTGRES_BIND_IP "PostgreSQL bind IP (127.0.0.1 local-only, 0.0.0.0 external)" "${_DEF_POSTGRES_BIND_IP:-127.0.0.1}"
   prompt REDIS_PORT      "Redis port"           "6379"
@@ -619,10 +676,39 @@ collect_variables() {
   prompt MINIO_API_PORT  "MinIO S3 API port"    "9001"
   prompt MINIO_UI_PORT   "MinIO console port"   "9090"
 
-  refresh_public_urls
+  # ── Public URLs ──────────────────────────────────────────────────────────
+  header "Public URLs"
+  printf "  ${DIM}These are the browser-visible URLs used for auth callbacks, API calls, and signed links.${RESET}\n"
+  printf "  ${DIM}For same-host Nginx on 443, use https://<your-domain> for both values.${RESET}\n\n"
+
+  local public_web_default="${_DEF_PUBLIC_WEB_URL:-}"
+  if [[ -z "$public_web_default" ]]; then
+    if [[ "$TRUST_PROXY" == "true" ]]; then
+      public_web_default="$(build_url "$PUBLIC_URL_SCHEME" "$HOST_IP" "")"
+    else
+      public_web_default="$(build_web_origin)"
+    fi
+  fi
+  prompt PUBLIC_WEB_URL "Public web URL" "$public_web_default"
+
+  local public_server_default="${_DEF_PUBLIC_SERVER_URL:-}"
+  if [[ -z "$public_server_default" ]]; then
+    if [[ "$TRUST_PROXY" == "true" ]]; then
+      public_server_default="$PUBLIC_WEB_URL"
+    else
+      public_server_default="$(build_server_origin)"
+    fi
+  fi
+  prompt PUBLIC_SERVER_URL "Public API URL" "$public_server_default"
 
   # ── CORS ─────────────────────────────────────────────────────────────────
-  CORS_ORIGINS="${_DEF_CORS_ORIGINS:-*}"
+  if [[ -n "${_DEF_CORS_ORIGINS:-}" ]]; then
+    CORS_ORIGINS="$_DEF_CORS_ORIGINS"
+  elif [[ "$TRUST_PROXY" == "true" ]]; then
+    CORS_ORIGINS="$PUBLIC_WEB_URL"
+  else
+    CORS_ORIGINS="*"
+  fi
 
   normalize_cors_origins
   info "CORS_ORIGINS set to: ${CORS_ORIGINS}"
@@ -656,6 +742,8 @@ PUBLIC_SERVER_URL=${PUBLIC_SERVER_URL}
 # ── Ports ────────────────────────────────────────────────────────────────────
 WEB_PORT=${WEB_PORT}
 SERVER_PORT=${SERVER_PORT}
+WEB_BIND_IP=${WEB_BIND_IP}
+SERVER_BIND_IP=${SERVER_BIND_IP}
 POSTGRES_PORT=${POSTGRES_PORT}
 POSTGRES_BIND_IP=${POSTGRES_BIND_IP}
 REDIS_PORT=${REDIS_PORT}
@@ -719,11 +807,13 @@ build_and_run() {
   COMPOSE_PROJECT_NAME="${COMPOSE_PROJECT_NAME:-content-studio-deploy}"
   PUBLIC_URL_SCHEME="${PUBLIC_URL_SCHEME:-http}"
   TRUST_PROXY="${TRUST_PROXY:-false}"
+  WEB_BIND_IP="${WEB_BIND_IP:-0.0.0.0}"
+  SERVER_BIND_IP="${SERVER_BIND_IP:-0.0.0.0}"
   POSTGRES_BIND_IP="${POSTGRES_BIND_IP:-127.0.0.1}"
   REDIS_BIND_IP="${REDIS_BIND_IP:-127.0.0.1}"
 
   normalize_host_ip
-  refresh_public_urls
+  ensure_public_urls
   normalize_cors_origins
   validate_runtime_constraints
 
@@ -796,8 +886,10 @@ build_and_run() {
 
   printf "  ${GREEN}Mode${RESET}           %s\n" "$DEPLOY_NODE_ENV"
   printf "  ${GREEN}Project${RESET}        %s\n" "$COMPOSE_PROJECT_NAME"
-  printf "  ${GREEN}Web App${RESET}        %s\n" "$PUBLIC_WEB_URL"
-  printf "  ${GREEN}API Server${RESET}     %s\n" "$PUBLIC_SERVER_URL"
+  printf "  ${GREEN}Public Web${RESET}     %s\n" "$PUBLIC_WEB_URL"
+  printf "  ${GREEN}Public API${RESET}     %s\n" "$PUBLIC_SERVER_URL"
+  printf "  ${GREEN}Web Bind${RESET}       %s:%s -> 8080\n" "$WEB_BIND_IP" "$WEB_PORT"
+  printf "  ${GREEN}API Bind${RESET}       %s:%s -> 3036\n" "$SERVER_BIND_IP" "$SERVER_PORT"
   printf "  ${GREEN}MinIO Console${RESET}  http://%s:%s  ${DIM}(minioadmin/minioadmin)${RESET}\n" "$HOST_IP" "$MINIO_UI_PORT"
   printf "  ${GREEN}MinIO S3 API${RESET}   http://%s:%s\n" "$HOST_IP" "$MINIO_API_PORT"
   printf "  ${GREEN}PostgreSQL${RESET}     %s:%s   ${DIM}(postgres/postgres)${RESET}\n" "$POSTGRES_BIND_IP" "$POSTGRES_PORT"

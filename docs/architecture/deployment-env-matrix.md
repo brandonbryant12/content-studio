@@ -144,9 +144,20 @@ Special behavior:
 Minimal public URL alignment for same-domain deployment:
 
 ```env
-PUBLIC_WEB_URL=https://studio.example.com
-PUBLIC_SERVER_URL=https://studio.example.com
+PUBLIC_WEB_URL=https://mydomain.com
+PUBLIC_SERVER_URL=https://mydomain.com
 CORS_ORIGINS=*
+```
+
+If nginx/ingress terminates TLS on the same VM, keep the public URLs above and
+bind the Docker-published web/API ports to loopback instead of exposing them
+directly:
+
+```env
+WEB_BIND_IP=127.0.0.1
+SERVER_BIND_IP=127.0.0.1
+WEB_PORT=8086
+SERVER_PORT=3036
 ```
 
 If you expose web/server on different ports and want a strict allowlist, include the web origin and port in `CORS_ORIGINS`.

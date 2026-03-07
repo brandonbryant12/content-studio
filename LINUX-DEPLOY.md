@@ -7,6 +7,7 @@ This guide is for bringing Content Studio up on a fresh Linux VM using Docker Co
 Running `pnpm deploy:linux` (or `./deploy`) will:
 
 - prompt for domain/host, runtime mode, ports, auth, AI, CORS, telemetry
+- prompt for browser-visible public URLs separately from internal bind ports
 - normalize CORS and always include the configured web origin
 - generate `.env.deploy` at repo root (mode `600`)
 - run in an isolated Compose project by default so deploy state does not reuse local-dev volumes
@@ -74,6 +75,7 @@ Important generated keys include:
 - `PUBLIC_SERVER_URL`
 - `TRUST_PROXY`
 - `WEB_PORT`, `SERVER_PORT`, `POSTGRES_PORT`, `REDIS_PORT`, `MINIO_API_PORT`, `MINIO_UI_PORT`
+- `WEB_BIND_IP`, `SERVER_BIND_IP`
 - `POSTGRES_BIND_IP`, `REDIS_BIND_IP`
 - `HTTPS_PROXY`, `HTTP_PROXY`, `NO_PROXY`, `NODE_EXTRA_CA_CERTS`
 
@@ -105,7 +107,8 @@ Expected one-shot behavior:
 
 ## Endpoints
 
-`./deploy` prints the final URLs from your selected host/domain and ports.
+`./deploy` prints the final browser-visible public URLs plus the local bind
+ports that Docker publishes on the VM.
 
 Typical defaults:
 
@@ -114,20 +117,124 @@ Typical defaults:
 - MinIO S3 API: `http://<HOST_IP>:9001`
 - MinIO Console: `http://<HOST_IP>:9090`
 
+For same-host HTTPS ingress via nginx, a common shape is:
+
+- `PUBLIC_WEB_URL=https://mydomain.com`
+- `PUBLIC_SERVER_URL=https://mydomain.com`
+- `WEB_BIND_IP=127.0.0.1`
+- `SERVER_BIND_IP=127.0.0.1`
+- `WEB_PORT=8086`
+- `SERVER_PORT=3036`
+
+That means browsers only ever see `https://mydomain.com`, while nginx
+proxies `/` to the web container and `/api` plus `/storage` to the server
+container on loopback.
+
+## Nginx Reverse Proxy (HTTPS CNAME)
+
+If you are fronting the stack with nginx on the same VM, use `production`
+mode in `./deploy` and set:
+
+```env
+HOST_IP=mydomain.com
+PUBLIC_URL_SCHEME=https
+DEPLOY_NODE_ENV=production
+TRUST_PROXY=true
+AUTH_MODE=sso-only
+WEB_BIND_IP=127.0.0.1
+SERVER_BIND_IP=127.0.0.1
+WEB_PORT=8086
+SERVER_PORT=3036
+PUBLIC_WEB_URL=https://mydomain.com
+PUBLIC_SERVER_URL=https://mydomain.com
+CORS_ORIGINS=https://mydomain.com
+```
+
+Why this matters:
+
+- `PUBLIC_WEB_URL` and `PUBLIC_SERVER_URL` are what the browser, auth flows,
+  and signed media URLs use.
+- `WEB_PORT` and `SERVER_PORT` are only the local VM ports nginx proxies to.
+- `TRUST_PROXY=true` is required so the app respects `X-Forwarded-*` headers.
+
+Recommended nginx config:
+
+```nginx
+map $http_upgrade $connection_upgrade {
+  default upgrade;
+  '' close;
+}
+
+server {
+  listen 80;
+  listen [::]:80;
+  server_name mydomain.com;
+  return 301 https://$host$request_uri;
+}
+
+server {
+  listen 443 ssl http2;
+  listen [::]:443 ssl http2;
+  server_name mydomain.com;
+
+  ssl_certificate /etc/letsencrypt/live/mydomain.com/fullchain.pem;
+  ssl_certificate_key /etc/letsencrypt/live/mydomain.com/privkey.pem;
+
+  client_max_body_size 100m;
+
+  proxy_set_header Host $host;
+  proxy_set_header X-Real-IP $remote_addr;
+  proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+  proxy_set_header X-Forwarded-Proto https;
+  proxy_set_header X-Forwarded-Host $host;
+  proxy_set_header X-Forwarded-Port 443;
+  proxy_http_version 1.1;
+
+  location /api/ {
+    proxy_pass http://127.0.0.1:3036/api/;
+    proxy_buffering off;
+    proxy_read_timeout 3600s;
+  }
+
+  location /storage/ {
+    proxy_pass http://127.0.0.1:3036/storage/;
+    proxy_read_timeout 3600s;
+  }
+
+  location = /server-healthcheck {
+    proxy_pass http://127.0.0.1:3036/healthcheck;
+  }
+
+  location / {
+    proxy_pass http://127.0.0.1:8086/;
+    proxy_set_header Upgrade $http_upgrade;
+    proxy_set_header Connection $connection_upgrade;
+  }
+}
+```
+
+Notes:
+
+- `proxy_buffering off` on `/api/` avoids breaking SSE/streaming responses.
+- If you split web and API onto different hostnames later, keep
+  `PUBLIC_WEB_URL` and `PUBLIC_SERVER_URL` aligned with those external origins
+  instead of the loopback proxy targets.
+
 ## Firewall (UFW) Example
 
 Open only what you need publicly:
 
 ```bash
 sudo ufw allow 22/tcp
-sudo ufw allow 8086/tcp
-sudo ufw allow 3036/tcp
+sudo ufw allow 80/tcp
+sudo ufw allow 443/tcp
 sudo ufw allow 9001/tcp
 sudo ufw allow 9090/tcp
 sudo ufw status numbered
 ```
 
-If you changed ports in `./deploy`, open those chosen ports instead.
+If nginx is your only public ingress, keep `WEB_PORT` and `SERVER_PORT`
+loopback-bound and do not open them in the firewall.
 
 ## Common Operations
 

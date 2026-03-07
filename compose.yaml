@@ -7,7 +7,10 @@
 #   docker compose --env-file .env.deploy up --build
 #
 # Defaults to localhost if HOST_IP is not set.
-# Services exposed:
+# Public URLs can differ from the bind ports when you place nginx/ingress in
+# front of the stack (for example, https://studio.example.com -> 127.0.0.1:8086
+# and /api -> 127.0.0.1:3036).
+# Default direct exposure:
 #   - Web app:       http://<HOST_IP>:<WEB_PORT>
 #   - API server:    http://<HOST_IP>:<SERVER_PORT>
 #   - MinIO S3 API:  http://<HOST_IP>:<MINIO_API_PORT>
@@ -38,7 +41,8 @@ services:
         PUBLIC_WEB_URL: "http://placeholder.invalid"
         PUBLIC_BASE_PATH: "/"
     ports:
-      - "${WEB_PORT:-8086}:8080"
+      # Set WEB_BIND_IP=127.0.0.1 when nginx/reverse proxy is the only ingress.
+      - "${WEB_BIND_IP:-0.0.0.0}:${WEB_PORT:-8086}:8080"
     environment:
       PUBLIC_SERVER_URL: "${PUBLIC_SERVER_URL:-http://${HOST_IP:-localhost}:${SERVER_PORT:-3036}}"
       PUBLIC_SERVER_API_PATH: /api
@@ -66,7 +70,8 @@ services:
       context: .
       dockerfile: ./apps/server/Dockerfile
     ports:
-      - "${SERVER_PORT:-3036}:3036"
+      # Set SERVER_BIND_IP=127.0.0.1 when nginx/reverse proxy is the only ingress.
+      - "${SERVER_BIND_IP:-0.0.0.0}:${SERVER_PORT:-3036}:3036"
     environment:
       NODE_ENV: "${DEPLOY_NODE_ENV:-development}"
       SERVER_AUTH_SECRET: "${SERVER_AUTH_SECRET:-please_change_this_in_production}"

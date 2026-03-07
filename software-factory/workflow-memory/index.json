@@ -1,5 +1,22 @@
 [
   {
+    "id": "2026-03-07-docs-knowledge-drift-added-same-origin-nginx-reverse-proxy-guidance-for-linux-deploy",
+    "date": "2026-03-07",
+    "month": "2026-03",
+    "workflow": "Docs + Knowledge Drift",
+    "title": "Added same-origin nginx reverse-proxy guidance for Linux deploy",
+    "severity": "medium",
+    "status": "closed",
+    "tags": [
+      "docs",
+      "deploy",
+      "reverse-proxy",
+      "nginx",
+      "skill:docs-knowledge-drift"
+    ],
+    "eventFile": "events/2026-03.jsonl"
+  },
+  {
     "id": "2026-03-07-docs-knowledge-drift-standardize-request-bound-protocol-helper-guidance",
     "date": "2026-03-07",
     "month": "2026-03",
