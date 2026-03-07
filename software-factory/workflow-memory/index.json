@@ -1,5 +1,38 @@
 [
   {
+    "id": "2026-03-07-feature-delivery-added-inline-denied-sso-callback-ux-on-login",
+    "date": "2026-03-07",
+    "month": "2026-03",
+    "workflow": "Feature Delivery",
+    "title": "Added inline denied-SSO callback UX on login",
+    "severity": "medium",
+    "status": "closed",
+    "tags": [
+      "auth",
+      "sso",
+      "ux",
+      "frontend",
+      "skill:feature-delivery"
+    ],
+    "eventFile": "events/2026-03.jsonl"
+  },
+  {
+    "id": "2026-03-07-feature-delivery-upgraded-better-auth-integration-to-1-5-4",
+    "date": "2026-03-07",
+    "month": "2026-03",
+    "workflow": "Feature Delivery",
+    "title": "Upgraded Better Auth integration to 1.5.4",
+    "severity": "medium",
+    "status": "closed",
+    "tags": [
+      "auth",
+      "dependency",
+      "better-auth",
+      "skill:debug-fix"
+    ],
+    "eventFile": "events/2026-03.jsonl"
+  },
+  {
     "id": "2026-03-07-periodic-scans-best-practice-researcher-docs-and-guardrail-drift-lint-scope-dri",
     "date": "2026-03-07",
     "month": "2026-03",
@@ -110,6 +143,43 @@
       "typecheck",
       "main-branch"
     ],
+    "eventFile": "events/2026-03.jsonl"
+  },
+  {
+    "id": "2026-03-07-self-improvement-microsoft-sso-callback-errors-redirected-to-web-login",
+    "date": "2026-03-07",
+    "month": "2026-03",
+    "workflow": "Self-Improvement",
+    "title": "Microsoft SSO callback errors redirected to web login",
+    "severity": "medium",
+    "status": "closed",
+    "tags": [
+      "auth",
+      "sso",
+      "frontend",
+      "split-origin",
+      "skill:debug-fix"
+    ],
+    "importance": 0.77,
+    "confidence": 0.95,
+    "eventFile": "events/2026-03.jsonl"
+  },
+  {
+    "id": "2026-03-07-self-improvement-sso-callback-review-found-better-auth-message-code-mismatch",
+    "date": "2026-03-07",
+    "month": "2026-03",
+    "workflow": "Self-Improvement",
+    "title": "SSO callback review found Better Auth message/code mismatch",
+    "severity": "high",
+    "status": "open",
+    "tags": [
+      "auth",
+      "sso",
+      "frontend",
+      "skill:pr-risk-review"
+    ],
+    "importance": 0.82,
+    "confidence": 0.95,
     "eventFile": "events/2026-03.jsonl"
   },
   {

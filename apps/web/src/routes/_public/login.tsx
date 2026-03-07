@@ -4,15 +4,55 @@ import { createFileRoute, Link } from '@tanstack/react-router';
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
 import { authClient } from '@/clients/authClient';
-import { isMicrosoftSSOAuthEnabled, isPasswordAuthEnabled } from '@/env';
+import { env, isMicrosoftSSOAuthEnabled, isPasswordAuthEnabled } from '@/env';
 import LoginCredentialsForm from '@/routes/_public/-components/login-form';
-import { getAuthErrorMessage } from '@/shared/lib/auth-errors';
+import {
+  getAuthErrorMessage,
+  getSSOCallbackErrorNotice,
+  MICROSOFT_SSO_AUTH_FLOW,
+} from '@/shared/lib/auth-errors';
+
+export interface LoginSearch {
+  readonly authFlow?: string;
+  readonly code?: string;
+  readonly error?: string;
+  readonly error_description?: string;
+  readonly message?: string;
+}
+
+const normalizeSearchValue = (value: unknown): string | undefined => {
+  if (typeof value !== 'string') {
+    return undefined;
+  }
+
+  const normalized = value.trim();
+  return normalized.length > 0 ? normalized : undefined;
+};
+
+const buildPublicAppUrl = (path: string): string => {
+  const normalizedBasePath = env.PUBLIC_BASE_PATH.endsWith('/')
+    ? env.PUBLIC_BASE_PATH
+    : `${env.PUBLIC_BASE_PATH}/`;
+  const baseUrl = new URL(normalizedBasePath, globalThis.location.origin);
+
+  return new URL(path.startsWith('/') ? path.slice(1) : path, baseUrl).toString();
+};
 
 export const Route = createFileRoute('/_public/login')({
+  validateSearch: (search): LoginSearch => ({
+    authFlow: normalizeSearchValue(search.authFlow),
+    code: normalizeSearchValue(search.code),
+    error: normalizeSearchValue(search.error),
+    error_description: normalizeSearchValue(search.error_description),
+    message: normalizeSearchValue(search.message),
+  }),
   component: RouteComponent,
 });
 
 function RouteComponent() {
+  const search = Route.useSearch();
+  const ssoErrorNotice = getSSOCallbackErrorNotice(search);
+
   useEffect(() => {
     document.title = 'Sign In - Content Studio';
   }, []);
@@ -25,6 +65,20 @@ function RouteComponent() {
           <h1 className="page-title">Sign in</h1>
         </div>
         <div className="card-padded">
+          {ssoErrorNotice ? (
+            <div
+              className="mb-4 rounded-xl border border-destructive/25 bg-destructive/5 p-4"
+              role="alert"
+              aria-live="assertive"
+            >
+              <p className="text-sm font-semibold text-destructive">
+                {ssoErrorNotice.title}
+              </p>
+              <p className="mt-1 text-sm text-muted-foreground">
+                {ssoErrorNotice.description}
+              </p>
+            </div>
+          ) : null}
           {isMicrosoftSSOAuthEnabled ? (
             <MicrosoftSSOButton />
           ) : (
@@ -51,7 +105,10 @@ function MicrosoftSSOButton() {
     setIsSubmitting(true);
     const { error } = await authClient.signIn.social({
       provider: 'microsoft',
-      callbackURL: '/dashboard',
+      callbackURL: buildPublicAppUrl('/dashboard'),
+      errorCallbackURL: buildPublicAppUrl(
+        `/login?authFlow=${MICROSOFT_SSO_AUTH_FLOW}`,
+      ),
     });
 
     if (error) {
