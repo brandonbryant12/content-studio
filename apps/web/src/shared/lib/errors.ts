@@ -12,6 +12,8 @@ const isDefinedAPIError = (error: unknown): error is DefinedAPIError => {
   return typeof e.code === 'string' && typeof e.message === 'string';
 };
 
+const getErrorData = <T>(error: DefinedAPIError): T => error.data as T;
+
 const STATIC_ERROR_MESSAGES = {
   GENERATION_IN_PROGRESS:
     'This podcast is already being generated. Please wait.',
@@ -43,42 +45,41 @@ export const getErrorMessage = (error: unknown, fallback: string): string => {
 
   switch (error.code) {
     case 'SOURCE_TOO_LARGE': {
-      const data = error.data as {
+      const data = getErrorData<{
         fileName: string;
         fileSize: number;
         maxSize: number;
-      };
+      }>(error);
       return `${data.fileName} (${formatFileSize(data.fileSize)}) exceeds ${formatFileSize(data.maxSize)} limit`;
     }
 
     case 'UNSUPPORTED_FORMAT': {
-      const data = error.data as {
-        fileName: string;
+      const data = getErrorData<{
         mimeType: string;
         supportedFormats: string[];
-      };
+      }>(error);
       return `${data.mimeType} not supported. Use: ${data.supportedFormats.join(', ')}`;
     }
 
     case 'RATE_LIMITED': {
-      const data = error.data as { retryAfter?: number } | undefined;
+      const data = getErrorData<{ retryAfter?: number } | undefined>(error);
       return data?.retryAfter
         ? `Too many requests. Try again in ${Math.ceil(data.retryAfter / 1000)} seconds.`
         : 'Too many requests. Please wait a moment.';
     }
 
     case 'SOURCE_QUOTA_EXCEEDED': {
-      const data = error.data as { count: number; limit: number };
+      const data = getErrorData<{ count: number; limit: number }>(error);
       return `You've reached your source limit (${data.count}/${data.limit}). Upgrade to add more.`;
     }
 
     case 'SOURCE_PARSE_ERROR': {
-      const data = error.data as { fileName: string };
+      const data = getErrorData<{ fileName: string }>(error);
       return `Failed to parse ${data.fileName}. The file may be corrupted.`;
     }
 
     case 'VALIDATION_ERROR': {
-      const data = error.data as { field?: string } | undefined;
+      const data = getErrorData<{ field?: string } | undefined>(error);
       return data?.field ? `Invalid value for ${data.field}` : error.message;
     }
 
