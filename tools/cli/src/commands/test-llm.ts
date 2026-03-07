@@ -76,6 +76,33 @@ const parseGenerationParams = (
   }),
 });
 
+const promptGenerationConfig = () =>
+  Effect.gen(function* () {
+    const systemPromptInput = yield* Prompt.run(
+      Prompt.text({
+        message: 'System prompt (optional)',
+        default: DEFAULT_SYSTEM_PROMPT,
+      }),
+    );
+    const temperatureInput = yield* Prompt.run(
+      Prompt.text({
+        message: 'Temperature (0 to 2)',
+        default: String(DEFAULT_TEMPERATURE),
+      }),
+    );
+    const maxTokensInput = yield* Prompt.run(
+      Prompt.text({
+        message: 'Max output tokens (1 to 8192)',
+        default: String(DEFAULT_MAX_TOKENS),
+      }),
+    );
+
+    return {
+      systemPrompt: normalizeOptional(systemPromptInput),
+      ...parseGenerationParams(temperatureInput, maxTokensInput),
+    };
+  });
+
 export const buildChatPrompt = (
   history: ReadonlyArray<ChatTurn>,
   userInput: string,
@@ -134,27 +161,10 @@ const runSmokeTest = (aiLayer: ReturnType<typeof createAILayer>) =>
 
 const runSinglePromptExperiment = (aiLayer: ReturnType<typeof createAILayer>) =>
   Effect.gen(function* () {
-    const systemPromptInput = yield* Prompt.run(
-      Prompt.text({
-        message: 'System prompt (optional)',
-        default: DEFAULT_SYSTEM_PROMPT,
-      }),
-    );
+    const generationConfig = yield* promptGenerationConfig();
     const prompt = yield* Prompt.run(
       Prompt.text({
         message: 'Prompt',
-      }),
-    );
-    const temperatureInput = yield* Prompt.run(
-      Prompt.text({
-        message: 'Temperature (0 to 2)',
-        default: String(DEFAULT_TEMPERATURE),
-      }),
-    );
-    const maxTokensInput = yield* Prompt.run(
-      Prompt.text({
-        message: 'Max output tokens (1 to 8192)',
-        default: String(DEFAULT_MAX_TOKENS),
       }),
     );
 
@@ -164,19 +174,14 @@ const runSinglePromptExperiment = (aiLayer: ReturnType<typeof createAILayer>) =>
       return;
     }
 
-    const { temperature, maxTokens } = parseGenerationParams(
-      temperatureInput,
-      maxTokensInput,
-    );
-
     const result = yield* Effect.gen(function* () {
       const llm = yield* LLM;
       return yield* llm.generate({
-        system: normalizeOptional(systemPromptInput),
+        system: generationConfig.systemPrompt,
         prompt: cleanedPrompt,
         schema: ResponseSchema,
-        temperature,
-        maxTokens,
+        temperature: generationConfig.temperature,
+        maxTokens: generationConfig.maxTokens,
       });
     }).pipe(Effect.provide(aiLayer));
 
@@ -187,30 +192,8 @@ const runSinglePromptExperiment = (aiLayer: ReturnType<typeof createAILayer>) =>
 
 const runChatExperiment = (aiLayer: ReturnType<typeof createAILayer>) =>
   Effect.gen(function* () {
-    const systemPromptInput = yield* Prompt.run(
-      Prompt.text({
-        message: 'System prompt (optional)',
-        default: DEFAULT_SYSTEM_PROMPT,
-      }),
-    );
-    const temperatureInput = yield* Prompt.run(
-      Prompt.text({
-        message: 'Temperature (0 to 2)',
-        default: String(DEFAULT_TEMPERATURE),
-      }),
-    );
-    const maxTokensInput = yield* Prompt.run(
-      Prompt.text({
-        message: 'Max output tokens (1 to 8192)',
-        default: String(DEFAULT_MAX_TOKENS),
-      }),
-    );
-
-    const systemPrompt = normalizeOptional(systemPromptInput);
-    const { temperature, maxTokens } = parseGenerationParams(
-      temperatureInput,
-      maxTokensInput,
-    );
+    const { systemPrompt, temperature, maxTokens } =
+      yield* promptGenerationConfig();
 
     yield* Console.log('\nInteractive chat mode started.');
     yield* Console.log('Commands: /exit to quit, /reset to clear history.\n');
@@ -317,10 +300,7 @@ export const testLlm = Command.make('llm', {}).pipe(
 
       const normalizedModelInput = normalizeOptional(modelInput);
       const model = resolveModelInput(normalizedModelInput);
-      if (
-        normalizedModelInput !== undefined &&
-        normalizedModelInput !== model
-      ) {
+      if (normalizedModelInput && normalizedModelInput !== model) {
         yield* Console.log(
           `Model "${normalizedModelInput}" is not in the supported @repo/ai catalog. Falling back to ${DEFAULT_MODEL}.`,
         );
@@ -330,18 +310,12 @@ export const testLlm = Command.make('llm', {}).pipe(
       const aiLayer = createAILayer({ apiKey, model });
 
       switch (mode) {
-        case 'smoke': {
-          yield* runSmokeTest(aiLayer);
-          return;
-        }
-        case 'single': {
-          yield* runSinglePromptExperiment(aiLayer);
-          return;
-        }
-        case 'chat': {
-          yield* runChatExperiment(aiLayer);
-          return;
-        }
+        case 'smoke':
+          return yield* runSmokeTest(aiLayer);
+        case 'single':
+          return yield* runSinglePromptExperiment(aiLayer);
+        case 'chat':
+          return yield* runChatExperiment(aiLayer);
       }
     }),
   ),
