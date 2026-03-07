@@ -4,6 +4,15 @@ import { join, extname } from 'node:path';
 
 const DIST_DIR = '/app/dist';
 const PORT = parseInt(process.env.PORT || '8080', 10);
+const PUBLIC_SERVER_ORIGIN = (() => {
+  try {
+    return process.env.PUBLIC_SERVER_URL
+      ? new URL(process.env.PUBLIC_SERVER_URL).origin
+      : null;
+  } catch {
+    return null;
+  }
+})();
 
 const MIME_TYPES = /** @type {const} */ ({
   '.html': 'text/html; charset=utf-8',
@@ -29,11 +38,18 @@ const MIME_TYPES = /** @type {const} */ ({
 });
 
 const indexHtml = await readFile(join(DIST_DIR, 'index.html'));
+const connectSrc = ["'self'"];
+
+if (PUBLIC_SERVER_ORIGIN) {
+  connectSrc.push(PUBLIC_SERVER_ORIGIN);
+}
+
+connectSrc.push('https:', 'wss:');
 
 const SECURITY_HEADERS = Object.freeze({
   'X-Content-Type-Options': 'nosniff',
   'X-Frame-Options': 'DENY',
-  Referrer-Policy: 'strict-origin-when-cross-origin',
+  'Referrer-Policy': 'strict-origin-when-cross-origin',
   'Permissions-Policy':
     'camera=(), microphone=(), geolocation=(), payment=(), usb=()',
   'Content-Security-Policy': [
@@ -42,11 +58,11 @@ const SECURITY_HEADERS = Object.freeze({
     "frame-ancestors 'none'",
     "object-src 'none'",
     "script-src 'self'",
-    "style-src 'self' 'unsafe-inline'",
+    "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
     "img-src 'self' data: https:",
-    "font-src 'self' data:",
+    "font-src 'self' data: https://fonts.gstatic.com",
     "media-src 'self' https: blob:",
-    "connect-src 'self' https: wss:",
+    `connect-src ${connectSrc.join(' ')}`,
     "form-action 'self'",
   ].join('; '),
 });

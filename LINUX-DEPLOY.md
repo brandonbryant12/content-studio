@@ -9,8 +9,9 @@ Running `pnpm deploy:linux` (or `./deploy`) will:
 - prompt for domain/host, runtime mode, ports, auth, AI, CORS, telemetry
 - normalize CORS and always include the configured web origin
 - generate `.env.deploy` at repo root (mode `600`)
+- run in an isolated Compose project by default so deploy state does not reuse local-dev volumes
 - build and start `web`, `server`, `worker`, `db`, `redis`, `minio`
-- run DB migrations via `migrate` before `server`/`worker` start
+- run DB migrations during `server` startup before the API starts serving traffic
 - create the MinIO bucket via `minio-init`
 - build `web` with placeholder `PUBLIC_*` values; inject real `PUBLIC_*` values at runtime via `env.js`
 
@@ -66,6 +67,7 @@ For required env variables across Linux and EKS deployment patterns, see:
 
 Important generated keys include:
 
+- `COMPOSE_PROJECT_NAME` (defaults to `content-studio-deploy`)
 - `DEPLOY_NODE_ENV`
 - `PUBLIC_URL_SCHEME`
 - `PUBLIC_WEB_URL`
@@ -92,15 +94,14 @@ docker compose --env-file .env.deploy ps
 docker compose --env-file .env.deploy logs -f server
 docker compose --env-file .env.deploy logs -f worker
 
-# One-shot setup jobs
-docker compose --env-file .env.deploy logs migrate
+# One-shot setup job
 docker compose --env-file .env.deploy logs minio-init
 ```
 
 Expected one-shot behavior:
 
-- `migrate` exits successfully after applying DB migrations
 - `minio-init` exits successfully after bucket setup
+- `server` logs `Database migrations completed` before serving traffic
 
 ## Endpoints
 

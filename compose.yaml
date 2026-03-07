@@ -20,6 +20,8 @@
 #   - DB and Redis ports are exposed for local development convenience only.
 #   - In production, remove or firewall these port mappings.
 
+name: ${COMPOSE_PROJECT_NAME:-content-studio}
+
 services:
   # ------------------------------------------------------------------ #
   # Web App

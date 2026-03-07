@@ -46,6 +46,10 @@ extract_scheme() {
   echo "$1" | sed -nE 's|^([a-zA-Z][a-zA-Z0-9+.-]*)://.*$|\1|p'
 }
 
+extract_host() {
+  echo "$1" | sed -nE 's|^[a-zA-Z][a-zA-Z0-9+.-]*://\[?([^]/:]+)\]?.*$|\1|p'
+}
+
 build_url() {
   local scheme="$1" host="$2" port="$3"
   echo "${scheme}://${host}:${port}"
@@ -235,6 +239,11 @@ load_app_defaults() {
   [[ -z "$web_url" ]] && web_url=$(read_env_value "$web_env" "PUBLIC_WEB_URL")
   [[ -n "$web_url" ]] && _DEF_WEB_PORT=$(extract_port "$web_url")
 
+  _DEF_HOST_IP=""
+  if [[ -n "$web_url" ]]; then
+    _DEF_HOST_IP=$(extract_host "$web_url")
+  fi
+
   _DEF_PUBLIC_URL_SCHEME=""
   if [[ -n "$web_url" ]]; then
     _DEF_PUBLIC_URL_SCHEME=$(extract_scheme "$web_url")
@@ -242,17 +251,22 @@ load_app_defaults() {
   if [[ -z "$_DEF_PUBLIC_URL_SCHEME" ]]; then
     local server_public_url
     server_public_url=$(read_env_value "$server_env" "PUBLIC_SERVER_URL")
-    [[ -n "$server_public_url" ]] && _DEF_PUBLIC_URL_SCHEME=$(extract_scheme "$server_public_url")
+    if [[ -n "$server_public_url" ]]; then
+      _DEF_PUBLIC_URL_SCHEME=$(extract_scheme "$server_public_url")
+      [[ -z "$_DEF_HOST_IP" ]] && _DEF_HOST_IP=$(extract_host "$server_public_url")
+    fi
   fi
 
   local existing_env="$ENV_FILE"
 
+  [[ -z "$_DEF_HOST_IP" ]] && _DEF_HOST_IP=$(read_env_value "$existing_env" "HOST_IP")
   [[ -z "$_DEF_DEPLOY_NODE_ENV" ]] && _DEF_DEPLOY_NODE_ENV=$(read_env_value "$existing_env" "DEPLOY_NODE_ENV")
   [[ -z "$_DEF_TRUST_PROXY" ]] && _DEF_TRUST_PROXY=$(read_env_value "$existing_env" "TRUST_PROXY")
   [[ -z "$_DEF_PUBLIC_URL_SCHEME" ]] && _DEF_PUBLIC_URL_SCHEME=$(read_env_value "$existing_env" "PUBLIC_URL_SCHEME")
   [[ -z "$_DEF_CORS_ORIGINS" ]] && _DEF_CORS_ORIGINS=$(read_env_value "$existing_env" "CORS_ORIGINS")
   [[ -z "$_DEF_SERVER_PORT" ]] && _DEF_SERVER_PORT=$(read_env_value "$existing_env" "SERVER_PORT")
   [[ -z "$_DEF_WEB_PORT" ]] && _DEF_WEB_PORT=$(read_env_value "$existing_env" "WEB_PORT")
+  _DEF_COMPOSE_PROJECT_NAME=$(read_env_value "$existing_env" "COMPOSE_PROJECT_NAME")
   [[ -z "$_DEF_HTTPS_PROXY" ]] && _DEF_HTTPS_PROXY=$(read_env_value "$existing_env" "HTTPS_PROXY")
   [[ -z "$_DEF_HTTP_PROXY" ]] && _DEF_HTTP_PROXY=$(read_env_value "$existing_env" "HTTP_PROXY")
   [[ -z "$_DEF_NO_PROXY" ]] && _DEF_NO_PROXY=$(read_env_value "$existing_env" "NO_PROXY")
@@ -466,13 +480,14 @@ collect_variables() {
   printf "  ${DIM}Examples: docker.io, ghcr.io, registry.example.com${RESET}\n\n"
 
   prompt DOCKER_REGISTRY "Docker image registry" "docker.io"
+  COMPOSE_PROJECT_NAME="${_DEF_COMPOSE_PROJECT_NAME:-content-studio-deploy}"
 
   # ── Network ──────────────────────────────────────────────────────────────
   header "Network Configuration"
   printf "  ${DIM}All services use this IP for public-facing URLs.${RESET}\n"
   printf "  ${DIM}Use host/IP only (no protocol). Example: localhost, 10.0.0.25, studio.example.com${RESET}\n\n"
 
-  prompt HOST_IP "Host IP / hostname" "$detected_ip"
+  prompt HOST_IP "Host IP / hostname" "${_DEF_HOST_IP:-$detected_ip}"
   normalize_host_ip
 
   # ── Runtime ──────────────────────────────────────────────────────────────
@@ -630,6 +645,7 @@ write_env_file() {
 
 # ── Docker Registry ──────────────────────────────────────────────────────────
 DOCKER_REGISTRY=${DOCKER_REGISTRY}
+COMPOSE_PROJECT_NAME=${COMPOSE_PROJECT_NAME}
 
 # ── Network ──────────────────────────────────────────────────────────────────
 HOST_IP=${HOST_IP}
@@ -700,6 +716,7 @@ build_and_run() {
   set +a
 
   DEPLOY_NODE_ENV="${DEPLOY_NODE_ENV:-development}"
+  COMPOSE_PROJECT_NAME="${COMPOSE_PROJECT_NAME:-content-studio-deploy}"
   PUBLIC_URL_SCHEME="${PUBLIC_URL_SCHEME:-http}"
   TRUST_PROXY="${TRUST_PROXY:-false}"
   POSTGRES_BIND_IP="${POSTGRES_BIND_IP:-127.0.0.1}"
@@ -778,6 +795,7 @@ build_and_run() {
   header "Deploy Complete"
 
   printf "  ${GREEN}Mode${RESET}           %s\n" "$DEPLOY_NODE_ENV"
+  printf "  ${GREEN}Project${RESET}        %s\n" "$COMPOSE_PROJECT_NAME"
   printf "  ${GREEN}Web App${RESET}        %s\n" "$PUBLIC_WEB_URL"
   printf "  ${GREEN}API Server${RESET}     %s\n" "$PUBLIC_SERVER_URL"
   printf "  ${GREEN}MinIO Console${RESET}  http://%s:%s  ${DIM}(minioadmin/minioadmin)${RESET}\n" "$HOST_IP" "$MINIO_UI_PORT"

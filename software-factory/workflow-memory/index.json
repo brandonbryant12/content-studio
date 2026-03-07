@@ -33,6 +33,27 @@
     "eventFile": "events/2026-03.jsonl"
   },
   {
+    "id": "2026-03-07-feature-delivery-local-deploy-isolated-from-dev-volumes-and-production-web-boot-f",
+    "date": "2026-03-07",
+    "month": "2026-03",
+    "workflow": "Feature Delivery",
+    "title": "Local deploy isolated from dev volumes and production web boot fixed",
+    "severity": "high",
+    "status": "closed",
+    "tags": [
+      "feature-delivery",
+      "deploy",
+      "localhost",
+      "skill:debug-fix",
+      "skill:tanstack-vite",
+      "capability:debugging",
+      "capability:tool-use",
+      "failure:env-drift",
+      "failure:test-evasion"
+    ],
+    "eventFile": "events/2026-03.jsonl"
+  },
+  {
     "id": "2026-03-07-feature-delivery-simplified-microsoft-sso-failure-handling",
     "date": "2026-03-07",
     "month": "2026-03",

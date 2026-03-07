@@ -78,11 +78,9 @@ export default defineConfig({
   build: {
     rollupOptions: {
       output: {
-        // Vite's current bundler path does not honor Rollup's
-        // `onlyExplicitManualChunks`, so we keep chunking explicit by
-        // constraining this function to coarse vendor buckets.
-        // Keep chunking coarse-grained. The previous per-package strategy
-        // created many tiny/empty chunks in production builds.
+        // Keep splitting limited to stable, high-volume vendor groups.
+        // Avoid a catch-all vendor chunk because it can create circular
+        // references between explicit vendor buckets and the fallback chunk.
         manualChunks(id) {
           if (!id.includes('node_modules')) return undefined;
 
@@ -110,7 +108,7 @@ export default defineConfig({
           if (id.includes('/node_modules/effect/')) return 'vendor-effect';
           if (id.includes('/node_modules/@radix-ui/')) return 'vendor-radix';
 
-          return 'vendor';
+          return undefined;
         },
       },
     },
