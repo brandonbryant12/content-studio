@@ -25,6 +25,10 @@ const STATIC_ERROR_MESSAGES = {
   JOB_NOT_FOUND: 'Job not found. It may have expired.',
 } satisfies Record<string, string>;
 
+const hasStaticErrorMessage = (
+  code: string,
+): code is keyof typeof STATIC_ERROR_MESSAGES => code in STATIC_ERROR_MESSAGES;
+
 const getUnknownErrorMessage = (error: unknown, fallback: string): string => {
   if (
     (typeof error === 'object' || typeof error === 'function') &&
@@ -84,7 +88,9 @@ export const getErrorMessage = (error: unknown, fallback: string): string => {
     }
 
     default:
-      return STATIC_ERROR_MESSAGES[error.code] ?? error.message;
+      return hasStaticErrorMessage(error.code)
+        ? STATIC_ERROR_MESSAGES[error.code]
+        : error.message;
   }
 };
 

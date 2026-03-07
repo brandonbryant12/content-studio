@@ -1,9 +1,9 @@
-import { GoogleAILive, type AI } from '@repo/ai';
+import { GoogleAILive, type AI, type LLMModelId } from '@repo/ai';
 import type { Layer } from 'effect';
 
 export interface AILayerOptions {
   readonly apiKey: string;
-  readonly model?: string;
+  readonly model?: LLMModelId;
 }
 
 export const createAILayer = (options: AILayerOptions): Layer.Layer<AI> =>

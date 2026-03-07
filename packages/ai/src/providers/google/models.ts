@@ -99,6 +99,10 @@ export type GoogleImageGenModelId = keyof typeof GOOGLE_IMAGE_GEN_MODELS;
 export type GoogleDeepResearchModelId =
   keyof typeof GOOGLE_DEEP_RESEARCH_MODELS;
 
+export const LLM_MODEL_IDS = Object.keys(
+  GOOGLE_LLM_MODELS,
+) as ReadonlyArray<GoogleLLMModelId>;
+
 export const LLM_MODEL: GoogleLLMModelId = 'gemini-3.1-flash-lite-preview';
 export const TTS_MODEL: GoogleTTSModelId = 'gemini-2.5-flash-preview-tts';
 export const IMAGE_GEN_MODEL: GoogleImageGenModelId =

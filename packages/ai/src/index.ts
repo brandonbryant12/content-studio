@@ -3,9 +3,11 @@ import { Layer } from 'effect';
 // Model constants
 export {
   LLM_MODEL,
+  LLM_MODEL_IDS,
   TTS_MODEL,
   IMAGE_GEN_MODEL,
   DEEP_RESEARCH_MODEL,
+  type LLMModelId,
 } from './models';
 
 // Re-export AI errors from package errors

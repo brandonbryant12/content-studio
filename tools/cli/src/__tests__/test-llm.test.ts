@@ -1,9 +1,13 @@
-import { LLM } from '@repo/ai';
+import { LLM, LLM_MODEL } from '@repo/ai';
 import { MockLLMLive, createMockLLM } from '@repo/ai/testing';
 import { Effect, Schema } from 'effect';
 import { describe, it, expect } from 'vitest';
 import type { LLMError } from '@repo/ai';
-import { buildChatPrompt, parseBoundedNumber } from '../commands/test-llm';
+import {
+  buildChatPrompt,
+  parseBoundedNumber,
+  resolveModelInput,
+} from '../commands/test-llm';
 
 describe('test-llm command logic', () => {
   it('builds a chat prompt with prior turns', () => {
@@ -39,6 +43,15 @@ describe('test-llm command logic', () => {
         integer: true,
       }),
     ).toBe(100);
+  });
+
+  it('falls back to the default model for unsupported model IDs', () => {
+    expect(resolveModelInput('')).toBe(LLM_MODEL);
+    expect(resolveModelInput('gemini-2.0-flash-exp')).toBe(LLM_MODEL);
+  });
+
+  it('keeps supported model IDs unchanged', () => {
+    expect(resolveModelInput(LLM_MODEL)).toBe(LLM_MODEL);
   });
 
   it('calls LLM.generate with a schema and returns structured output', async () => {

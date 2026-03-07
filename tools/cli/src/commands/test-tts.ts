@@ -2,7 +2,7 @@ import * as fs from 'node:fs/promises';
 import * as path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { Command, Prompt } from '@effect/cli';
-import { FEMALE_VOICES, MALE_VOICES, type GeminiVoiceId } from '@repo/ai';
+import { FEMALE_VOICES, MALE_VOICES, type KnownVoiceId } from '@repo/ai';
 import { Console, Effect } from 'effect';
 import { loadEnv } from '../lib/env';
 
@@ -40,12 +40,12 @@ const genderPrompt = (label: string) =>
     ],
   });
 
-const voicePrompt = (label: string, voices: readonly string[]) =>
+const voicePrompt = (label: string, voices: readonly KnownVoiceId[]) =>
   Prompt.select({
     message: `${label} voice`,
     choices: voices.map((id) => ({
       title: id,
-      value: id as GeminiVoiceId,
+      value: id,
     })),
   });
 

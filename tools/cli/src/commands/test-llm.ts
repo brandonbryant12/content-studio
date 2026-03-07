@@ -1,5 +1,5 @@
 import { Command, Prompt } from '@effect/cli';
-import { LLM, LLM_MODEL } from '@repo/ai';
+import { LLM, LLM_MODEL, LLM_MODEL_IDS, type LLMModelId } from '@repo/ai';
 import { Console, Effect, Schema } from 'effect';
 import { createAILayer } from '../lib/ai-layer';
 import { loadEnv } from '../lib/env';
@@ -29,6 +29,16 @@ export interface ChatTurn {
 const normalizeOptional = (value: string): string | undefined => {
   const trimmed = value.trim();
   return trimmed.length > 0 ? trimmed : undefined;
+};
+
+export const isSupportedModelId = (value: string): value is LLMModelId =>
+  LLM_MODEL_IDS.some((modelId) => modelId === value);
+
+export const resolveModelInput = (value: string | undefined): LLMModelId => {
+  const normalized = value === undefined ? undefined : normalizeOptional(value);
+  return normalized !== undefined && isSupportedModelId(normalized)
+    ? normalized
+    : DEFAULT_MODEL;
 };
 
 export const parseBoundedNumber = (
@@ -304,7 +314,16 @@ export const testLlm = Command.make('llm', {}).pipe(
         }),
       );
 
-      const model = normalizeOptional(modelInput) ?? DEFAULT_MODEL;
+      const normalizedModelInput = normalizeOptional(modelInput);
+      const model = resolveModelInput(normalizedModelInput);
+      if (
+        normalizedModelInput !== undefined &&
+        normalizedModelInput !== model
+      ) {
+        yield* Console.log(
+          `Model "${normalizedModelInput}" is not in the supported @repo/ai catalog. Falling back to ${DEFAULT_MODEL}.`,
+        );
+      }
       yield* Console.log(`\nUsing model: ${model}`);
 
       const aiLayer = createAILayer({ apiKey, model });

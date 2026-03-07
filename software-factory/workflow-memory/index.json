@@ -1,5 +1,23 @@
 [
   {
+    "id": "2026-03-07-self-improvement-guard-cli-against-repo-ai-api-drift-and-clean-main-validation",
+    "date": "2026-03-07",
+    "month": "2026-03",
+    "workflow": "Self-Improvement",
+    "title": "Guard CLI against @repo/ai API drift and clean main validation",
+    "severity": "medium",
+    "status": "closed",
+    "tags": [
+      "skill:self-improvement",
+      "skill:debug-fix",
+      "domain:ai",
+      "domain:web",
+      "typecheck",
+      "main-branch"
+    ],
+    "eventFile": "events/2026-03.jsonl"
+  },
+  {
     "id": "2026-03-06-architecture-adr-guard-ai-provider-boundary-refactor-keeps-google-internals-behind-moda",
     "date": "2026-03-06",
     "month": "2026-03",
