@@ -19,8 +19,6 @@ const DEFAULT_SYSTEM_PROMPT =
 const DEFAULT_TEMPERATURE = 0.7;
 const DEFAULT_MAX_TOKENS = 1024;
 
-type ExperimentMode = 'smoke' | 'single' | 'chat';
-
 export interface ChatTurn {
   readonly role: 'user' | 'assistant';
   readonly text: string;
@@ -60,6 +58,23 @@ export const parseBoundedNumber = (
 
   return nextValue;
 };
+
+const parseGenerationParams = (
+  temperatureInput: string,
+  maxTokensInput: string,
+) => ({
+  temperature: parseBoundedNumber(temperatureInput, {
+    fallback: DEFAULT_TEMPERATURE,
+    min: 0,
+    max: 2,
+  }),
+  maxTokens: parseBoundedNumber(maxTokensInput, {
+    fallback: DEFAULT_MAX_TOKENS,
+    min: 1,
+    max: 8192,
+    integer: true,
+  }),
+});
 
 export const buildChatPrompt = (
   history: ReadonlyArray<ChatTurn>,
@@ -149,17 +164,10 @@ const runSinglePromptExperiment = (aiLayer: ReturnType<typeof createAILayer>) =>
       return;
     }
 
-    const temperature = parseBoundedNumber(temperatureInput, {
-      fallback: DEFAULT_TEMPERATURE,
-      min: 0,
-      max: 2,
-    });
-    const maxTokens = parseBoundedNumber(maxTokensInput, {
-      fallback: DEFAULT_MAX_TOKENS,
-      min: 1,
-      max: 8192,
-      integer: true,
-    });
+    const { temperature, maxTokens } = parseGenerationParams(
+      temperatureInput,
+      maxTokensInput,
+    );
 
     const result = yield* Effect.gen(function* () {
       const llm = yield* LLM;
@@ -199,17 +207,10 @@ const runChatExperiment = (aiLayer: ReturnType<typeof createAILayer>) =>
     );
 
     const systemPrompt = normalizeOptional(systemPromptInput);
-    const temperature = parseBoundedNumber(temperatureInput, {
-      fallback: DEFAULT_TEMPERATURE,
-      min: 0,
-      max: 2,
-    });
-    const maxTokens = parseBoundedNumber(maxTokensInput, {
-      fallback: DEFAULT_MAX_TOKENS,
-      min: 1,
-      max: 8192,
-      integer: true,
-    });
+    const { temperature, maxTokens } = parseGenerationParams(
+      temperatureInput,
+      maxTokensInput,
+    );
 
     yield* Console.log('\nInteractive chat mode started.');
     yield* Console.log('Commands: /exit to quit, /reset to clear history.\n');
@@ -328,19 +329,20 @@ export const testLlm = Command.make('llm', {}).pipe(
 
       const aiLayer = createAILayer({ apiKey, model });
 
-      const selectedMode: ExperimentMode = mode;
-
-      if (selectedMode === 'smoke') {
-        yield* runSmokeTest(aiLayer);
-        return;
+      switch (mode) {
+        case 'smoke': {
+          yield* runSmokeTest(aiLayer);
+          return;
+        }
+        case 'single': {
+          yield* runSinglePromptExperiment(aiLayer);
+          return;
+        }
+        case 'chat': {
+          yield* runChatExperiment(aiLayer);
+          return;
+        }
       }
-
-      if (selectedMode === 'single') {
-        yield* runSinglePromptExperiment(aiLayer);
-        return;
-      }
-
-      yield* runChatExperiment(aiLayer);
     }),
   ),
   Command.withDescription(
