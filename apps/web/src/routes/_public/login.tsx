@@ -14,7 +14,6 @@ import {
 
 export interface LoginSearch {
   readonly authFlow?: string;
-  readonly code?: string;
   readonly error?: string;
   readonly error_description?: string;
   readonly message?: string;
@@ -44,7 +43,6 @@ const buildPublicAppUrl = (path: string): string => {
 export const Route = createFileRoute('/_public/login')({
   validateSearch: (search): LoginSearch => ({
     authFlow: normalizeSearchValue(search.authFlow),
-    code: normalizeSearchValue(search.code),
     error: normalizeSearchValue(search.error),
     error_description: normalizeSearchValue(search.error_description),
     message: normalizeSearchValue(search.message),

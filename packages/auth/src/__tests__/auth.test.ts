@@ -86,33 +86,16 @@ describe('buildTrustedOrigins', () => {
     expect(parsedUrl.origin).toBe('https://studio.example.com');
     expect(parsedUrl.pathname).toBe('/app/login');
     expect(parsedUrl.searchParams.get('authFlow')).toBe('microsoft-sso');
-    expect(parsedUrl.searchParams.get('error')).toBe(
-      'SSO_GROUP_MEMBERSHIP_REQUIRED',
-    );
-    expect(parsedUrl.searchParams.get('error_description')).toBe(
-      'Microsoft SSO group membership is required',
-    );
+    expect(parsedUrl.searchParams.get('error')).toBe('microsoft_sso_failed');
+    expect(parsedUrl.searchParams.get('error_description')).toBeNull();
   });
 
-  it('normalizes Better Auth Microsoft callback error messages', () => {
+  it('returns null when there is no callback error to redirect', () => {
     const redirectUrl = buildMicrosoftSSOErrorRedirectUrl({
       webUrl: 'https://studio.example.com',
-      error: {
-        body: {
-          message: 'Microsoft_SSO_authorization_failed',
-        },
-      },
+      error: null,
     });
 
-    expect(redirectUrl).not.toBeNull();
-
-    const parsedUrl = new URL(redirectUrl!);
-    expect(parsedUrl.pathname).toBe('/login');
-    expect(parsedUrl.searchParams.get('error')).toBe(
-      'SSO_AUTHORIZATION_FAILED',
-    );
-    expect(parsedUrl.searchParams.get('error_description')).toBe(
-      'Microsoft_SSO_authorization_failed',
-    );
+    expect(redirectUrl).toBeNull();
   });
 });

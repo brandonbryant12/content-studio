@@ -6,6 +6,9 @@ import {
 } from './auth-errors';
 
 describe('getAuthErrorMessage', () => {
+  const ssoFailureMessage =
+    "We couldn't complete Microsoft sign-in. Try again, and if you still need access to Content Studio, contact your administrator.";
+
   it('returns fallback for unknown input', () => {
     expect(getAuthErrorMessage(null, 'Unable to sign in.')).toBe(
       'Unable to sign in.',
@@ -60,9 +63,7 @@ describe('getAuthErrorMessage', () => {
         { code: 'SSO_AUTHORIZATION_FAILED' },
         'Unable to sign in with Microsoft.',
       ),
-    ).toBe(
-      'Microsoft sign-in was denied. Try again or contact your administrator.',
-    );
+    ).toBe(ssoFailureMessage);
   });
 
   it('maps SSO group-membership failures from Better Auth callback tokens', () => {
@@ -71,47 +72,34 @@ describe('getAuthErrorMessage', () => {
         { error: 'Microsoft_SSO_group_membership_is_required' },
         'Unable to sign in with Microsoft.',
       ),
-    ).toBe('Your Microsoft account does not have access to Content Studio.');
+    ).toBe(ssoFailureMessage);
   });
 });
 
 describe('getSSOCallbackErrorNotice', () => {
-  it('returns a targeted notice for required Microsoft group membership', () => {
+  it('returns a generic notice for Microsoft SSO callback failures', () => {
     expect(
       getSSOCallbackErrorNotice({
         authFlow: MICROSOFT_SSO_AUTH_FLOW,
         error: 'SSO_GROUP_MEMBERSHIP_REQUIRED',
       }),
     ).toEqual({
-      title: 'Your Microsoft account does not have access',
+      title: 'Microsoft sign-in failed',
       description:
-        'Use a Microsoft account in the approved Content Studio access group, or contact your administrator for access.',
+        "We couldn't complete Microsoft sign-in. Try again, and if you still need access to Content Studio, contact your administrator.",
     });
   });
 
-  it('returns a generic denial notice for provider access_denied callbacks', () => {
+  it('returns the same generic notice for unknown callback errors', () => {
     expect(
       getSSOCallbackErrorNotice({
         authFlow: MICROSOFT_SSO_AUTH_FLOW,
-        error: 'access_denied',
+        error: 'invalid_code',
       }),
     ).toEqual({
-      title: 'Microsoft sign-in was canceled or denied',
+      title: 'Microsoft sign-in failed',
       description:
-        'Try again with your approved Microsoft account. If access should have been granted, contact your administrator.',
-    });
-  });
-
-  it('returns a targeted notice for Better Auth Microsoft callback tokens', () => {
-    expect(
-      getSSOCallbackErrorNotice({
-        authFlow: MICROSOFT_SSO_AUTH_FLOW,
-        error: 'Microsoft_SSO_authorization_failed',
-      }),
-    ).toEqual({
-      title: 'Microsoft sign-in was denied',
-      description:
-        "We couldn't verify that this Microsoft account is allowed to access Content Studio. Try again or contact your administrator if you should have access.",
+        "We couldn't complete Microsoft sign-in. Try again, and if you still need access to Content Studio, contact your administrator.",
     });
   });
 
@@ -120,6 +108,14 @@ describe('getSSOCallbackErrorNotice', () => {
       getSSOCallbackErrorNotice({
         authFlow: 'password',
         error: 'UNKNOWN_ERROR',
+      }),
+    ).toBeNull();
+  });
+
+  it('returns null when there is no callback error detail', () => {
+    expect(
+      getSSOCallbackErrorNotice({
+        authFlow: MICROSOFT_SSO_AUTH_FLOW,
       }),
     ).toBeNull();
   });

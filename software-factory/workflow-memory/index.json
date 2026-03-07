@@ -33,6 +33,23 @@
     "eventFile": "events/2026-03.jsonl"
   },
   {
+    "id": "2026-03-07-feature-delivery-simplified-microsoft-sso-failure-handling",
+    "date": "2026-03-07",
+    "month": "2026-03",
+    "workflow": "Feature Delivery",
+    "title": "Simplified Microsoft SSO failure handling",
+    "severity": "medium",
+    "status": "done",
+    "tags": [
+      "skill:code-simplifier",
+      "auth",
+      "sso",
+      "frontend:error-handling"
+    ],
+    "confidence": 0.95,
+    "eventFile": "events/2026-03.jsonl"
+  },
+  {
     "id": "2026-03-07-feature-delivery-upgraded-better-auth-integration-to-1-5-4",
     "date": "2026-03-07",
     "month": "2026-03",

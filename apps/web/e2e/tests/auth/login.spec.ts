@@ -41,18 +41,14 @@ test.describe('Login Page', () => {
     await loginPage.expectToast('Invalid email or password');
   });
 
-  test('shows an inline notice for denied Microsoft SSO callbacks', async ({
+  test('shows an inline notice for Microsoft SSO callback failures', async ({
     page,
   }) => {
-    await page.goto(
-      '/login?authFlow=microsoft-sso&error=SSO_GROUP_MEMBERSHIP_REQUIRED',
-    );
+    await page.goto('/login?authFlow=microsoft-sso&error=invalid_code');
 
     const alert = page.getByRole('alert');
-    await expect(alert).toContainText(
-      'Your Microsoft account does not have access',
-    );
-    await expect(alert).toContainText('approved Content Studio access group');
+    await expect(alert).toContainText('Microsoft sign-in failed');
+    await expect(alert).toContainText('contact your administrator');
   });
 
   test('successfully logs in with valid credentials', async ({ loginPage }) => {
