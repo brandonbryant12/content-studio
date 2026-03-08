@@ -41,7 +41,7 @@ export const isSupportedModelId = (value: string): value is LLMModelId =>
   supportedModelIds.has(value);
 
 export const resolveModelInput = (value: string | undefined): LLMModelId => {
-  const normalized = value === undefined ? undefined : normalizeOptional(value);
+  const normalized = normalizeOptional(value ?? '');
   if (normalized === undefined) {
     return DEFAULT_MODEL;
   }
@@ -302,11 +302,11 @@ export const testLlm = Command.make('llm', {}).pipe(
         }),
       );
 
-      const normalizedModelInput = normalizeOptional(modelInput);
-      const model = resolveModelInput(normalizedModelInput);
-      if (normalizedModelInput && normalizedModelInput !== model) {
+      const requestedModel = normalizeOptional(modelInput);
+      const model = resolveModelInput(modelInput);
+      if (requestedModel && requestedModel !== model) {
         yield* Console.log(
-          `Model "${normalizedModelInput}" is not in the supported @repo/ai catalog. Falling back to ${DEFAULT_MODEL}.`,
+          `Model "${requestedModel}" is not in the supported @repo/ai catalog. Falling back to ${DEFAULT_MODEL}.`,
         );
       }
       yield* Console.log(`\nUsing model: ${model}`);
