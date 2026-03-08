@@ -33,6 +33,43 @@
     "eventFile": "events/2026-03.jsonl"
   },
   {
+    "id": "2026-03-08-periodic-scans-best-practice-researcher-docs-and-guardrail-drift-workflow-memor",
+    "date": "2026-03-08",
+    "month": "2026-03",
+    "workflow": "Periodic Scans",
+    "title": "Best Practice Researcher: docs-and-guardrail-drift — workflow-memory index integrity failure + error-location lint drift",
+    "severity": "high",
+    "status": "completed",
+    "tags": [
+      "automation",
+      "periodic-scans",
+      "best-practice-researcher",
+      "memory",
+      "workflow-memory",
+      "skill:periodic-scans",
+      "trajectory:scope:macro",
+      "trajectory:domain:docs-and-guardrail-drift",
+      "signal:5",
+      "tool:gh",
+      "tool:workflow-memory:preflight",
+      "tool:workflow-memory:retrieve",
+      "tool:workflow-memory:add-entry",
+      "tool:workflow-memory:sync",
+      "tool:node",
+      "tool:web-search",
+      "tool:web-fetch",
+      "memory-form:external",
+      "memory-function:episodic",
+      "memory-function:semantic",
+      "memory-dynamics:retrieve",
+      "memory-dynamics:write",
+      "memory-dynamics:conflict"
+    ],
+    "importance": 0.93,
+    "confidence": 0.92,
+    "eventFile": "events/2026-03.jsonl"
+  },
+  {
     "id": "2026-03-08-periodic-scans-product-owner-reviewer-approval-review-retry-micro-pass-list-sta",
     "date": "2026-03-08",
     "month": "2026-03",
@@ -64,6 +101,40 @@
     ],
     "importance": 0.88,
     "confidence": 0.9,
+    "eventFile": "events/2026-03.jsonl"
+  },
+  {
+    "id": "2026-03-08-periodic-scans-product-owner-reviewer-empty-loading-error-micro-dashboard-and-retry-recovery",
+    "date": "2026-03-08",
+    "month": "2026-03",
+    "workflow": "Periodic Scans",
+    "title": "Product Owner Reviewer: empty/loading/error/success micro pass — dashboard partial-failure resilience and in-flow retry recovery",
+    "severity": "medium",
+    "status": "completed",
+    "tags": [
+      "automation",
+      "periodic-scans",
+      "product-owner",
+      "memory",
+      "workflow-memory",
+      "trajectory:scope:micro",
+      "trajectory:domain:empty-loading-error-success",
+      "tool:gh",
+      "tool:workflow-memory:preflight",
+      "tool:workflow-memory:retrieve",
+      "tool:workflow-memory:add-entry",
+      "tool:workflow-memory:sync",
+      "tool:rg",
+      "tool:sed",
+      "tool:jq",
+      "memory-form:external",
+      "memory-function:episodic",
+      "memory-function:semantic",
+      "memory-dynamics:retrieve",
+      "memory-dynamics:write"
+    ],
+    "importance": 0.88,
+    "confidence": 0.91,
     "eventFile": "events/2026-03.jsonl"
   },
   {
@@ -7017,8 +7088,5 @@
       "memory-dynamics:write"
     ],
     "eventFile": "events/2026-02.jsonl"
-  }
-]
-  "eventFile": "events/2026-02.jsonl"
   }
 ]
