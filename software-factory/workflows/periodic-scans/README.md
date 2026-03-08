@@ -5,7 +5,8 @@
 
 ## What It Does
 
-Runs recurring per-PR, daily, weekly, and monthly quality scans to detect systemic risks and produce prioritized closure work.
+Runs recurring checks on product quality, code health, docs, and workflow
+tooling, then routes findings into concrete follow-up work.
 
 ## Workflow Skills
 
@@ -14,19 +15,19 @@ Runs recurring per-PR, daily, weekly, and monthly quality scans to detect system
 
 ## Automation Entry Points
 
-- [`best-practice-researcher`](../../../automations/best-practice-researcher/best-practice-researcher.md): continuous best-practice random-walk research scan lane.
-- [`software-factory-researcher`](../../../automations/software-factory-researcher/software-factory-researcher.md): continuous software-factory/self-improvement research scan lane.
-- [`product-vision-researcher`](../../../automations/product-vision-researcher/product-vision-researcher.md): strategic product-direction lane that turns roadmap opportunities into `product-vision` issues.
-- [`product-owner-reviewer`](../../../automations/product-owner-reviewer/product-owner-reviewer.md): day-to-day UX/journey coherence lane that opens tactical product-owner improvements.
-- [`issue-evaluator`](../../../automations/issue-evaluator/issue-evaluator.md): issue decision lane that labels open issues as `ready-for-dev`, `human-eval-needed`, or `rejected` using a strict readiness rubric.
-- [`sanity-check`](../../../automations/sanity-check/sanity-check.md): hourly memory-driven scan lane that can directly implement and merge bounded high-confidence fixes.
+- [`best-practice-researcher`](../../../automations/best-practice-researcher/best-practice-researcher.md): opens issues for architecture, testing, and implementation best-practice gaps.
+- [`software-factory-researcher`](../../../automations/software-factory-researcher/software-factory-researcher.md): opens issues for workflow, automation, and related documentation/tooling gaps.
+- [`product-vision-researcher`](../../../automations/product-vision-researcher/product-vision-researcher.md): turns longer-horizon product opportunities into `product-vision` issues.
+- [`product-owner-reviewer`](../../../automations/product-owner-reviewer/product-owner-reviewer.md): reviews day-to-day UX flows and opens tactical product improvements.
+- [`issue-evaluator`](../../../automations/issue-evaluator/issue-evaluator.md): labels open issues as `ready-for-dev`, `human-eval-needed`, or `rejected` using a strict readiness rubric.
+- [`sanity-check`](../../../automations/sanity-check/sanity-check.md): runs bounded follow-up fixes that can be validated and merged safely.
 
 ## How It Works
 
 1. Run cadence-specific checks (per-PR, daily, weekly, monthly/release).
 2. Classify findings by severity, impact, effort, and confidence.
-3. Add workflow-memory coverage checks and flag missing monthly workflow entries.
-4. Route fixes to execution workflows and track closure status.
+3. Check workflow-memory coverage and flag missing review/maintenance follow-up where required.
+4. Route fixes to feature delivery, docs updates, or workflow maintenance and track closure status.
 
 ## Outputs
 

@@ -5,7 +5,7 @@
       "id": "feature-delivery",
       "name": "Feature Delivery",
       "memoryKey": "Feature Delivery",
-      "summary": "Executes plan -> implement -> validate -> compound for vertical delivery slices.",
+      "summary": "Default workflow for scoped product, platform, and code changes.",
       "primarySkills": [
         "feature-delivery"
       ],
@@ -45,7 +45,7 @@
       "id": "periodic-scans",
       "name": "Periodic Scans",
       "memoryKey": "Periodic Scans",
-      "summary": "Runs recurring quality scans and routes findings into closure workflows.",
+      "summary": "Runs recurring product, code, and workflow-quality checks and routes findings into follow-up work.",
       "primarySkills": [
         "periodic-scans"
       ],
@@ -63,7 +63,7 @@
       "id": "self-improvement",
       "name": "Self-Improvement",
       "memoryKey": "Self-Improvement",
-      "summary": "Converts repeated failures into stronger guardrails, tests, docs, and automation rules.",
+      "summary": "Maintains repository guardrails, workflow docs, skills, and automations after repeated failures or review feedback.",
       "primarySkills": [
         "self-improvement"
       ],
@@ -211,7 +211,7 @@
       "id": "quality-closure-loop",
       "name": "Quality Closure Loop",
       "memoryKey": "Uses workflow keys executed in-loop",
-      "summary": "Orchestrates scan -> triage -> fixes -> recurrence prevention -> closure.",
+      "summary": "Takes findings through triage, fixes, validation, and recurrence prevention.",
       "skills": [
         "quality-closure-loop"
       ],

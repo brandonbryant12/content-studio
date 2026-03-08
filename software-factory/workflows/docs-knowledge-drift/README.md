@@ -10,12 +10,12 @@ Keeps standards, workflow guidance, and onboarding docs aligned with real reposi
 ## Workflow Skills
 
 - `docs-knowledge-drift` (primary)
-- Common companions: `feature-delivery`, `self-improvement`
+- Common companions: `feature-delivery`, `periodic-scans`, `self-improvement`
 
 ## Automation Entry Points
 
 - No dedicated automation lane currently owns this workflow.
-- Typically run during feature delivery, periodic scans, and self-improvement loops.
+- Typically run during product changes, after scan findings, or while fixing workflow/tooling drift.
 
 ## How It Works
 

@@ -1,16 +1,18 @@
 # Operations
 
-Operations are the runnable units of the Software Factory CLI.
+Operations are the runnable CLI entrypoints for workflow tooling.
 
 Execution model:
 
 ```text
-Automation -> Operation -> Strategy -> Skills -> Artifacts
+Automation lane -> Operation -> Workflow -> Skills -> Outputs
 ```
 
 - `Operation`: CLI-run entrypoint (`software-factory operation run ...`).
-- `Strategy`: internal execution contract selected by the operation.
-- `Skill`: reusable method invoked during strategy phases.
+- `Workflow`: documented delivery or maintenance flow selected by the operation.
+- `Skill`: reusable method invoked during workflow execution.
+
+The registry field is still named `strategy`; the docs use `workflow`.
 
 Registry source of truth:
 - [`software-factory/operations/registry.json`](./registry.json)
@@ -20,7 +22,7 @@ Registry source of truth:
 
 1. `ready-for-dev-executor`
 - Purpose: implement `ready-for-dev` issues.
-- Strategy: `auto` (routed by issue complexity/surface).
+- Workflow: `auto` (routed by issue complexity/surface).
 - Runner: native Effect TypeScript two-stage router:
   - codex planner call selects a coherent issue bundle + model/thinking
   - codex execution call implements the selected bundle
@@ -28,32 +30,32 @@ Registry source of truth:
 
 2. `issue-evaluator`
 - Purpose: apply decision labels to open issues.
-- Strategy: `periodic-scans`
+- Workflow: `periodic-scans`
 - Args: `--dry-run`, `--model`, `--thinking`
 
 3. `sanity-check`
 - Purpose: periodic scan/fix loop with recurrence guardrails.
-- Strategy: `periodic-scans`
+- Workflow: `periodic-scans`
 - Args: `--dry-run`, `--model`, `--thinking`
 
 4. `best-practice-researcher`
 - Purpose: best-practice random-walk research and issue drafting.
-- Strategy: `periodic-scans`
+- Workflow: `periodic-scans`
 - Args: `--dry-run`, `--model`, `--thinking`
 
 5. `software-factory-researcher`
-- Purpose: software-factory and self-improvement research.
-- Strategy: `self-improvement`
+- Purpose: workflow, automation, and documentation/tooling maintenance research.
+- Workflow: `self-improvement`
 - Args: `--dry-run`, `--model`, `--thinking`
 
 6. `product-vision-researcher`
 - Purpose: strategic product opportunity research.
-- Strategy: `periodic-scans`
+- Workflow: `periodic-scans`
 - Args: `--dry-run`, `--model`, `--thinking`
 
 7. `product-owner-reviewer`
 - Purpose: tactical UX/journey review and issue drafting.
-- Strategy: `periodic-scans`
+- Workflow: `periodic-scans`
 - Args: `--dry-run`, `--model`, `--thinking`
 
 ## Runtime Notes

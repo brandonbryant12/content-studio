@@ -43,16 +43,20 @@ Start here:
 4. Backend patterns: [`docs/patterns/`](./docs/patterns/)
 5. Frontend standards: [`docs/frontend/`](./docs/frontend/)
 
-## Software Factory
+## Workflow Tooling
 
-Operation, strategy, automation, and workflow-memory conventions are defined in [`software-factory/`](./software-factory/).
+Repository workflow docs live in [`software-factory/`](./software-factory/) and
+[`automations/`](./automations/). Use them when you need to understand which
+workflow fits a change, which skill to invoke, or how an automation lane runs.
+
+Most product and code changes should still start in [`docs/`](./docs/).
 
 Start here:
 
-1. Operations catalog: [`software-factory/operations/README.md`](./software-factory/operations/README.md)
-2. Strategy catalog: [`software-factory/workflows/README.md`](./software-factory/workflows/README.md)
-3. Automations guide: [`automations/README.md`](./automations/README.md)
-4. Workflow memory guide: [`software-factory/workflow-memory/README.md`](./software-factory/workflow-memory/README.md)
+1. Workflow catalog: [`software-factory/workflows/README.md`](./software-factory/workflows/README.md)
+2. Operations catalog: [`software-factory/operations/README.md`](./software-factory/operations/README.md)
+3. Automation lanes: [`automations/README.md`](./automations/README.md)
+4. Workflow logging and retrieval: [`software-factory/workflow-memory/README.md`](./software-factory/workflow-memory/README.md)
 
 ## Development Setup
 

@@ -5,7 +5,9 @@
 
 ## What It Does
 
-Converts repeated failures, review feedback, and scan findings into stronger guardrails across tests, lint, docs, skills, and automation.
+Repository maintenance workflow for strengthening docs, checks, skills, and
+automation after repeated failures, review feedback, or scan findings. This is
+about improving the development process, not changing product behavior.
 
 ## Workflow Skills
 
@@ -14,9 +16,9 @@ Converts repeated failures, review feedback, and scan findings into stronger gua
 
 ## Automation Entry Points
 
-- [`software-factory-researcher`](../../../automations/software-factory-researcher/software-factory-researcher.md): produces candidate self-improvement issues.
-- [`ready-for-dev-executor`](../../../automations/ready-for-dev-executor/ready-for-dev-executor.md): implements approved self-improvement issues after a human adds `ready-for-dev`.
-- [`sanity-check`](../../../automations/sanity-check/sanity-check.md): periodically identifies and directly fixes bounded self-improvement guardrail issues.
+- [`software-factory-researcher`](../../../automations/software-factory-researcher/software-factory-researcher.md): produces candidate workflow-tooling and guardrail issues.
+- [`ready-for-dev-executor`](../../../automations/ready-for-dev-executor/ready-for-dev-executor.md): implements approved workflow-maintenance issues after a human adds `ready-for-dev`.
+- [`sanity-check`](../../../automations/sanity-check/sanity-check.md): periodically identifies and directly fixes bounded guardrail and workflow-tooling issues.
 
 ## How It Works
 

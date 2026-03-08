@@ -1,11 +1,8 @@
-# Research Log
+# Research
 
-This directory tracks paper-derived ideas that are actually implemented in this repository.
+This directory is intentionally reset for the ownership handoff.
 
-Use this log to preserve traceability from:
-- external paper -> issue proposal -> implementation in code
+Use it to track new external research and shipped adaptations from this point forward.
 
 Primary file:
 - [`research/implemented-ideas.md`](./implemented-ideas.md)
-
-Only log ideas that were shipped (merged), not just discussed.

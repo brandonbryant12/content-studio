@@ -157,7 +157,7 @@
     {
       "id": "software-factory-researcher",
       "name": "Software Factory Researcher",
-      "description": "Research lane for software-factory architecture and self-improvement recommendations.",
+      "description": "Research lane for workflow, automation, and documentation/tooling maintenance recommendations.",
       "defaultModel": "gpt-5.3-codex",
       "defaultThinking": "high",
       "strategy": "self-improvement",

@@ -5,7 +5,8 @@
 
 ## What It Does
 
-Runs the default request-to-merge delivery loop: plan slices, implement safely, validate, update docs, and compound learnings.
+Default workflow for product, API, worker, and web changes. Use it for scoped
+features, behavior changes, and straightforward refactors.
 
 ## Workflow Skills
 
@@ -23,7 +24,7 @@ Runs the default request-to-merge delivery loop: plan slices, implement safely, 
 2. Implement one slice at a time with guardrails (authz, sanitization, typing, query keys, telemetry lifecycle).
 3. Validate with targeted checks, then widen to repo gates.
 4. Update docs when behavior or guardrails change.
-5. Persist a memory event and include the event id in delivery notes.
+5. Record the workflow-memory note required by the workflow and include the event id in delivery notes.
 
 ## Outputs
 

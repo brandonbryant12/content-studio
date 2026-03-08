@@ -58,23 +58,25 @@ const runWorkflowsGeneratePromise = async (): Promise<number> => {
   lines.push("");
   lines.push("# Workflow Catalog");
   lines.push("");
-  lines.push("Canonical workflow catalog for Content Studio.");
+  lines.push("Workflow, skill, and automation-lane reference for Content Studio.");
   lines.push("");
   lines.push("Source of truth: [`software-factory/workflows/registry.json`](./registry.json)");
   lines.push("");
-  lines.push("## Concepts");
+  lines.push("## Terms");
   lines.push("");
-  lines.push("- `Workflow`: A process contract that defines scope, expected outcome, and workflow-memory key.");
-  lines.push("- `Skill`: A reusable execution method that implements one part of a workflow (or a helper task).");
   lines.push(
-    "- `Automation`: A runtime lane (scheduled or event-driven) that invokes one or more workflows and skills with lane-specific policies.",
+    "- `Workflow`: a documented development or maintenance flow with scope, expected outcome, and workflow-memory key.",
+  );
+  lines.push("- `Skill`: reusable execution instructions used within a workflow or helper task.");
+  lines.push(
+    "- `Automation lane`: a scheduled or event-driven wrapper that runs operations with lane-specific policies.",
   );
   lines.push("");
-  lines.push("Not every workflow has an automation lane, and not every automation lane maps 1:1 to one workflow.");
+  lines.push("Start in `docs/` for product and code rules. Use this catalog to choose the workflow, skills, and lanes that fit the work.");
   lines.push("");
   lines.push("## Core Workflows");
   lines.push("");
-  lines.push("Core workflows are the only entries with first-class workflow memory keys.");
+  lines.push("Only core workflows own standalone workflow-memory keys.");
   lines.push("");
   lines.push("| Workflow | Directory | Memory Key | Primary Skills | Automation Lanes | Intent |");
   lines.push("|---|---|---|---|---|---|");
@@ -88,7 +90,7 @@ const runWorkflowsGeneratePromise = async (): Promise<number> => {
   lines.push("");
   lines.push("## Utility Skills (Not Workflows)");
   lines.push("");
-  lines.push("These are reusable helper/orchestrator skills. They do not define standalone workflow classes.");
+  lines.push("These are reusable helper skills. They do not define standalone workflow classes.");
   lines.push("");
   lines.push("| Utility Skill | Memory Key | Source Skill | Used With Workflows | Automation Lanes | Purpose |");
   lines.push("|---|---|---|---|---|---|");
@@ -104,7 +106,8 @@ const runWorkflowsGeneratePromise = async (): Promise<number> => {
   lines.push("");
   lines.push("1. Pick the smallest core workflow set that satisfies the change.");
   lines.push("2. Add utility skills only when they reduce risk or improve execution clarity.");
-  lines.push("3. Persist workflow-memory notes using the core workflow key(s) that were actually executed.");
+  lines.push("3. Check the linked automation lanes when the work is scheduled, issue-driven, or queue-driven.");
+  lines.push("4. Persist workflow-memory notes using the core workflow key(s) that were actually executed.");
 
   await writeFile(readmePath, `${lines.join("\n")}\n`, "utf8");
   console.log(`Generated ${readmePath}`);

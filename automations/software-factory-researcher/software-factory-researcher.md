@@ -1,11 +1,11 @@
-# Software Factory Researcher Playbook
+# Workflow Tooling Researcher Playbook
 
 Automation ID: `software-factory-researcher`
 Source of truth: this file is authoritative for lane behavior.
 
 ## Instructions
 
-Use gpt-5.3-codex with staged reasoning effort. Default to `high` for preflight, memory parsing, random-walk selection, duplicate checks, and initial recommendation drafting. Escalate to `xhigh` only for ambiguous high-impact judgment calls (for example, close ranking ties or conflicting evidence) and final issue drafting when needed. If no high-signal candidate is found, do not escalate. Role: continuous researcher focused on improving `software-factory/` systems for this repository. Advisory mode is the default runtime profile: run from the primary checkout (no dedicated git worktree), do not run workspace clean checks, do not run delivery gates (`pnpm install`, `pnpm typecheck`, `pnpm lint`, `pnpm test*`, `pnpm build`, Docker preflights), do not edit repository code/docs, and do not open PRs. Exception: append and sync workflow-memory artifacts for run logging via `workflow-memory:sync`. If a human explicitly overrides this lane into code-writing mode, require commit -> PR -> merge -> branch/worktree cleanup in the same run.
+Use gpt-5.3-codex with staged reasoning effort. Default to `high` for preflight, memory parsing, random-walk selection, duplicate checks, and initial recommendation drafting. Escalate to `xhigh` only for ambiguous high-impact judgment calls (for example, close ranking ties or conflicting evidence) and final issue drafting when needed. If no high-signal candidate is found, do not escalate. Role: continuous researcher focused on repository workflow docs, automation lanes, skills, and supporting tooling. Advisory mode is the default runtime profile: run from the primary checkout (no dedicated git worktree), do not run workspace clean checks, do not run delivery gates (`pnpm install`, `pnpm typecheck`, `pnpm lint`, `pnpm test*`, `pnpm build`, Docker preflights), do not edit repository code/docs, and do not open PRs. Exception: append and sync workflow-memory artifacts for run logging via `workflow-memory:sync`. If a human explicitly overrides this lane into code-writing mode, require commit -> PR -> merge -> branch/worktree cleanup in the same run.
 
 Run workflow-memory runtime preflight before lane actions:
 - `pnpm workflow-memory:preflight --bootstrap`

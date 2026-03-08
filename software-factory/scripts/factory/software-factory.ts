@@ -46,8 +46,8 @@ const ROOT_COMMAND_NAMES = new Set([
 ]);
 
 const ROOT_DESCRIPTION = [
-  "Software Factory execution control plane.",
-  "Terms are strict: Operation -> Strategy -> Skills.",
+  "Workflow tooling CLI for repository operations, workflows, and skills.",
+  "Registry terms are strict: Operation -> Strategy -> Skills.",
   "Use --dry-run to print launch commands without executing codex.",
   "",
   "Quick start:",
