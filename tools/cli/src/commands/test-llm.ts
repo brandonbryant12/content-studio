@@ -35,14 +35,17 @@ const normalizeOptional = (value: string): string | undefined => {
   return trimmed.length > 0 ? trimmed : undefined;
 };
 
+const supportedModelIds = new Set<string>(LLM_MODEL_IDS);
+
 export const isSupportedModelId = (value: string): value is LLMModelId =>
-  LLM_MODEL_IDS.some((modelId) => modelId === value);
+  supportedModelIds.has(value);
 
 export const resolveModelInput = (value: string | undefined): LLMModelId => {
   const normalized = value === undefined ? undefined : normalizeOptional(value);
-  return normalized !== undefined && isSupportedModelId(normalized)
-    ? normalized
-    : DEFAULT_MODEL;
+  if (normalized === undefined) {
+    return DEFAULT_MODEL;
+  }
+  return isSupportedModelId(normalized) ? normalized : DEFAULT_MODEL;
 };
 
 export const parseBoundedNumber = (
@@ -113,15 +116,11 @@ export const buildChatPrompt = (
   history: ReadonlyArray<ChatTurn>,
   userInput: string,
 ): string => {
-  const transcript = history
-    .map(
-      (turn) => `${turn.role === 'user' ? 'User' : 'Assistant'}: ${turn.text}`,
-    )
-    .join('\n');
-
-  return transcript.length > 0
-    ? `${transcript}\nUser: ${userInput}\nAssistant:`
-    : `User: ${userInput}\nAssistant:`;
+  const lines = history.map(
+    (turn) => `${turn.role === 'user' ? 'User' : 'Assistant'}: ${turn.text}`,
+  );
+  lines.push(`User: ${userInput}`, 'Assistant:');
+  return lines.join('\n');
 };
 
 const getDefaultKey = (): Effect.Effect<string | undefined> =>
@@ -250,11 +249,10 @@ const runChatExperiment = (aiLayer: ReturnType<typeof createAILayer>) =>
       }
 
       const assistantText = response.right.object.response.trim();
-      history = [
-        ...history,
+      history.push(
         { role: 'user', text: input },
         { role: 'assistant', text: assistantText },
-      ];
+      );
 
       yield* Console.log(`\nAssistant: ${assistantText}\n`);
       yield* printUsage(response.right.usage);
