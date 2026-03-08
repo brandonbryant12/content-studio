@@ -30,9 +30,9 @@ export interface ChatTurn {
   readonly text: string;
 }
 
-const normalizeOptional = (value: string): string | undefined => {
-  const trimmed = value.trim();
-  return trimmed.length > 0 ? trimmed : undefined;
+const normalizeOptional = (value: string | undefined): string | undefined => {
+  const trimmed = value?.trim();
+  return trimmed && trimmed.length > 0 ? trimmed : undefined;
 };
 
 const supportedModelIds = new Set<string>(LLM_MODEL_IDS);
@@ -40,12 +40,25 @@ const supportedModelIds = new Set<string>(LLM_MODEL_IDS);
 export const isSupportedModelId = (value: string): value is LLMModelId =>
   supportedModelIds.has(value);
 
-export const resolveModelInput = (value: string | undefined): LLMModelId => {
-  const normalized = normalizeOptional(value ?? '');
-  if (normalized === undefined) {
-    return DEFAULT_MODEL;
+const resolveModelSelection = (
+  value: string | undefined,
+): {
+  readonly requestedModel: string | undefined;
+  readonly model: LLMModelId;
+} => {
+  const requestedModel = normalizeOptional(value);
+  if (requestedModel === undefined) {
+    return { requestedModel, model: DEFAULT_MODEL };
   }
-  return isSupportedModelId(normalized) ? normalized : DEFAULT_MODEL;
+
+  return {
+    requestedModel,
+    model: isSupportedModelId(requestedModel) ? requestedModel : DEFAULT_MODEL,
+  };
+};
+
+export const resolveModelInput = (value: string | undefined): LLMModelId => {
+  return resolveModelSelection(value).model;
 };
 
 export const parseBoundedNumber = (
@@ -302,8 +315,7 @@ export const testLlm = Command.make('llm', {}).pipe(
         }),
       );
 
-      const requestedModel = normalizeOptional(modelInput);
-      const model = resolveModelInput(modelInput);
+      const { requestedModel, model } = resolveModelSelection(modelInput);
       if (requestedModel && requestedModel !== model) {
         yield* Console.log(
           `Model "${requestedModel}" is not in the supported @repo/ai catalog. Falling back to ${DEFAULT_MODEL}.`,
