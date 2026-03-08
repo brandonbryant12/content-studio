@@ -3,6 +3,7 @@ import { createFileRoute } from '@tanstack/react-router';
 import { useEffect } from 'react';
 import { apiClient } from '@/clients/apiClient';
 import { queryClient } from '@/clients/queryClient';
+import { formatProductPageTitle } from '@/constants';
 import { SourceDetailContainer } from '@/features/sources/components';
 import { SuspenseBoundary } from '@/shared/components/suspense-boundary';
 
@@ -28,7 +29,7 @@ function SourcePage() {
   const { sourceId } = Route.useParams();
 
   useEffect(() => {
-    document.title = 'Source - Content Studio';
+    document.title = formatProductPageTitle('Source');
   }, []);
 
   return (

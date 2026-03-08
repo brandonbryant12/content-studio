@@ -11,7 +11,7 @@ import { Button } from '@repo/ui/components/button';
 import { createFileRoute, Link, Navigate } from '@tanstack/react-router';
 import { useEffect } from 'react';
 import { authClient } from '@/clients/authClient';
-import { APP_NAME } from '@/constants';
+import { AI_APP_NAME, APP_NAME, formatProductPageTitle } from '@/constants';
 import { isPasswordAuthEnabled } from '@/env';
 
 export const Route = createFileRoute('/')({
@@ -52,7 +52,7 @@ function RouteComponent() {
   const primaryCtaLabel = isPasswordAuthEnabled ? 'Sign up' : 'Sign in';
 
   useEffect(() => {
-    document.title = 'Content Studio';
+    document.title = formatProductPageTitle();
   }, []);
 
   if (session?.user) {
@@ -84,7 +84,7 @@ function RouteComponent() {
           </div>
 
           {/* Eyebrow */}
-          <p className="page-eyebrow animate-fade-in-up">AI Content Studio</p>
+          <p className="page-eyebrow animate-fade-in-up">{AI_APP_NAME}</p>
 
           {/* Headline */}
           <h1 className="hero-title font-serif font-bold tracking-tight text-foreground leading-[1.05] animate-fade-in-up stagger-1">
@@ -95,8 +95,7 @@ function RouteComponent() {
           {/* Subtitle */}
           <p className="text-body-lg mt-6 max-w-xl mx-auto animate-fade-in-up stagger-2">
             Upload your sources, paste a URL, or let AI research a topic.
-            Content Studio generates polished podcasts, voiceovers, and visuals
-            you can trust — grounded in your sources.
+            {` ${APP_NAME} generates polished podcasts, voiceovers, and visuals you can trust — grounded in your sources.`}
           </p>
 
           {/* CTAs */}
@@ -135,7 +134,7 @@ function RouteComponent() {
                 step: 2,
                 icon: LightningBoltIcon,
                 title: 'AI creates your content',
-                desc: 'Choose your format — podcast, voiceover, or infographic — and Content Studio generates it from your approved sources.',
+                desc: `Choose your format — podcast, voiceover, or infographic — and ${APP_NAME} generates it from your approved sources.`,
                 color: 'text-primary',
                 bg: 'bg-primary',
               },

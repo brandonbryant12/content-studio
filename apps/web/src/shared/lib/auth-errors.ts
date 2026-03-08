@@ -1,3 +1,5 @@
+import { APP_NAME } from '@/constants';
+
 const AUTH_ERROR_MESSAGES: Record<string, string> = {
   INVALID_EMAIL_OR_PASSWORD: 'Invalid email or password.',
   USER_ALREADY_EXISTS: 'An account with that email already exists.',
@@ -5,8 +7,7 @@ const AUTH_ERROR_MESSAGES: Record<string, string> = {
 
 const RATE_LIMITED_MESSAGE =
   'Too many sign-in attempts. Please try again in a moment.';
-const MICROSOFT_SSO_FAILURE_MESSAGE =
-  "We couldn't complete Microsoft sign-in. Try again, and if you still need access to Content Studio, contact your administrator.";
+const MICROSOFT_SSO_FAILURE_MESSAGE = `We couldn't complete Microsoft sign-in. Try again, and if you still need access to ${APP_NAME}, contact your administrator.`;
 
 export const MICROSOFT_SSO_AUTH_FLOW = 'microsoft-sso';
 

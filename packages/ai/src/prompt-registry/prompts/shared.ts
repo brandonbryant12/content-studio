@@ -1,5 +1,6 @@
 import type { PromptComplianceMetadata } from '../types';
 
+export const PROMPT_PRODUCT_NAME = 'Creator Studio' as const;
 export const PROMPT_OWNER = 'team:content-studio-ai';
 
 const DEFAULT_PROHIBITED_DATA = [

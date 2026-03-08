@@ -1,5 +1,6 @@
 import { describe, it, expect, vi } from 'vitest';
 import { OnboardingGuidance } from '../components/onboarding-guidance';
+import { APP_NAME } from '@/constants';
 import { render, screen, fireEvent } from '@/test-utils';
 
 // Stub TanStack Router Link
@@ -13,7 +14,7 @@ describe('OnboardingGuidance', () => {
   it('renders all three workflow steps', () => {
     render(<OnboardingGuidance onDismiss={vi.fn()} />);
 
-    expect(screen.getByText('Welcome to Content Studio')).toBeInTheDocument();
+    expect(screen.getByText(`Welcome to ${APP_NAME}`)).toBeInTheDocument();
     expect(screen.getByText('Add source material')).toBeInTheDocument();
     expect(screen.getByText('Set up your brand voice')).toBeInTheDocument();
     expect(screen.getByText('Generate your first content')).toBeInTheDocument();

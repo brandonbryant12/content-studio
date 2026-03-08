@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# Content Studio — Environment Setup
+# Creator Studio — Environment Setup
 # Generates .env files for server, web, and worker apps.
 #
 # Supports two modes:
@@ -10,6 +10,7 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 ROOT_DIR="$(cd "$SCRIPT_DIR/../.." && pwd)"
+PRODUCT_NAME='Creator Studio'
 
 # Colors
 BOLD='\033[1m'
@@ -68,7 +69,7 @@ prompt_yn() {
 # ─── Banner ───────────────────────────────────────────────────────────
 echo -e "${BOLD}${CYAN}"
 echo "  ┌─────────────────────────────────────┐"
-echo "  │     Content Studio — Env Setup       │"
+printf "  │     %-31s │\n" "${PRODUCT_NAME} — Env Setup"
 echo "  └─────────────────────────────────────┘"
 echo -e "${RESET}"
 

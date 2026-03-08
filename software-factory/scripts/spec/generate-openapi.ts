@@ -38,6 +38,7 @@ const asRecord = (value: unknown): Record<string, unknown> | null => {
 };
 
 const csvCell = (value: string): string => value.replaceAll('|', '\\|');
+const OPENAPI_SNAPSHOT_TITLE = 'Creator Studio API (Spec Snapshot)' as const;
 
 const isStreamingOutput = (outputSchema: unknown): boolean => {
   const schemaRecord = asRecord(outputSchema);
@@ -142,7 +143,7 @@ const buildOpenApiDocument = (
   return {
     openapi: '3.1.0',
     info: {
-      title: 'Content Studio API (Spec Snapshot)',
+      title: OPENAPI_SNAPSHOT_TITLE,
       version: '1.0.0',
       description:
         'Generated from oRPC contract metadata. Request/response schemas are intentionally omitted in this initial snapshot.',

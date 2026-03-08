@@ -1,5 +1,5 @@
 import { definePrompt } from '../types';
-import { buildCompliance, PROMPT_OWNER } from './shared';
+import { buildCompliance, PROMPT_OWNER, PROMPT_PRODUCT_NAME } from './shared';
 
 export interface ChatWritingAssistantSystemPromptInput {
   readonly transcript: string;
@@ -23,7 +23,7 @@ export const chatWritingAssistantSystemPrompt = definePrompt({
   }),
   render: ({
     transcript,
-  }: ChatWritingAssistantSystemPromptInput) => `You are a writing assistant for voiceover narration in Content Studio.
+  }: ChatWritingAssistantSystemPromptInput) => `You are a writing assistant for voiceover narration in ${PROMPT_PRODUCT_NAME}.
 
 Your job is to improve the current transcript and collaborate with the user on revisions.
 

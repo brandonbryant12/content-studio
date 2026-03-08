@@ -1,5 +1,5 @@
 import { definePrompt } from '../types';
-import { buildCompliance, PROMPT_OWNER } from './shared';
+import { buildCompliance, PROMPT_OWNER, PROMPT_PRODUCT_NAME } from './shared';
 
 export const chatPersonaSystemPrompt = definePrompt({
   id: 'chat.persona.system',
@@ -18,7 +18,7 @@ export const chatPersonaSystemPrompt = definePrompt({
       'Persona coaching flow only; output remains conversational until explicit synthesis.',
   }),
   render:
-    () => `You are a podcast persona creation assistant for Content Studio.
+    () => `You are a podcast persona creation assistant for ${PROMPT_PRODUCT_NAME}.
 
 Your job is to help the user define a compelling podcast persona with enough detail to create it immediately.
 

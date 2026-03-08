@@ -1,14 +1,14 @@
 import { describe, expect, it } from 'vitest';
+import { APP_NAME } from '@/constants';
 import {
   getAuthErrorMessage,
   getSSOCallbackErrorNotice,
   MICROSOFT_SSO_AUTH_FLOW,
 } from './auth-errors';
 
-describe('getAuthErrorMessage', () => {
-  const ssoFailureMessage =
-    "We couldn't complete Microsoft sign-in. Try again, and if you still need access to Content Studio, contact your administrator.";
+const ssoFailureMessage = `We couldn't complete Microsoft sign-in. Try again, and if you still need access to ${APP_NAME}, contact your administrator.`;
 
+describe('getAuthErrorMessage', () => {
   it('returns fallback for unknown input', () => {
     expect(getAuthErrorMessage(null, 'Unable to sign in.')).toBe(
       'Unable to sign in.',
@@ -85,8 +85,7 @@ describe('getSSOCallbackErrorNotice', () => {
       }),
     ).toEqual({
       title: 'Microsoft sign-in failed',
-      description:
-        "We couldn't complete Microsoft sign-in. Try again, and if you still need access to Content Studio, contact your administrator.",
+      description: ssoFailureMessage,
     });
   });
 
@@ -98,8 +97,7 @@ describe('getSSOCallbackErrorNotice', () => {
       }),
     ).toEqual({
       title: 'Microsoft sign-in failed',
-      description:
-        "We couldn't complete Microsoft sign-in. Try again, and if you still need access to Content Studio, contact your administrator.",
+      description: ssoFailureMessage,
     });
   });
 

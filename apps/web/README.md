@@ -1,4 +1,4 @@
-# Web App (Content Studio)
+# Web App (Creator Studio)
 
 React SPA built with Vite, TanStack Router, and Tailwind CSS.
 

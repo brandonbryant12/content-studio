@@ -1,4 +1,4 @@
-# Content Studio CLI
+# Creator Studio CLI
 
 Interactive developer CLI for testing integrations against real services. Built with `@effect/cli`.
 

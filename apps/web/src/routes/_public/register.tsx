@@ -1,5 +1,6 @@
 import { Navigate, createFileRoute, Link } from '@tanstack/react-router';
 import { useEffect } from 'react';
+import { APP_NAME, formatProductPageTitle } from '@/constants';
 import { isPasswordAuthEnabled } from '@/env';
 import RegisterCredentialsForm from '@/routes/_public/-components/register-form';
 
@@ -9,7 +10,7 @@ export const Route = createFileRoute('/_public/register')({
 
 function RouteComponent() {
   useEffect(() => {
-    document.title = 'Create Account - Content Studio';
+    document.title = formatProductPageTitle('Create Account');
   }, []);
 
   if (!isPasswordAuthEnabled) {
@@ -20,7 +21,7 @@ function RouteComponent() {
     <div className="auth-container">
       <div className="auth-card">
         <div className="auth-header">
-          <p className="page-eyebrow">Content Studio</p>
+          <p className="page-eyebrow">{APP_NAME}</p>
           <h1 className="page-title">Create account</h1>
         </div>
         <div className="card-padded">

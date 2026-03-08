@@ -5,18 +5,21 @@ type MetadataInput = Record<string, JsonValue> | null | undefined;
 export const sanitizeMetadata = (metadata: MetadataInput) => {
   if (!metadata) return undefined;
 
-  const entries = Object.entries(metadata).flatMap(([key, value]) => {
+  const entries: Array<[string, JsonValue]> = [];
+
+  for (const [key, value] of Object.entries(metadata)) {
     const trimmedKey = key.trim();
-    if (!trimmedKey) return [];
+    if (!trimmedKey) continue;
 
     if (typeof value === 'string') {
       const trimmedValue = value.trim();
-      if (!trimmedValue) return [];
-      return [[trimmedKey, trimmedValue] satisfies [string, JsonValue]];
+      if (!trimmedValue) continue;
+      entries.push([trimmedKey, trimmedValue]);
+      continue;
     }
 
-    return [[trimmedKey, value] satisfies [string, JsonValue]];
-  });
+    entries.push([trimmedKey, value]);
+  }
 
   return Object.fromEntries(entries);
 };

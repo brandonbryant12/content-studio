@@ -9,6 +9,7 @@ import { Button } from '@repo/ui/components/button';
 import { Spinner } from '@repo/ui/components/spinner';
 import { Link } from '@tanstack/react-router';
 import { QuickStartPanel } from './quick-start-panel';
+import { APP_NAME } from '@/constants';
 import { SourcesRecentSection, RecentSection } from './recent-section';
 import {
   CreateInfographicDialog,
@@ -206,7 +207,7 @@ function WorkflowStrip() {
   return (
     <div
       className="mb-8 rounded-xl border border-border/60 bg-card/50 px-4 py-3 animate-fade-in"
-      aria-label="How Content Studio works"
+      aria-label={`How ${APP_NAME} works`}
     >
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
         {WORKFLOW_STEPS.map((step, i) => (

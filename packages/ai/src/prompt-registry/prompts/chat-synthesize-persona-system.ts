@@ -1,5 +1,5 @@
 import { definePrompt } from '../types';
-import { buildCompliance, PROMPT_OWNER } from './shared';
+import { buildCompliance, PROMPT_OWNER, PROMPT_PRODUCT_NAME } from './shared';
 
 export const chatSynthesizePersonaSystemPrompt = definePrompt({
   id: 'chat.synthesize-persona.system',
@@ -17,7 +17,7 @@ export const chatSynthesizePersonaSystemPrompt = definePrompt({
     notes:
       'Structured persona output may be persisted with user resources; review voice selection behavior.',
   }),
-  render: () => `You are a persona synthesizer for Content Studio.
+  render: () => `You are a persona synthesizer for ${PROMPT_PRODUCT_NAME}.
 
 Given a conversation between a user and a persona creation assistant, synthesize the discussion into a structured persona definition:
 1. A name for the persona (can be a real-sounding name or a character name)

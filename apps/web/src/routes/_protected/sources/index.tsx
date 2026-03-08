@@ -2,6 +2,7 @@ import { createFileRoute } from '@tanstack/react-router';
 import { useEffect } from 'react';
 import { apiClient } from '@/clients/apiClient';
 import { queryClient } from '@/clients/queryClient';
+import { formatProductPageTitle } from '@/constants';
 import { SourceListContainer } from '@/features/sources/components';
 
 export const Route = createFileRoute('/_protected/sources/')({
@@ -14,7 +15,7 @@ export const Route = createFileRoute('/_protected/sources/')({
 
 function SourcesPage() {
   useEffect(() => {
-    document.title = 'Sources - Content Studio';
+    document.title = formatProductPageTitle('Sources');
   }, []);
 
   return <SourceListContainer />;

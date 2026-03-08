@@ -1,5 +1,5 @@
 import { definePrompt } from '../types';
-import { buildCompliance, PROMPT_OWNER } from './shared';
+import { buildCompliance, PROMPT_OWNER, PROMPT_PRODUCT_NAME } from './shared';
 
 export const chatResearchSystemPrompt = definePrompt({
   id: 'chat.research.system',
@@ -17,7 +17,7 @@ export const chatResearchSystemPrompt = definePrompt({
       'Conversation guidance only; does not execute research or call external tools.',
   }),
   render:
-    () => `You are a research topic refinement assistant for Content Studio.
+    () => `You are a research topic refinement assistant for ${PROMPT_PRODUCT_NAME}.
 
 Your job is to turn the user's initial idea into an execution-ready deep research brief.
 

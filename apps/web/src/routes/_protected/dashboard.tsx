@@ -2,6 +2,7 @@ import { createFileRoute } from '@tanstack/react-router';
 import { useEffect } from 'react';
 import { apiClient } from '@/clients/apiClient';
 import { queryClient } from '@/clients/queryClient';
+import { formatProductPageTitle } from '@/constants';
 import { DashboardContainer } from '@/features/dashboard/components/dashboard-container';
 import { SuspenseBoundary } from '@/shared/components/suspense-boundary';
 
@@ -26,7 +27,7 @@ export const Route = createFileRoute('/_protected/dashboard')({
 
 function DashboardPage() {
   useEffect(() => {
-    document.title = 'Dashboard - Content Studio';
+    document.title = formatProductPageTitle('Dashboard');
   }, []);
 
   return (

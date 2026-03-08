@@ -5,6 +5,7 @@ import tanstackRouter from '@tanstack/router-plugin/vite';
 import react from '@vitejs/plugin-react-swc';
 import { Schema } from 'effect';
 import { defineConfig } from 'vite';
+import { ProductBranding } from './src/constants';
 
 /**
  * Fixes issue with "__dirname is not defined in ES module scope"
@@ -61,6 +62,12 @@ const port = parseInt(webUrl.port, 10);
 
 export default defineConfig({
   plugins: [
+    {
+      name: 'product-branding-html',
+      transformIndexHtml(html) {
+        return html.replace(/%PRODUCT_NAME%/g, ProductBranding.PRODUCT_NAME);
+      },
+    },
     tanstackRouter({
       routeToken: 'layout',
       autoCodeSplitting: true,

@@ -1,9 +1,11 @@
+import { ProductBranding } from './constants';
+
 export const generateRootHtml = (webUrl: string, serverUrl: string) => `
   <!DOCTYPE html>
   <html lang="en">
     <head>
       <meta charset="UTF-8" />
-      <title>Content Studio API</title>
+      <title>${ProductBranding.API_NAME}</title>
       <style>
         :root { color-scheme: light dark; }
         body {
@@ -49,7 +51,7 @@ export const generateRootHtml = (webUrl: string, serverUrl: string) => `
       </style>
     </head>
     <body>
-      <h1>Content Studio API</h1>
+      <h1>${ProductBranding.API_NAME}</h1>
       <hr />
       <h2>Resources</h2>
       <ul>

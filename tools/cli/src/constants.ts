@@ -1,7 +1,7 @@
-export const DEFAULT_SERVER_PORT = 3035;
 export const PRODUCT_NAME = 'Creator Studio' as const;
 
 export const ProductBranding = {
   PRODUCT_NAME,
-  API_NAME: `${PRODUCT_NAME} API`,
+  CLI_NAME: `${PRODUCT_NAME} CLI`,
+  DEVELOPER_CLI_DESCRIPTION: `${PRODUCT_NAME} developer CLI`,
 } as const;

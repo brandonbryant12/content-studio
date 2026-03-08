@@ -3,6 +3,7 @@ import { useNavigate } from '@tanstack/react-router';
 import { startTransition, useEffect } from 'react';
 import { apiClient } from '@/clients/apiClient';
 import { queryClient } from '@/clients/queryClient';
+import { formatProductPageTitle } from '@/constants';
 import { AdminUserDetailContainer } from '@/features/admin/components/admin-user-detail-container';
 import {
   DEFAULT_ADMIN_ENTITY_LIMIT,
@@ -98,7 +99,7 @@ function AdminUserDetailRoute() {
   };
 
   useEffect(() => {
-    document.title = 'Admin User - Content Studio';
+    document.title = formatProductPageTitle('Admin User');
   }, []);
 
   return (

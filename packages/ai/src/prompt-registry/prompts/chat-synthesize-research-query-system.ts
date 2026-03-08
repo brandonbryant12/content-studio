@@ -1,5 +1,5 @@
 import { definePrompt } from '../types';
-import { buildCompliance, PROMPT_OWNER } from './shared';
+import { buildCompliance, PROMPT_OWNER, PROMPT_PRODUCT_NAME } from './shared';
 
 export const chatSynthesizeResearchQuerySystemPrompt = definePrompt({
   id: 'chat.synthesize-research-query.system',
@@ -18,7 +18,8 @@ export const chatSynthesizeResearchQuerySystemPrompt = definePrompt({
     notes:
       'Structured output may be persisted as research documents; keep scope constrained to discussed context.',
   }),
-  render: () => `You are a research query synthesizer for Content Studio.
+  render:
+    () => `You are a research query synthesizer for ${PROMPT_PRODUCT_NAME}.
 
 Given a conversation between a user and a research assistant, synthesize the discussion into:
 1. A deep research query that functions like an execution-ready research brief.

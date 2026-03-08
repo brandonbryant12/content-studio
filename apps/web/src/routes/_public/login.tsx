@@ -4,6 +4,7 @@ import { createFileRoute, Link } from '@tanstack/react-router';
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
 import { authClient } from '@/clients/authClient';
+import { APP_NAME, formatProductPageTitle } from '@/constants';
 import { env, isMicrosoftSSOAuthEnabled, isPasswordAuthEnabled } from '@/env';
 import LoginCredentialsForm from '@/routes/_public/-components/login-form';
 import {
@@ -55,14 +56,14 @@ function RouteComponent() {
   const ssoErrorNotice = getSSOCallbackErrorNotice(search);
 
   useEffect(() => {
-    document.title = 'Sign In - Content Studio';
+    document.title = formatProductPageTitle('Sign In');
   }, []);
 
   return (
     <div className="auth-container">
       <div className="auth-card">
         <div className="auth-header">
-          <p className="page-eyebrow">Content Studio</p>
+          <p className="page-eyebrow">{APP_NAME}</p>
           <h1 className="page-title">Sign in</h1>
         </div>
         <div className="card-padded">

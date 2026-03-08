@@ -6,6 +6,7 @@ import { Effect } from 'effect';
 import urlJoin from 'url-join';
 import type { ServerRuntime } from './runtime';
 import type { AuthInstance } from '@repo/auth/server';
+import { ProductBranding } from './constants';
 import { handleORPCError } from './effect-handler';
 import { createORPCContext } from './orpc';
 import { appRouter } from './router';
@@ -63,11 +64,11 @@ export const createApi = ({
     plugins: [
       new StrictGetMethodPlugin(),
       new OpenAPIReferencePlugin({
-        docsTitle: 'Content Studio | API Reference',
+        docsTitle: ProductBranding.API_REFERENCE_TITLE,
         docsProvider: 'scalar',
         specGenerateOptions: {
           info: {
-            title: 'Content Studio API',
+            title: ProductBranding.API_NAME,
             version: '1.0.0',
           },
           servers: [{ url: urlJoin(serverUrl, apiPath) }],

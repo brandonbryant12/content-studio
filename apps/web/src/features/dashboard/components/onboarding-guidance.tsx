@@ -6,6 +6,7 @@ import {
 } from '@radix-ui/react-icons';
 import { Button } from '@repo/ui/components/button';
 import { Link } from '@tanstack/react-router';
+import { APP_NAME } from '@/constants';
 
 interface OnboardingGuidanceProps {
   onDismiss: () => void;
@@ -66,7 +67,7 @@ export function OnboardingGuidance({ onDismiss }: OnboardingGuidanceProps) {
       {/* Header */}
       <div className="mb-6 sm:mb-8 max-w-lg">
         <h2 className="font-serif text-xl font-semibold text-foreground mb-2">
-          Welcome to Content Studio
+          {`Welcome to ${APP_NAME}`}
         </h2>
         <p className="text-sm text-muted-foreground leading-relaxed">
           Follow these three steps to create your first piece of content.

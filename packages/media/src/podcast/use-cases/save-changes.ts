@@ -4,6 +4,7 @@ import {
   type PersonaId,
   type Podcast,
   type ScriptSegment,
+  type UpdatePodcast,
 } from '@repo/db/schema';
 import { Effect, Schema } from 'effect';
 import { annotateUseCaseSpan, withUseCaseSpan } from '../../shared';
@@ -25,14 +26,15 @@ export interface SaveChangesResult {
   hasChanges: boolean;
 }
 
-type VoicePersonaUpdateData = {
-  hostVoice?: string;
-  hostVoiceName?: string;
-  coHostVoice?: string;
-  coHostVoiceName?: string;
-  hostPersonaId?: PersonaId | null;
-  coHostPersonaId?: PersonaId | null;
-};
+type VoicePersonaUpdateData = Pick<
+  UpdatePodcast,
+  | 'hostVoice'
+  | 'hostVoiceName'
+  | 'coHostVoice'
+  | 'coHostVoiceName'
+  | 'hostPersonaId'
+  | 'coHostPersonaId'
+>;
 
 const voicePersonaInputKeys = [
   'hostVoice',
@@ -46,16 +48,24 @@ const voicePersonaInputKeys = [
 const buildVoicePersonaUpdateData = (
   input: SaveChangesInput,
 ): VoicePersonaUpdateData => {
-  const updateData: VoicePersonaUpdateData = {};
-
-  for (const key of voicePersonaInputKeys) {
-    const value = input[key];
-    if (value !== undefined) {
-      updateData[key] = value;
-    }
-  }
-
-  return updateData;
+  return {
+    ...(input.hostVoice !== undefined ? { hostVoice: input.hostVoice } : {}),
+    ...(input.hostVoiceName !== undefined
+      ? { hostVoiceName: input.hostVoiceName }
+      : {}),
+    ...(input.coHostVoice !== undefined
+      ? { coHostVoice: input.coHostVoice }
+      : {}),
+    ...(input.coHostVoiceName !== undefined
+      ? { coHostVoiceName: input.coHostVoiceName }
+      : {}),
+    ...(input.hostPersonaId !== undefined
+      ? { hostPersonaId: input.hostPersonaId }
+      : {}),
+    ...(input.coHostPersonaId !== undefined
+      ? { coHostPersonaId: input.coHostPersonaId }
+      : {}),
+  };
 };
 
 /**

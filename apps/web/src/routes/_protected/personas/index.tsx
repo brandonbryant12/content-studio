@@ -2,6 +2,7 @@ import { createFileRoute } from '@tanstack/react-router';
 import { useEffect } from 'react';
 import { apiClient } from '@/clients/apiClient';
 import { queryClient } from '@/clients/queryClient';
+import { formatProductPageTitle } from '@/constants';
 import { PersonaListContainer } from '@/features/personas/components/persona-list-container';
 
 export const Route = createFileRoute('/_protected/personas/')({
@@ -14,7 +15,7 @@ export const Route = createFileRoute('/_protected/personas/')({
 
 function PersonasPage() {
   useEffect(() => {
-    document.title = 'Personas - Content Studio';
+    document.title = formatProductPageTitle('Personas');
   }, []);
 
   return <PersonaListContainer />;

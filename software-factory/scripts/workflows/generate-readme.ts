@@ -4,6 +4,8 @@ import { fileURLToPath } from "node:url";
 import { Effect } from "effect";
 import { readWorkflowRegistry } from "./registry";
 
+const PRODUCT_NAME = "Creator Studio" as const;
+
 const runWorkflowsGeneratePromise = async (): Promise<number> => {
   const scriptDir = dirname(fileURLToPath(import.meta.url));
   const workflowsDir = resolve(scriptDir, "../../workflows");
@@ -58,7 +60,7 @@ const runWorkflowsGeneratePromise = async (): Promise<number> => {
   lines.push("");
   lines.push("# Workflow Catalog");
   lines.push("");
-  lines.push("Workflow, skill, and automation-lane reference for Content Studio.");
+  lines.push(`Workflow, skill, and automation-lane reference for ${PRODUCT_NAME}.`);
   lines.push("");
   lines.push("Source of truth: [`software-factory/workflows/registry.json`](./registry.json)");
   lines.push("");

@@ -1,5 +1,6 @@
-export const SOURCE_DEFINITION =
-  'Sources are reusable reference materials that Content Studio turns into podcasts, voiceovers, infographics, and future edits.';
+import { APP_NAME } from '@/constants';
+
+export const SOURCE_DEFINITION = `Sources are reusable reference materials that ${APP_NAME} turns into podcasts, voiceovers, infographics, and future edits.`;
 
 export const SOURCE_LIST_SUPPORT =
   'Each source stores extracted text from a file, public web page, or AI-assisted research brief so you can reuse the same facts more than once.';

@@ -180,6 +180,40 @@ describe('saveChanges', () => {
       });
     });
 
+    it('preserves null persona clears in the update payload', async () => {
+      const user = createTestUser();
+      const podcast = createTestPodcast({
+        createdBy: user.id,
+        status: 'ready',
+      });
+      const state: MockState = {
+        podcasts: new Map([[podcast.id, podcast]]),
+      };
+
+      const updateSpy = vi.fn();
+
+      const layers = Layer.mergeAll(
+        MockDbLive,
+        createMockPodcastRepo(state, { onUpdate: updateSpy }),
+      );
+
+      const result = await Effect.runPromise(
+        withTestUser(user)(
+          saveChanges({
+            podcastId: podcast.id,
+            hostPersonaId: null,
+            coHostPersonaId: null,
+          }),
+        ).pipe(Effect.provide(layers)),
+      );
+
+      expect(result.hasChanges).toBe(true);
+      expect(updateSpy).toHaveBeenCalledWith(podcast.id, {
+        hostPersonaId: null,
+        coHostPersonaId: null,
+      });
+    });
+
     it('returns hasChanges=false when no changes provided', async () => {
       const user = createTestUser();
       const podcast = createTestPodcast({
