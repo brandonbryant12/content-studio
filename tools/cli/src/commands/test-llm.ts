@@ -1,5 +1,11 @@
 import { Command, Prompt } from '@effect/cli';
-import { LLM, LLM_MODEL, LLM_MODEL_IDS, type LLMModelId } from '@repo/ai';
+import {
+  LLM,
+  LLM_MODEL,
+  LLM_MODEL_IDS,
+  type GenerateOptions,
+  type LLMModelId,
+} from '@repo/ai';
 import { Console, Effect, Schema } from 'effect';
 import { createAILayer } from '../lib/ai-layer';
 import { loadEnv } from '../lib/env';
@@ -140,18 +146,24 @@ const printUsage = (
     yield* Console.log(`  Total:  ${usage?.totalTokens ?? 'N/A'}`);
   });
 
+const generateWithLayer = <T>(
+  aiLayer: ReturnType<typeof createAILayer>,
+  options: GenerateOptions<T>,
+) =>
+  Effect.gen(function* () {
+    const llm = yield* LLM;
+    return yield* llm.generate(options);
+  }).pipe(Effect.provide(aiLayer));
+
 const runSmokeTest = (aiLayer: ReturnType<typeof createAILayer>) =>
   Effect.gen(function* () {
     yield* Console.log('\nRunning smoke test...\n');
 
-    const result = yield* Effect.gen(function* () {
-      const llm = yield* LLM;
-      return yield* llm.generate({
-        prompt: 'Generate a friendly greeting and an interesting science fact.',
-        schema: GreetingSchema,
-        temperature: DEFAULT_TEMPERATURE,
-      });
-    }).pipe(Effect.provide(aiLayer));
+    const result = yield* generateWithLayer(aiLayer, {
+      prompt: 'Generate a friendly greeting and an interesting science fact.',
+      schema: GreetingSchema,
+      temperature: DEFAULT_TEMPERATURE,
+    });
 
     yield* Console.log('--- Result ---');
     yield* Console.log(`Greeting: ${result.object.greeting}`);
@@ -174,16 +186,13 @@ const runSinglePromptExperiment = (aiLayer: ReturnType<typeof createAILayer>) =>
       return;
     }
 
-    const result = yield* Effect.gen(function* () {
-      const llm = yield* LLM;
-      return yield* llm.generate({
-        system: generationConfig.systemPrompt,
-        prompt: cleanedPrompt,
-        schema: ResponseSchema,
-        temperature: generationConfig.temperature,
-        maxTokens: generationConfig.maxTokens,
-      });
-    }).pipe(Effect.provide(aiLayer));
+    const result = yield* generateWithLayer(aiLayer, {
+      system: generationConfig.systemPrompt,
+      prompt: cleanedPrompt,
+      schema: ResponseSchema,
+      temperature: generationConfig.temperature,
+      maxTokens: generationConfig.maxTokens,
+    });
 
     yield* Console.log('\n--- Gemini Response ---');
     yield* Console.log(result.object.response);
@@ -223,16 +232,13 @@ const runChatExperiment = (aiLayer: ReturnType<typeof createAILayer>) =>
       }
 
       const prompt = buildChatPrompt(history, input);
-      const response = yield* Effect.gen(function* () {
-        const llm = yield* LLM;
-        return yield* llm.generate({
-          system: systemPrompt,
-          prompt,
-          schema: ResponseSchema,
-          temperature,
-          maxTokens,
-        });
-      }).pipe(Effect.provide(aiLayer), Effect.either);
+      const response = yield* generateWithLayer(aiLayer, {
+        system: systemPrompt,
+        prompt,
+        schema: ResponseSchema,
+        temperature,
+        maxTokens,
+      }).pipe(Effect.either);
 
       if (response._tag === 'Left') {
         const message =
