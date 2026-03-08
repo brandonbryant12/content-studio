@@ -65,15 +65,15 @@ function RouteComponent() {
       <section className="relative flex-1 flex items-center justify-center px-6 py-20 md:py-28">
         {/* Background orbs */}
         <div
-          className="absolute top-[-20%] left-[-10%] w-[500px] h-[500px] rounded-full opacity-[0.07] blur-[100px] pointer-events-none bg-[hsl(var(--chart-1))]"
+          className="absolute top-[-20%] left-[-10%] w-[500px] h-[500px] rounded-full opacity-[0.07] blur-[100px] pointer-events-none bg-[var(--chart-1)]"
           aria-hidden="true"
         />
         <div
-          className="absolute bottom-[-15%] right-[-5%] w-[400px] h-[400px] rounded-full opacity-[0.05] blur-[80px] pointer-events-none bg-[hsl(var(--chart-3))]"
+          className="absolute bottom-[-15%] right-[-5%] w-[400px] h-[400px] rounded-full opacity-[0.05] blur-[80px] pointer-events-none bg-[var(--chart-3)]"
           aria-hidden="true"
         />
         <div
-          className="absolute top-[30%] right-[15%] w-[300px] h-[300px] rounded-full opacity-[0.04] blur-[60px] pointer-events-none bg-[hsl(var(--chart-2))]"
+          className="absolute top-[30%] right-[15%] w-[300px] h-[300px] rounded-full opacity-[0.04] blur-[60px] pointer-events-none bg-[var(--chart-2)]"
           aria-hidden="true"
         />
 
@@ -178,14 +178,13 @@ function RouteComponent() {
 
       {/* Features */}
       <section className="px-6 pb-20 md:pb-28">
-        <div className="max-w-5xl mx-auto space-y-24">
+        <div className="max-w-5xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-12 md:gap-16">
           {[
             {
               icon: FileTextIcon,
               label: 'Sources',
               headline: 'Ground every asset in verified source material',
               desc: 'Upload approved files, import web pages, or let AI deep-research a topic. Your source library becomes the single source of truth behind every piece of content.',
-              image: '/screenshots/documents.png',
               color: 'text-sky-400',
               iconBg: 'bg-sky-500/10',
             },
@@ -194,10 +193,8 @@ function RouteComponent() {
               label: 'Podcasts',
               headline: 'Generate a podcast episode from a single source',
               desc: 'Select your sources, choose conversation or monologue format, assign reusable personas so each episode keeps the same host perspective and voice, then review and edit every line of the script before generating audio.',
-              image: '/screenshots/podcasts.png',
               color: 'text-violet-400',
               iconBg: 'bg-violet-500/10',
-              reverse: true,
             },
             {
               icon: SpeakerLoudIcon,
@@ -205,7 +202,6 @@ function RouteComponent() {
               headline:
                 'From script to professional narration — fully reviewable',
               desc: 'Write or paste your script, let the built-in AI assistant refine it, pick from 30+ natural voices, and generate polished audio — perfect for compliant training, explainers, and presentations.',
-              image: '/screenshots/voiceovers.png',
               color: 'text-emerald-400',
               iconBg: 'bg-emerald-500/10',
             },
@@ -214,52 +210,25 @@ function RouteComponent() {
               label: 'Infographics',
               headline: 'Create on-brand visuals without a designer',
               desc: 'Describe what you need, choose a format and style preset, and get review-ready images. Save your brand styles so every visual stays consistent and on-message.',
-              image: '/screenshots/infographics.png',
               color: 'text-amber-400',
               iconBg: 'bg-amber-500/10',
-              reverse: true,
             },
-          ].map(
-            ({
-              icon: Icon,
-              label,
-              headline,
-              desc,
-              image,
-              color,
-              iconBg,
-              reverse,
-            }) => (
+          ].map(({ icon: Icon, label, headline, desc, color, iconBg }) => (
+            <div key={label} className="space-y-4">
               <div
-                key={label}
-                className={`flex flex-col ${reverse ? 'md:flex-row-reverse' : 'md:flex-row'} items-center gap-10 md:gap-16`}
+                className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-full ${iconBg}`}
               >
-                <div className="flex-1 min-w-0">
-                  <div
-                    className={`inline-flex items-center gap-2 mb-4 px-3 py-1.5 rounded-full ${iconBg}`}
-                  >
-                    <Icon className={`w-4 h-4 ${color}`} aria-hidden="true" />
-                    <span className={`text-sm font-medium ${color}`}>
-                      {label}
-                    </span>
-                  </div>
-                  <h3 className="font-serif font-bold text-2xl md:text-3xl text-foreground mb-3">
-                    {headline}
-                  </h3>
-                  <p className="text-body-lg text-muted-foreground leading-relaxed">
-                    {desc}
-                  </p>
-                </div>
-                <div className="flex-1 min-w-0 w-full">
-                  <img
-                    src={image}
-                    alt={`${label} screenshot`}
-                    className="rounded-xl border border-border shadow-2xl shadow-black/20 w-full"
-                  />
-                </div>
+                <Icon className={`w-4 h-4 ${color}`} aria-hidden="true" />
+                <span className={`text-sm font-medium ${color}`}>{label}</span>
               </div>
-            ),
-          )}
+              <h3 className="font-serif font-bold text-2xl md:text-3xl text-foreground">
+                {headline}
+              </h3>
+              <p className="text-body-lg text-muted-foreground leading-relaxed">
+                {desc}
+              </p>
+            </div>
+          ))}
         </div>
       </section>
 

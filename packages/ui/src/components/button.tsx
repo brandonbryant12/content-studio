@@ -12,9 +12,9 @@ const buttonVariants = cva(
     variants: {
       variant: {
         default:
-          'bg-gradient-to-b from-primary to-primary/90 text-primary-foreground shadow-[inset_0_1px_0_0_hsl(var(--primary-foreground)/0.15),0_1px_3px_hsl(var(--primary)/0.3)] hover:from-primary/95 hover:to-primary/85 hover:shadow-[inset_0_1px_0_0_hsl(var(--primary-foreground)/0.2),0_4px_12px_hsl(var(--primary)/0.25)] active:scale-[0.98] active:shadow-[inset_0_1px_0_0_hsl(var(--primary-foreground)/0.1)]',
+          'bg-gradient-to-b from-primary to-primary/90 text-primary-foreground shadow-[inset_0_1px_0_0_color-mix(in_srgb,var(--primary-foreground)_15%,transparent),0_1px_3px_color-mix(in_srgb,var(--primary)_30%,transparent)] hover:from-primary/95 hover:to-primary/85 hover:shadow-[inset_0_1px_0_0_color-mix(in_srgb,var(--primary-foreground)_20%,transparent),0_4px_12px_color-mix(in_srgb,var(--primary)_25%,transparent)] active:scale-[0.98] active:shadow-[inset_0_1px_0_0_color-mix(in_srgb,var(--primary-foreground)_10%,transparent)]',
         destructive:
-          'bg-gradient-to-b from-destructive to-destructive/90 text-destructive-foreground shadow-[inset_0_1px_0_0_hsl(var(--destructive-foreground)/0.15),0_1px_3px_hsl(var(--destructive)/0.3)] hover:from-destructive/95 hover:to-destructive/85 active:scale-[0.98]',
+          'bg-gradient-to-b from-destructive to-destructive/90 text-destructive-foreground shadow-[inset_0_1px_0_0_color-mix(in_srgb,var(--destructive-foreground)_15%,transparent),0_1px_3px_color-mix(in_srgb,var(--destructive)_30%,transparent)] hover:from-destructive/95 hover:to-destructive/85 active:scale-[0.98]',
         outline:
           'border-2 border-border bg-card hover:bg-muted hover:border-primary/30 active:scale-[0.98] shadow-sm',
         secondary:

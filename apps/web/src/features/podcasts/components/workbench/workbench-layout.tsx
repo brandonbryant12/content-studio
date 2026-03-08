@@ -35,6 +35,7 @@ interface WorkbenchLayoutProps {
   podcast: PodcastFull;
   leftPanel: ReactNode;
   rightPanel: ReactNode;
+  audioStrip?: ReactNode;
   actionBar?: ReactNode;
   onDelete: () => void;
   isDeleting: boolean;
@@ -54,6 +55,7 @@ export function WorkbenchLayout({
   podcast,
   leftPanel,
   rightPanel,
+  audioStrip,
   actionBar,
   onDelete,
   isDeleting,
@@ -166,6 +168,9 @@ export function WorkbenchLayout({
           </Button>
         </div>
       </header>
+
+      {/* Hero audio strip — always visible when audio exists */}
+      {audioStrip && <div className="workbench-audio-strip">{audioStrip}</div>}
 
       <Tabs
         value={activeTab}

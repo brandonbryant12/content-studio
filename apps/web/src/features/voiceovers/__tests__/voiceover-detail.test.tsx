@@ -15,13 +15,16 @@ vi.mock('../components/workbench', () => ({
   WorkbenchLayout: ({
     children,
     actionBar,
+    audioStrip,
     rightPanel,
   }: {
     children: ReactNode;
     actionBar: ReactNode;
+    audioStrip?: ReactNode;
     rightPanel?: ReactNode;
   }) => (
     <div data-testid="workbench-layout">
+      {audioStrip && <div data-testid="audio-strip">{audioStrip}</div>}
       <div data-testid="action-bar-container">{actionBar}</div>
       <div data-testid="workbench-content">{children}</div>
       <div data-testid="assistant-panel-container">{rightPanel}</div>

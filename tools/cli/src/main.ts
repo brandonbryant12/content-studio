@@ -2,9 +2,9 @@ import { Command } from '@effect/cli';
 import { NodeContext, NodeRuntime } from '@effect/platform-node';
 import { Effect } from 'effect';
 import { admin } from './commands/admin';
-import { ProductBranding } from './constants';
 import { seed } from './commands/seed';
 import { test } from './commands/test';
+import { ProductBranding } from './constants';
 import { configureProxy } from './lib/proxy';
 
 configureProxy();

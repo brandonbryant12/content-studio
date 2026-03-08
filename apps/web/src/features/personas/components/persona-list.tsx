@@ -143,7 +143,6 @@ export function PersonaList({
       {/* Header */}
       <div className="flex items-center justify-between mb-5">
         <div>
-          <p className="page-eyebrow">Personas</p>
           <h1 className="page-title">Personas</h1>
           <p className="mt-2 max-w-3xl text-sm leading-relaxed text-muted-foreground">
             {PERSONA_DEFINITION} {PERSONA_LIST_SUPPORT}

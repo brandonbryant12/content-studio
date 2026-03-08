@@ -3,6 +3,7 @@ import type { UsePodcastSettingsReturn } from '../hooks/use-podcast-settings';
 import type { UseScriptEditorReturn } from '../hooks/use-script-editor';
 import type { UseSourceSelectionReturn } from '../hooks/use-source-selection';
 import type { RouterOutput } from '@repo/api/client';
+import { AudioPlayer } from './audio-player';
 import {
   WorkbenchLayout,
   ScriptPanel,
@@ -116,6 +117,7 @@ export function PodcastDetail({
           sourceSelection={sourceSelection}
         />
       }
+      audioStrip={displayAudio ? <AudioPlayer url={displayAudio.url} /> : null}
       actionBar={
         <GlobalActionBar
           status={podcast.status}
@@ -125,7 +127,6 @@ export function PodcastDetail({
           onSave={onSave}
           onGenerate={onGenerate}
           disabled={isGenerating}
-          audioUrl={displayAudio?.url}
           errorMessage={podcast.errorMessage}
         />
       }

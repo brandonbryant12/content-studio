@@ -6,7 +6,6 @@ import {
 import { Button } from '@repo/ui/components/button';
 import { Spinner } from '@repo/ui/components/spinner';
 import { VersionStatus, type VersionStatusType } from '../../lib/status';
-import { AudioPlayer } from '../audio-player';
 import { getGenerationFailureMessage } from '@/shared/lib/errors';
 import { GENERATION_LABELS } from '@/shared/lib/generation-language';
 
@@ -18,7 +17,6 @@ interface GlobalActionBarProps {
   onSave: () => void;
   onGenerate: () => void;
   disabled?: boolean;
-  audioUrl?: string;
   errorMessage?: string | null;
 }
 
@@ -30,10 +28,8 @@ export function GlobalActionBar({
   onSave,
   onGenerate,
   disabled,
-  audioUrl,
   errorMessage,
 }: GlobalActionBarProps) {
-  const hasAudio = !!audioUrl;
   const showChangesState =
     hasChanges &&
     (status === VersionStatus.READY || status === VersionStatus.FAILED);
@@ -143,12 +139,6 @@ export function GlobalActionBar({
           ) : null}
           <span>{getStatusMessage()}</span>
         </div>
-
-        {hasAudio && (
-          <div className="action-bar-audio">
-            <AudioPlayer url={audioUrl} />
-          </div>
-        )}
 
         <div className="action-bar-actions">{renderAction()}</div>
       </div>

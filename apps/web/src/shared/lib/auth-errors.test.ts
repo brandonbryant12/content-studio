@@ -1,10 +1,10 @@
 import { describe, expect, it } from 'vitest';
-import { APP_NAME } from '@/constants';
 import {
   getAuthErrorMessage,
   getSSOCallbackErrorNotice,
   MICROSOFT_SSO_AUTH_FLOW,
 } from './auth-errors';
+import { APP_NAME } from '@/constants';
 
 const ssoFailureMessage = `We couldn't complete Microsoft sign-in. Try again, and if you still need access to ${APP_NAME}, contact your administrator.`;
 

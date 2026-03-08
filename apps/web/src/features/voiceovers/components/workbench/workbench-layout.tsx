@@ -33,6 +33,7 @@ interface WorkbenchLayoutProps {
   isTitleDisabled: boolean;
   children: ReactNode;
   rightPanel?: ReactNode;
+  audioStrip?: ReactNode;
   actionBar?: ReactNode;
   onDelete: () => void;
   isDeleting: boolean;
@@ -56,6 +57,7 @@ export function WorkbenchLayout({
   isTitleDisabled,
   children,
   rightPanel,
+  audioStrip,
   actionBar,
   onDelete,
   isDeleting,
@@ -227,6 +229,11 @@ export function WorkbenchLayout({
             </div>
           </div>
         </header>
+
+        {/* Hero audio strip — always visible when audio exists */}
+        {audioStrip && (
+          <div className="workbench-audio-strip">{audioStrip}</div>
+        )}
 
         {/* Main content */}
         <div className="workbench-main">

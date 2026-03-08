@@ -17,7 +17,6 @@ function ListPageStateShell({
     <div className={containerClassName}>
       <div className="flex items-center justify-between mb-8">
         <div>
-          <p className="page-eyebrow">{title}</p>
           <h1 className="page-title">{title}</h1>
         </div>
       </div>

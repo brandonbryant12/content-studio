@@ -1,7 +1,8 @@
 import { Command } from '@effect/cli';
-import { seedVoicePreviews } from './seed-voice-previews';
+import { downloadVoices } from './download-voices';
+import { uploadVoicePreviews } from './upload-voice-previews';
 
 export const seed = Command.make('seed', {}).pipe(
   Command.withDescription('Seed data (voice previews, etc.)'),
-  Command.withSubcommands([seedVoicePreviews]),
+  Command.withSubcommands([downloadVoices, uploadVoicePreviews]),
 );

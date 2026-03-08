@@ -34,9 +34,9 @@ Use via Tailwind: `bg-primary`, `text-muted-foreground`, `border-destructive`.
 
 | Font | Variable | Usage |
 |------|----------|-------|
-| Instrument Sans | `--font-sans` | UI elements (default) |
-| Fraunces | `--font-serif` | Editorial content, headings |
-| IBM Plex Mono | `--font-mono` | Code, technical values |
+| Inter | `--font-sans` | UI elements (default) |
+| Georgia | `--font-serif` | Editorial content, headings |
+| JetBrains Mono | `--font-mono` | Code, technical values |
 
 ### Type Scale
 

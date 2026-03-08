@@ -36,15 +36,6 @@ type VoicePersonaUpdateData = Pick<
   | 'coHostPersonaId'
 >;
 
-const voicePersonaInputKeys = [
-  'hostVoice',
-  'hostVoiceName',
-  'coHostVoice',
-  'coHostVoiceName',
-  'hostPersonaId',
-  'coHostPersonaId',
-] as const satisfies ReadonlyArray<keyof VoicePersonaUpdateData>;
-
 const buildVoicePersonaUpdateData = (
   input: SaveChangesInput,
 ): VoicePersonaUpdateData => {

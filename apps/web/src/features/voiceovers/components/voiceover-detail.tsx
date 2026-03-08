@@ -113,6 +113,11 @@ export function VoiceoverDetail({
       onExportScript={onExportScript}
       onCopyTranscript={onCopyTranscript}
       rightPanel={assistantPanel}
+      audioStrip={
+        displayAudio ? (
+          <AudioStage src={displayAudio.url} duration={displayAudio.duration} />
+        ) : null
+      }
       actionBar={
         <ActionBar
           status={voiceover.status}
@@ -180,16 +185,6 @@ export function VoiceoverDetail({
             />
           )}
         </div>
-
-        {/* Audio Stage (when available) - pinned at bottom */}
-        {displayAudio && (
-          <div className="shrink-0">
-            <AudioStage
-              src={displayAudio.url}
-              duration={displayAudio.duration}
-            />
-          </div>
-        )}
       </div>
     </WorkbenchLayout>
   );

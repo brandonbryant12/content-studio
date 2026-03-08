@@ -181,7 +181,6 @@ export function PodcastList({
       {/* Header */}
       <div className="flex items-center justify-between mb-5">
         <div>
-          <p className="page-eyebrow">Podcasts</p>
           <h1 className="page-title">Podcasts</h1>
           <p className="mt-2 max-w-3xl text-sm leading-relaxed text-muted-foreground">
             {PODCAST_DEFINITION} {PODCAST_LIST_SUPPORT}

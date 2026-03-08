@@ -9,8 +9,8 @@ import { Button } from '@repo/ui/components/button';
 import { Spinner } from '@repo/ui/components/spinner';
 import { Link } from '@tanstack/react-router';
 import { QuickStartPanel } from './quick-start-panel';
-import { APP_NAME } from '@/constants';
 import { SourcesRecentSection, RecentSection } from './recent-section';
+import { APP_NAME } from '@/constants';
 import {
   CreateInfographicDialog,
   type CreateInfographicPayload,

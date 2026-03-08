@@ -364,7 +364,6 @@ export function VoiceoverList({
       {/* Header */}
       <div className="flex items-center justify-between mb-5">
         <div>
-          <p className="page-eyebrow">Voiceovers</p>
           <h1 className="page-title">Voiceovers</h1>
           <p className="mt-2 max-w-3xl text-sm leading-relaxed text-muted-foreground">
             {VOICEOVER_DEFINITION} {VOICEOVER_LIST_SUPPORT}
