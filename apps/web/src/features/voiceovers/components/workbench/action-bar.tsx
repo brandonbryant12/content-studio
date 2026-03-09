@@ -36,6 +36,12 @@ export function ActionBar({
   const isFailed = status === VoiceoverStatus.FAILED;
   const isReady = status === VoiceoverStatus.READY;
   const isDrafting = status === VoiceoverStatus.DRAFTING;
+  const savingContent = (
+    <>
+      <Spinner className="w-3.5 h-3.5 mr-1.5" />
+      {GENERATION_LABELS.saving}
+    </>
+  );
 
   const failureMessage =
     !isGenerating && isFailed ? getGenerationFailureMessage(errorMessage) : null;
@@ -92,14 +98,7 @@ export function ActionBar({
                 disabled={isSaving || disabled}
                 className="global-action-bar-btn-secondary"
               >
-                {isSaving ? (
-                  <>
-                    <Spinner className="w-3.5 h-3.5 mr-1.5" />
-                    {GENERATION_LABELS.saving}
-                  </>
-                ) : (
-                  'Save Draft'
-                )}
+                {isSaving ? savingContent : 'Save Draft'}
               </Button>
               {hasText && (
                 <Button
@@ -109,10 +108,7 @@ export function ActionBar({
                   className="global-action-bar-btn-primary"
                 >
                   {isSaving ? (
-                    <>
-                      <Spinner className="w-3.5 h-3.5 mr-1.5" />
-                      {GENERATION_LABELS.saving}
-                    </>
+                    savingContent
                   ) : (
                     <>
                       <LightningBoltIcon className="w-3.5 h-3.5 mr-1.5" />
@@ -145,6 +141,7 @@ export function ActionBar({
           icon: <ReloadIcon className="w-3.5 h-3.5 mr-1.5" />,
         }
       : null;
+  const shouldShowGenerateAction = generateAction && (isFailed || hasText);
 
   return (
     <>
@@ -157,7 +154,7 @@ export function ActionBar({
             <span className="global-action-bar-status-text">{statusLabel}</span>
           </div>
           <div className="global-action-bar-actions">
-            {generateAction && (isFailed || hasText) && (
+            {shouldShowGenerateAction && (
               <Button
                 size="sm"
                 onClick={onGenerate}
