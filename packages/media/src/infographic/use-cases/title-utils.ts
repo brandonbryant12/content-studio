@@ -37,11 +37,13 @@ export function selectOriginalTitlePrompt({
   currentPrompt,
   existingVersions,
 }: SelectOriginalPromptInput): string {
-  const firstVersionPrompt = existingVersions
-    .map((version) => version.prompt?.trim() ?? '')
-    .find((prompt) => prompt.length > 0);
+  for (const version of existingVersions) {
+    const prompt = version.prompt?.trim();
+    if (prompt) {
+      return prompt;
+    }
+  }
 
-  if (firstVersionPrompt) return firstVersionPrompt;
   return currentPrompt?.trim() ?? '';
 }
 
@@ -71,6 +73,9 @@ function toTitleCase(words: readonly string[]): string {
     .join(' ');
 }
 
+const stripWrappingQuotes = (value: string): string =>
+  value.replace(/^["'`]+|["'`]+$/g, '');
+
 /**
  * Deterministic fallback used when the LLM title call fails.
  */
@@ -83,11 +88,11 @@ export function buildFallbackInfographicTitle(prompt: string): string {
 }
 
 export function normalizeInfographicTitleCandidate(candidate: string): string {
-  let normalized = candidate.replace(/\s+/g, ' ').trim();
-  normalized = normalized.replace(/^["'`]+|["'`]+$/g, '');
-  normalized = normalized.replace(/[.!?]+$/g, '').trim();
-  normalized = normalized.replace(/^["'`]+|["'`]+$/g, '');
-  return normalized.trim();
+  const normalized = stripWrappingQuotes(candidate.replace(/\s+/g, ' ').trim())
+    .replace(/[.!?]+$/g, '')
+    .trim();
+
+  return stripWrappingQuotes(normalized).trim();
 }
 
 /**
