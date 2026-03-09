@@ -11,6 +11,7 @@ import type { JobId, JobStatus, Source } from '@repo/db/schema';
 import { SourceNotFound } from '../../../errors';
 import { MockDbLive } from '../../../test-utils/mock-repos';
 import { SourceRepo, type SourceRepoService } from '../../repos';
+import { DeepResearchFeatureLive } from '../../services/deep-research-feature';
 import { retryProcessing } from '../retry-processing';
 
 const createMockSourceRepo = (
@@ -114,6 +115,7 @@ describe('retryProcessing', () => {
 
       const layers = Layer.mergeAll(
         MockDbLive,
+        DeepResearchFeatureLive(true),
         createMockSourceRepo(doc, { onUpdateStatus: updateStatusSpy }),
         createMockQueue({ onEnqueue: enqueueSpy }),
       );
@@ -153,6 +155,7 @@ describe('retryProcessing', () => {
 
       const layers = Layer.mergeAll(
         MockDbLive,
+        DeepResearchFeatureLive(true),
         createMockSourceRepo(doc),
         createMockQueue({ onEnqueue: enqueueSpy }),
       );
@@ -187,6 +190,7 @@ describe('retryProcessing', () => {
 
       const layers = Layer.mergeAll(
         MockDbLive,
+        DeepResearchFeatureLive(true),
         createMockSourceRepo(doc),
         createMockQueue(),
       );
@@ -209,6 +213,7 @@ describe('retryProcessing', () => {
 
       const layers = Layer.mergeAll(
         MockDbLive,
+        DeepResearchFeatureLive(true),
         createMockSourceRepo(null),
         createMockQueue(),
       );
@@ -241,6 +246,7 @@ describe('retryProcessing', () => {
 
       const layers = Layer.mergeAll(
         MockDbLive,
+        DeepResearchFeatureLive(true),
         createMockSourceRepo(doc),
         createMockQueue({ onEnqueue: enqueueSpy }),
       );
@@ -269,6 +275,7 @@ describe('retryProcessing', () => {
 
       const layers = Layer.mergeAll(
         MockDbLive,
+        DeepResearchFeatureLive(true),
         createMockSourceRepo(doc),
         createMockQueue(),
       );
@@ -302,6 +309,7 @@ describe('retryProcessing', () => {
 
       const layers = Layer.mergeAll(
         MockDbLive,
+        DeepResearchFeatureLive(true),
         createMockSourceRepo(doc),
         createMockQueue({ onEnqueue: enqueueSpy }),
       );
@@ -329,6 +337,7 @@ describe('retryProcessing', () => {
 
       const layers = Layer.mergeAll(
         MockDbLive,
+        DeepResearchFeatureLive(true),
         createMockSourceRepo(doc, { onUpdateStatus: updateStatusSpy }),
         createMockQueue({ onEnqueue: enqueueSpy }),
       );
@@ -360,6 +369,7 @@ describe('retryProcessing', () => {
 
       const layers = Layer.mergeAll(
         MockDbLive,
+        DeepResearchFeatureLive(true),
         createMockSourceRepo(doc),
         createMockQueue({ onEnqueue: enqueueSpy }),
       );
@@ -372,6 +382,38 @@ describe('retryProcessing', () => {
 
       expect(enqueueSpy).toHaveBeenCalledTimes(1);
       expect(enqueueSpy.mock.calls[0]![0]).toBe('process-research');
+    });
+
+    it('fails for research retries when deep research is disabled', async () => {
+      const user = createTestUser();
+      const doc = createTestSource({
+        createdBy: user.id,
+        source: 'research',
+        researchConfig: { query: 'AI advancements 2024' },
+        status: 'failed',
+      });
+
+      const enqueueSpy = vi.fn();
+
+      const layers = Layer.mergeAll(
+        MockDbLive,
+        DeepResearchFeatureLive(false),
+        createMockSourceRepo(doc),
+        createMockQueue({ onEnqueue: enqueueSpy }),
+      );
+
+      const result = await Effect.runPromiseExit(
+        withTestUser(user)(
+          retryProcessing({ id: doc.id }).pipe(Effect.provide(layers)),
+        ),
+      );
+
+      expect(result._tag).toBe('Failure');
+      expect(enqueueSpy).not.toHaveBeenCalled();
+      if (result._tag === 'Failure' && result.cause._tag === 'Fail') {
+        const error = result.cause.error as { _tag?: string };
+        expect(error._tag).toBe('DeepResearchDisabled');
+      }
     });
   });
 });

@@ -6,6 +6,7 @@ export {
   SourceParseError,
   SourceContentNotFound,
   SourceAlreadyProcessing,
+  DeepResearchDisabled,
 } from './source-errors';
 
 export {

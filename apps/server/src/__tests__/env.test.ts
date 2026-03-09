@@ -48,4 +48,12 @@ describe('server env', () => {
       'AUDIO_PLAYBACK_SIGNING_SECRET is required in production when AUDIO_PLAYBACK_PROXY_ENABLED=true or STORAGE_ACCESS_PROXY_ENABLED=true',
     );
   });
+
+  it('parses DISABLE_DEEP_RESEARCH as a boolean flag', async () => {
+    const { env } = await loadEnvModule({
+      DISABLE_DEEP_RESEARCH: 'true',
+    });
+
+    expect(env.DISABLE_DEEP_RESEARCH).toBe(true);
+  });
 });

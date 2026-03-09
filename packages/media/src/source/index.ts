@@ -23,6 +23,12 @@ export * from './use-cases';
 
 // Services
 export { calculateContentHash } from './services/content-utils';
+export {
+  DeepResearchFeature,
+  DeepResearchFeatureLive,
+  ensureDeepResearchEnabled,
+  type DeepResearchFeatureService,
+} from './services/deep-research-feature';
 export { validateUrl } from './services/url-validator';
 export {
   UrlScraper,

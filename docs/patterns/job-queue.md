@@ -89,7 +89,7 @@ This guarantees exactly-one-worker-per-job even with multiple worker instances.
 
 Worker concurrency is two-dimensional:
 
-1. global cap (`MAX_CONCURRENT_JOBS`, default `5`)
+1. global cap (`MAX_CONCURRENT_JOBS`, default `20`)
 2. per-type caps (`DEFAULT_PER_TYPE_CONCURRENCY`)
 
 Per-type caps are clamped by the global cap at runtime, so overrides cannot exceed total process capacity.

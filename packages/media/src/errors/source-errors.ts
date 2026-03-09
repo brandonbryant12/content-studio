@@ -124,3 +124,19 @@ export class SourceAlreadyProcessing extends Schema.TaggedError<SourceAlreadyPro
     return { sourceId: e.id };
   }
 }
+
+export class DeepResearchDisabled extends Schema.TaggedError<DeepResearchDisabled>()(
+  'DeepResearchDisabled',
+  {
+    message: Schema.optional(Schema.String),
+  },
+) {
+  static readonly httpStatus = 403 as const;
+  static readonly httpCode = 'DEEP_RESEARCH_DISABLED' as const;
+  static readonly httpMessage = (e: DeepResearchDisabled) =>
+    e.message ?? 'Deep research is currently disabled';
+  static readonly logLevel = 'silent' as const;
+  static getData() {
+    return { feature: 'deep_research' as const };
+  }
+}

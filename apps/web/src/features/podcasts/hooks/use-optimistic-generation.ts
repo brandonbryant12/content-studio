@@ -22,7 +22,7 @@ export function useOptimisticGeneration(podcastId: string) {
 
   return useOptimisticMutation<
     { jobId: string; status: string },
-    { id: string; promptInstructions?: string },
+    { id: string; promptInstructions?: string; ignoreEpisodePlan?: boolean },
     Podcast
   >({
     queryKey,

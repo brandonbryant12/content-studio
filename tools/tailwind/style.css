@@ -3679,11 +3679,11 @@
      WIZARD CONTAINER
      ----------------------------------------- */
   .setup-wizard {
-    @apply flex-1 flex items-center justify-center p-4 md:p-8 bg-muted overflow-y-auto;
+    @apply flex-1 flex p-4 md:p-8 bg-muted overflow-y-auto;
   }
 
   .setup-wizard-card {
-    @apply w-full max-w-2xl bg-card border border-border rounded-2xl shadow-lg overflow-hidden;
+    @apply w-full max-w-4xl m-auto bg-card border border-border rounded-2xl shadow-lg overflow-hidden;
     animation: setup-fade-in 0.4s ease-out;
   }
 

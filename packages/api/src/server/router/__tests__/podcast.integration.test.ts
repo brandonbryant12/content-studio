@@ -1,4 +1,4 @@
-import { MockLLMLive, MockTTSLive } from '@repo/ai/testing';
+import { MockLLMLive, MockTTSLive, createMockLLM } from '@repo/ai/testing';
 import { DatabasePolicyLive, type User } from '@repo/auth/policy';
 import {
   user as userTable,
@@ -136,6 +136,11 @@ const handlers = {
       podcastRouter.generate as unknown as ORPCProcedure,
       args,
     ),
+  generatePlan: (args: HandlerArgs): Promise<PodcastOutput> =>
+    callHandler<PodcastOutput>(
+      podcastRouter.generatePlan as unknown as ORPCProcedure,
+      args,
+    ),
   getJob: (args: HandlerArgs): Promise<JobOutput> =>
     callHandler<JobOutput>(
       podcastRouter.getJob as unknown as ORPCProcedure,
@@ -172,10 +177,13 @@ let inMemoryStorage: ReturnType<typeof createInMemoryStorage>;
  * Create a minimal test runtime with only the services needed for podcast operations.
  * Uses in-memory storage from @repo/testing to properly store and retrieve content.
  */
-const createTestRuntime = (ctx: TestContext): ServerRuntime => {
+const createTestRuntime = (
+  ctx: TestContext,
+  llmLayer = MockLLMLive,
+): ServerRuntime => {
   inMemoryStorage = createInMemoryStorage();
   const mockAILayers = Layer.mergeAll(
-    MockLLMLive,
+    llmLayer,
     MockTTSLive,
     inMemoryStorage.layer,
   );
@@ -465,6 +473,7 @@ describe('podcast router', () => {
           format: 'conversation' as const,
           sourceIds: [doc.id],
           description: 'A test podcast description',
+          setupInstructions: 'Lead with the bill breakdown',
           promptInstructions: 'Make it funny',
           targetDurationMinutes: 10,
           hostVoice: 'Charon',
@@ -483,6 +492,7 @@ describe('podcast router', () => {
       expect(result.sources).toHaveLength(1);
       expect(result.sources[0]?.id).toBe(doc.id);
       expect(result.description).toBe('A test podcast description');
+      expect(result.setupInstructions).toBe('Lead with the bill breakdown');
       expect(result.promptInstructions).toBe('Make it funny');
       expect(result.targetDurationMinutes).toBe(10);
       expect(result.hostVoice).toBe('Charon');
@@ -525,6 +535,7 @@ describe('podcast router', () => {
           id: podcast.id,
           title: 'Updated Title',
           description: 'Updated description',
+          setupInstructions: 'Focus on payment options',
           promptInstructions: 'Updated instructions',
           targetDurationMinutes: 15,
         },
@@ -534,6 +545,7 @@ describe('podcast router', () => {
       expect(result.id).toBe(podcast.id);
       expect(result.title).toBe('Updated Title');
       expect(result.description).toBe('Updated description');
+      expect(result.setupInstructions).toBe('Focus on payment options');
       expect(result.promptInstructions).toBe('Updated instructions');
       expect(result.targetDurationMinutes).toBe(15);
       expectIsoTimestamp(result.createdAt);
@@ -622,13 +634,17 @@ describe('podcast router', () => {
   });
 
   describe('generate handler', () => {
-    it('creates a generation job and forwards prompt instructions', async () => {
+    it('creates a generation job and forwards quick-start overrides', async () => {
       const podcast = await insertTestPodcast(ctx, testUser.id);
       const context = createMockContext(runtime, user);
 
       const result = await handlers.generate({
         context,
-        input: { id: podcast.id, promptInstructions: 'Make it educational' },
+        input: {
+          id: podcast.id,
+          promptInstructions: 'Make it educational',
+          ignoreEpisodePlan: true,
+        },
         errors,
       });
 
@@ -642,9 +658,19 @@ describe('podcast router', () => {
       expect(job).toBeDefined();
       expect(job?.type).toBe('generate-podcast');
       expect(
-        (job?.payload as { promptInstructions?: string } | undefined)
-          ?.promptInstructions,
+        (
+          job?.payload as
+            | { promptInstructions?: string; ignoreEpisodePlan?: boolean }
+            | undefined
+        )?.promptInstructions,
       ).toBe('Make it educational');
+      expect(
+        (
+          job?.payload as
+            | { promptInstructions?: string; ignoreEpisodePlan?: boolean }
+            | undefined
+        )?.ignoreEpisodePlan,
+      ).toBe(true);
     });
 
     it('returns existing pending job for idempotency', async () => {
@@ -697,6 +723,87 @@ describe('podcast router', () => {
             errors,
           }),
         'PODCAST_NOT_FOUND',
+      );
+    });
+  });
+
+  describe('generatePlan handler', () => {
+    it('generates and persists an episode plan', async () => {
+      const source = await insertTestSource(ctx, testUser.id, {
+        title: 'Operational Notes',
+        extractedText:
+          'Teams need clear ownership, high quality sources, and measured rollout loops.',
+      });
+      const podcast = await insertTestPodcast(ctx, testUser.id, {
+        sourceIds: [source.id],
+      });
+      runtime = createTestRuntime(
+        ctx,
+        createMockLLM({
+          response: {
+            angle: 'Focus on rollout discipline.',
+            openingHook: 'AI launches often fail in the handoff.',
+            closingTakeaway: 'Start with one workflow and tighten feedback.',
+            sections: [
+              {
+                heading: 'Why launches stall',
+                summary: 'Operational gaps that block delivery.',
+                keyPoints: ['No clear owner', 'Weak source quality'],
+                sourceIds: [source.id],
+                estimatedMinutes: 2,
+              },
+            ],
+          },
+        }),
+      );
+      const context = createMockContext(runtime, user);
+
+      const result = await handlers.generatePlan({
+        context,
+        input: { id: podcast.id },
+        errors,
+      });
+
+      expect(result.id).toBe(podcast.id);
+      expect(result.episodePlan).toEqual({
+        angle: 'Focus on rollout discipline.',
+        openingHook: 'AI launches often fail in the handoff.',
+        closingTakeaway: 'Start with one workflow and tighten feedback.',
+        sections: [
+          {
+            heading: 'Why launches stall',
+            summary: 'Operational gaps that block delivery.',
+            keyPoints: ['No clear owner', 'Weak source quality'],
+            sourceIds: [source.id],
+            estimatedMinutes: 2,
+          },
+        ],
+      });
+
+      const [persisted] = await ctx.db
+        .select()
+        .from(podcastTable)
+        .where(eq(podcastTable.id, podcast.id as PodcastId));
+      expect(persisted?.episodePlan).toEqual(result.episodePlan);
+    });
+
+    it('returns PODCAST_PLAN_SOURCES_NOT_READY when a selected source is processing', async () => {
+      const source = await insertTestSource(ctx, testUser.id, {
+        status: 'processing',
+      });
+      const podcast = await insertTestPodcast(ctx, testUser.id, {
+        sourceIds: [source.id],
+      });
+      const context = createMockContext(runtime, user);
+
+      await expectHandlerErrorCode(
+        () =>
+          handlers.generatePlan({
+            context,
+            input: { id: podcast.id },
+            errors,
+          }),
+        'PODCAST_PLAN_SOURCES_NOT_READY',
       );
     });
   });

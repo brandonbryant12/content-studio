@@ -23,6 +23,7 @@ import {
 } from '../../shared';
 import { SourceRepo } from '../repos';
 import { calculateContentHash } from '../services/content-utils';
+import { ensureDeepResearchEnabled } from '../services/deep-research-feature';
 
 export class ResearchTimeoutError extends Schema.TaggedError<ResearchTimeoutError>()(
   'ResearchTimeoutError',
@@ -105,6 +106,8 @@ export const processResearch = (input: ProcessResearchInput) => {
 
   return Effect.gen(function* () {
     const { sourceId, query } = input;
+    yield* ensureDeepResearchEnabled;
+
     const research = yield* DeepResearch;
     const sourceRepo = yield* SourceRepo;
     const storage = yield* Storage;

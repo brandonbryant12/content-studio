@@ -11,6 +11,11 @@ packages/db/src/schemas/*.ts     # Drizzle schema + enums + relations
 packages/db/drizzle/             # generated SQL + metadata
 ```
 
+`packages/db/drizzle/0000_broad_schema_baseline.sql` is the bootstrap baseline.
+After that baseline exists, new schema changes must land as new numbered
+forward migrations plus matching snapshot/journal updates. Do not edit old
+migration files to represent a new change.
+
 ## Golden Principles
 
 1. Schema changes are backward-compatible first (expand then contract).
@@ -69,6 +74,30 @@ Use expand-contract for breaking changes:
 
 For non-breaking additive changes (new table/column with safe default), one-step migration is acceptable.
 
+## Migration Artifact Rules
+
+1. Change the schema in `packages/db/src/schemas/*.ts`.
+2. Generate a new Drizzle migration under `packages/db/drizzle/`.
+3. Commit the generated SQL, snapshot, and `_journal.json` updates together.
+4. Apply the migration locally to verify it.
+
+Required rule:
+
+1. Post-bootstrap schema changes must create a new numbered migration file.
+2. Do not edit `0000_broad_schema_baseline.sql` or an older snapshot to
+   represent a new change unless you are intentionally resetting migration
+   history before deployment and have explicitly decided to squash history.
+3. `pnpm db:push` is for applying schema changes locally; it does not replace
+   generating and committing migration artifacts.
+
+Typical additive-change flow:
+
+```bash
+cd packages/db
+DB_POSTGRES_URL=postgresql://... pnpm generate --name <change-name>
+pnpm db:push
+```
+
 ## Transaction and Data Movement Rules
 
 1. Keep data migration logic deterministic and idempotent.
@@ -84,7 +113,9 @@ Before merge:
 2. Query/index impact reviewed against affected repos.
 3. Migration path documented (expand-contract or additive).
 4. API/use-case contract impact captured in tests/spec updates.
-5. `pnpm db:push` and relevant tests run locally.
+5. A new forward migration file was generated and committed for every
+   post-bootstrap schema change.
+6. `pnpm db:push`/migration apply and relevant tests ran locally.
 
 ## Related Standards
 

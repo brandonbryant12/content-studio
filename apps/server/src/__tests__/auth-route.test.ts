@@ -22,10 +22,9 @@ vi.mock('../env', () => ({
 }));
 
 vi.mock('../middleware/rate-limit', () => ({
-  createAuthRateLimit: () => async (
-    _c: { req: Request },
-    next: () => Promise<void>,
-  ) => next(),
+  createAuthRateLimit:
+    () => async (_c: { req: Request }, next: () => Promise<void>) =>
+      next(),
 }));
 
 vi.mock('../services', () => ({

@@ -8,6 +8,15 @@ interface SetupFooterProps {
   isLoading?: boolean;
   isFinalStep?: boolean;
   subtitle?: string;
+  continueLabel?: string;
+  loadingLabel?: string;
+  secondaryAction?: {
+    label: string;
+    loadingLabel?: string;
+    onClick: () => void;
+    disabled?: boolean;
+    isLoading?: boolean;
+  };
 }
 
 export function SetupFooter({
@@ -18,7 +27,15 @@ export function SetupFooter({
   isLoading = false,
   isFinalStep = false,
   subtitle,
+  continueLabel,
+  loadingLabel,
+  secondaryAction,
 }: SetupFooterProps) {
+  const resolvedContinueLabel =
+    continueLabel ?? (isFinalStep ? 'Generate Podcast' : 'Continue');
+  const resolvedLoadingLabel =
+    loadingLabel ?? (isFinalStep ? 'Generating...' : 'Saving...');
+
   return (
     <div className="setup-footer">
       <div className="setup-footer-left">
@@ -35,6 +52,23 @@ export function SetupFooter({
       </div>
 
       <div className="setup-footer-right">
+        {secondaryAction && (
+          <button
+            type="button"
+            onClick={secondaryAction.onClick}
+            disabled={secondaryAction.disabled || secondaryAction.isLoading}
+            className="inline-flex items-center justify-center rounded-xl border border-border bg-background px-4 py-3 text-sm font-medium text-foreground transition-colors hover:bg-muted disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            {secondaryAction.isLoading ? (
+              <span className="flex items-center gap-2">
+                <Spinner className="w-4 h-4" />
+                {secondaryAction.loadingLabel ?? secondaryAction.label}
+              </span>
+            ) : (
+              secondaryAction.label
+            )}
+          </button>
+        )}
         <button
           type="button"
           onClick={onContinue}
@@ -44,12 +78,10 @@ export function SetupFooter({
           {isLoading ? (
             <span className="flex items-center gap-2">
               <Spinner className="w-4 h-4" />
-              {isFinalStep ? 'Generating...' : 'Saving...'}
+              {resolvedLoadingLabel}
             </span>
-          ) : isFinalStep ? (
-            'Generate Podcast'
           ) : (
-            'Continue'
+            resolvedContinueLabel
           )}
         </button>
         {subtitle && (

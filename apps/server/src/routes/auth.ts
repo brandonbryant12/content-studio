@@ -41,7 +41,11 @@ export const authRoute = new Hono()
           ? String((failure as { message: unknown }).message)
           : 'Access token refresh failed';
 
-      console.error('[AUTH_ACCESS_TOKEN_FAILURE]', '[errorTag:' + errorTag + ']', message);
+      console.error(
+        '[AUTH_ACCESS_TOKEN_FAILURE]',
+        '[errorTag:' + errorTag + ']',
+        message,
+      );
       return c.body(null, 503);
     }
 

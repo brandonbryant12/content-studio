@@ -1,5 +1,66 @@
 [
   {
+    "id": "2026-03-09-architecture-adr-guard-ai-interaction-limit-plan-was-written-under-docs-plans",
+    "date": "2026-03-09",
+    "month": "2026-03",
+    "workflow": "Architecture + ADR Guard",
+    "title": "AI interaction limit plan was written under docs/plans",
+    "severity": "low",
+    "status": "closed",
+    "tags": [
+      "skill:intake-triage",
+      "skill:architecture-adr-guard",
+      "docs",
+      "plans",
+      "quota",
+      "ai-usage"
+    ],
+    "importance": 0.73,
+    "confidence": 0.98,
+    "eventFile": "events/2026-03.jsonl"
+  },
+  {
+    "id": "2026-03-09-architecture-adr-guard-generation-limits-should-spend-on-admission-and-key-by-ai-modality",
+    "date": "2026-03-09",
+    "month": "2026-03",
+    "workflow": "Architecture + ADR Guard",
+    "title": "Generation limits should spend on admission and key by AI modality",
+    "severity": "medium",
+    "status": "proposed",
+    "tags": [
+      "skill:intake-triage",
+      "skill:architecture-adr-guard",
+      "quota",
+      "ai-usage",
+      "llm",
+      "tts",
+      "deep-research"
+    ],
+    "importance": 0.84,
+    "confidence": 0.96,
+    "eventFile": "events/2026-03.jsonl"
+  },
+  {
+    "id": "2026-03-09-architecture-adr-guard-monthly-generation-limits-should-use-policy-plus-attempt-ledger",
+    "date": "2026-03-09",
+    "month": "2026-03",
+    "workflow": "Architecture + ADR Guard",
+    "title": "Monthly generation limits should use policy config plus a dedicated attempt ledger",
+    "severity": "medium",
+    "status": "proposed",
+    "tags": [
+      "skill:intake-triage",
+      "skill:architecture-adr-guard",
+      "quota",
+      "admin",
+      "job-queue",
+      "ai-usage"
+    ],
+    "importance": 0.8,
+    "confidence": 0.93,
+    "eventFile": "events/2026-03.jsonl"
+  },
+  {
     "id": "2026-03-09-feature-delivery-auth-access-token-route-must-map-session-lookup-failures-to-50",
     "date": "2026-03-09",
     "month": "2026-03",
@@ -56,6 +117,65 @@
     "eventFile": "events/2026-03.jsonl"
   },
   {
+    "id": "2026-03-09-feature-delivery-podcast-episode-plan-output-now-normalizes-invalid-estimatedminu",
+    "date": "2026-03-09",
+    "month": "2026-03",
+    "workflow": "Feature Delivery",
+    "title": "Podcast episode plan output now normalizes invalid estimatedMinutes before API serialization",
+    "severity": "medium",
+    "status": "closed",
+    "tags": [
+      "skill:feature-delivery",
+      "skill:debug-fix",
+      "podcast",
+      "episode-plan",
+      "serialization",
+      "contract-validation"
+    ],
+    "importance": 0.85,
+    "confidence": 0.96,
+    "eventFile": "events/2026-03.jsonl"
+  },
+  {
+    "id": "2026-03-09-feature-delivery-podcast-episodeplan-now-ships-as-a-forward-migration-and-schema-",
+    "date": "2026-03-09",
+    "month": "2026-03",
+    "workflow": "Feature Delivery",
+    "title": "Podcast episodePlan now ships as a forward migration and schema docs forbid editing baseline migrations",
+    "severity": "medium",
+    "status": "closed",
+    "tags": [
+      "skill:feature-delivery",
+      "skill:docs-knowledge-drift",
+      "db",
+      "migrations",
+      "drizzle",
+      "podcast",
+      "schema-governance"
+    ],
+    "importance": 0.88,
+    "confidence": 0.97,
+    "eventFile": "events/2026-03.jsonl"
+  },
+  {
+    "id": "2026-03-09-feature-delivery-podcast-script-prompt-now-carries-target-runtime-and-planner-sec",
+    "date": "2026-03-09",
+    "month": "2026-03",
+    "workflow": "Feature Delivery",
+    "title": "Podcast script prompt now carries target runtime and planner section count is duration-aware",
+    "severity": "medium",
+    "status": "applied",
+    "tags": [
+      "skill:feature-delivery",
+      "area:podcasts",
+      "area:prompt-registry",
+      "area:script-generation",
+      "area:episode-planner"
+    ],
+    "confidence": 0.98,
+    "eventFile": "events/2026-03.jsonl"
+  },
+  {
     "id": "2026-03-09-feature-delivery-podcast-sse-now-exposes-script-ready-phase-and-durable-failure-s",
     "date": "2026-03-09",
     "month": "2026-03",
@@ -76,6 +196,47 @@
     ],
     "importance": 0.88,
     "confidence": 0.91,
+    "eventFile": "events/2026-03.jsonl"
+  },
+  {
+    "id": "2026-03-09-feature-delivery-podcast-wizard-now-splits-quick-start-setup-directions-from-opti",
+    "date": "2026-03-09",
+    "month": "2026-03",
+    "workflow": "Feature Delivery",
+    "title": "Podcast wizard now splits quick-start setup directions from optional episode planning",
+    "severity": "medium",
+    "status": "applied",
+    "tags": [
+      "skill:feature-delivery",
+      "area:podcasts",
+      "area:setup-wizard",
+      "area:db-migrations",
+      "ux:quick-start",
+      "ux:planner"
+    ],
+    "confidence": 0.96,
+    "eventFile": "events/2026-03.jsonl"
+  },
+  {
+    "id": "2026-03-09-feature-delivery-podcast-wizard-now-supports-optional-ai-plan-approval-before-gen",
+    "date": "2026-03-09",
+    "month": "2026-03",
+    "workflow": "Feature Delivery",
+    "title": "Podcast wizard now supports optional AI plan approval before generation",
+    "severity": "medium",
+    "status": "closed",
+    "tags": [
+      "skill:feature-delivery",
+      "skill:frontend-design",
+      "skill:tanstack-vite",
+      "podcast",
+      "setup-wizard",
+      "planning",
+      "outline",
+      "skip-path"
+    ],
+    "importance": 0.86,
+    "confidence": 0.95,
     "eventFile": "events/2026-03.jsonl"
   },
   {
@@ -137,6 +298,27 @@
     "eventFile": "events/2026-03.jsonl"
   },
   {
+    "id": "2026-03-09-feature-delivery-testcontainer-schema-push-should-infer-drizzle-database-type-fro",
+    "date": "2026-03-09",
+    "month": "2026-03",
+    "workflow": "Feature Delivery",
+    "title": "Testcontainer schema push should infer drizzle database type from pushSchema",
+    "severity": "medium",
+    "status": "closed",
+    "tags": [
+      "skill:feature-delivery",
+      "skill:debug-fix",
+      "testing",
+      "drizzle",
+      "testcontainers",
+      "build",
+      "type-boundary"
+    ],
+    "importance": 0.83,
+    "confidence": 0.97,
+    "eventFile": "events/2026-03.jsonl"
+  },
+  {
     "id": "2026-03-09-feature-delivery-voiceover-assistant-now-forces-rewrite-tool-on-direct-edit-reque",
     "date": "2026-03-09",
     "month": "2026-03",
@@ -190,6 +372,24 @@
     ],
     "importance": 0.76,
     "confidence": 0.9,
+    "eventFile": "events/2026-03.jsonl"
+  },
+  {
+    "id": "2026-03-09-feature-delivery-worker-global-concurrency-default-raised-from-5-to-20",
+    "date": "2026-03-09",
+    "month": "2026-03",
+    "workflow": "Feature Delivery",
+    "title": "Worker global concurrency default raised from 5 to 20",
+    "severity": "low",
+    "status": "closed",
+    "tags": [
+      "skill:feature-delivery",
+      "worker",
+      "job-queue",
+      "concurrency"
+    ],
+    "importance": 0.61,
+    "confidence": 0.97,
     "eventFile": "events/2026-03.jsonl"
   },
   {

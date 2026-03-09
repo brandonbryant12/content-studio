@@ -24,6 +24,11 @@ export {
   type GenerateScriptResult,
 } from './generate-script';
 export {
+  generatePodcastPlan,
+  type GeneratePodcastPlanInput,
+  PodcastPlanSourcesNotReadyError,
+} from './generate-plan';
+export {
   generateAudio,
   type GenerateAudioInput,
   type GenerateAudioResult,

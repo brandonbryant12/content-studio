@@ -178,7 +178,14 @@ export function useWritingAssistantChat(
     return () => {
       isCancelled = true;
     };
-  }, [addToolResult, messages, onApplyTranscriptEdit, sendMessage, setMessages, transcript]);
+  }, [
+    addToolResult,
+    messages,
+    onApplyTranscriptEdit,
+    sendMessage,
+    setMessages,
+    transcript,
+  ]);
 
   const isStreaming = status === 'submitted' || status === 'streaming';
 

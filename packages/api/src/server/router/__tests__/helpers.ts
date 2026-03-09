@@ -118,6 +118,7 @@ export type ErrorCode =
   | 'INVALID_VOICEOVER_AUDIO_GENERATION'
   | 'INVALID_SAVE'
   | 'PODCAST_NOT_FOUND'
+  | 'PODCAST_PLAN_SOURCES_NOT_READY'
   | 'SCRIPT_NOT_FOUND'
   | 'VOICEOVER_NOT_FOUND'
   | 'USER_NOT_FOUND'
@@ -161,6 +162,10 @@ export interface MockErrorFactory {
     data?: unknown;
   }) => ORPCError<string, unknown>;
   PODCAST_NOT_FOUND: (opts: {
+    message: string;
+    data?: unknown;
+  }) => ORPCError<string, unknown>;
+  PODCAST_PLAN_SOURCES_NOT_READY: (opts: {
     message: string;
     data?: unknown;
   }) => ORPCError<string, unknown>;
@@ -229,6 +234,7 @@ const ERROR_STATUS_CODES: Record<ErrorCode, number> = {
   INVALID_VOICEOVER_AUDIO_GENERATION: 400,
   INVALID_SAVE: 409,
   PODCAST_NOT_FOUND: 404,
+  PODCAST_PLAN_SOURCES_NOT_READY: 409,
   SCRIPT_NOT_FOUND: 404,
   VOICEOVER_NOT_FOUND: 404,
   USER_NOT_FOUND: 404,
@@ -279,6 +285,13 @@ const mapMessageToCode = (message: string): ErrorCode | null => {
     normalized.includes('too large')
   ) {
     return 'SOURCE_TOO_LARGE';
+  }
+
+  if (
+    normalized.includes('sources must finish processing') ||
+    normalized.includes('plan can be generated')
+  ) {
+    return 'PODCAST_PLAN_SOURCES_NOT_READY';
   }
 
   if (
@@ -342,6 +355,9 @@ export const createMockErrors = (): MockErrorFactory => {
     ),
     INVALID_SAVE: createErrorFactory('INVALID_SAVE'),
     PODCAST_NOT_FOUND: createErrorFactory('PODCAST_NOT_FOUND'),
+    PODCAST_PLAN_SOURCES_NOT_READY: createErrorFactory(
+      'PODCAST_PLAN_SOURCES_NOT_READY',
+    ),
     SCRIPT_NOT_FOUND: createErrorFactory('SCRIPT_NOT_FOUND'),
     VOICEOVER_NOT_FOUND: createErrorFactory('VOICEOVER_NOT_FOUND'),
     USER_NOT_FOUND: createErrorFactory('USER_NOT_FOUND'),

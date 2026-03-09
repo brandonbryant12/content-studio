@@ -1,13 +1,21 @@
 import { SourceStatus, JobType } from '@repo/db/schema';
-import { SourceRepo } from '@repo/media';
+import { DeepResearchFeature, SourceRepo } from '@repo/media';
 import { Queue, formatError, type ProcessResearchPayload } from '@repo/queue';
 import { Effect } from 'effect';
 import { emitEntityChange, type PublishEvent } from './events';
 
 export const recoverOrphanedResearch = (publishEvent: PublishEvent) =>
   Effect.gen(function* () {
+    const deepResearchFeature = yield* DeepResearchFeature;
     const sourceRepo = yield* SourceRepo;
     const queue = yield* Queue;
+
+    if (!deepResearchFeature.enabled) {
+      yield* Effect.logInfo(
+        'Skipping orphaned research recovery because deep research is disabled',
+      );
+      return;
+    }
 
     const orphans = yield* sourceRepo.findOrphanedResearch();
 

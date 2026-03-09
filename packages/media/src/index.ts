@@ -9,6 +9,7 @@ export {
   UrlFetchError,
   InvalidUrlError,
   SourceAlreadyProcessing,
+  DeepResearchDisabled,
   PodcastNotFound,
   PodcastError,
   ScriptNotFound,
@@ -104,7 +105,11 @@ export {
 export {
   UrlScraper,
   UrlScraperLive,
+  DeepResearchFeature,
+  DeepResearchFeatureLive,
+  ensureDeepResearchEnabled,
   type UrlScraperService,
+  type DeepResearchFeatureService,
   type ScrapedContent,
 } from './source';
 
@@ -280,6 +285,7 @@ export {
   listPodcasts,
   saveChanges,
   generateScript,
+  generatePodcastPlan,
   generateAudio,
   startGeneration,
   saveAndQueueAudio,
@@ -300,6 +306,7 @@ export {
   type SaveChangesResult,
   type GenerateScriptInput,
   type GenerateScriptResult,
+  type GeneratePodcastPlanInput,
   type GenerateAudioInput,
   type GenerateAudioResult,
   type StartGenerationInput,
@@ -311,6 +318,7 @@ export {
   type ApprovePodcastInput,
   type RevokeApprovalInput,
   type GenerateCoverImageInput,
+  PodcastPlanSourcesNotReadyError,
 } from './podcast';
 
 export {
@@ -320,6 +328,8 @@ export {
   type UpdatePodcast,
   type VersionStatus,
   type ScriptSegment,
+  type PodcastEpisodePlan,
+  type PodcastEpisodePlanSection,
 } from './podcast';
 
 export {

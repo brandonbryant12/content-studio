@@ -194,6 +194,37 @@ describe('startGeneration', () => {
         user.id,
       );
     });
+
+    it('can request quick-start generation without a saved plan', async () => {
+      const user = createTestUser();
+      const podcast = createTestPodcast({ createdBy: user.id });
+      const enqueueSpy = vi.fn();
+
+      const layers = Layer.mergeAll(
+        MockDbLive,
+        createMockPodcastRepo({ podcast }),
+        createMockQueue({ podcast }, { onEnqueue: enqueueSpy }),
+      );
+
+      await Effect.runPromise(
+        withTestUser(user)(
+          startGeneration({
+            podcastId: podcast.id,
+            promptInstructions: 'Lead with the billing basics.',
+            ignoreEpisodePlan: true,
+          }).pipe(Effect.provide(layers)),
+        ),
+      );
+
+      expect(enqueueSpy).toHaveBeenCalledWith(
+        'generate-podcast',
+        expect.objectContaining({
+          promptInstructions: 'Lead with the billing basics.',
+          ignoreEpisodePlan: true,
+        }),
+        user.id,
+      );
+    });
   });
 
   describe('status handling', () => {

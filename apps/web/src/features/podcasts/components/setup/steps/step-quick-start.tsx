@@ -1,18 +1,18 @@
 import {
+  getInstructionPresetLabel,
   INSTRUCTION_CHAR_LIMIT,
   INSTRUCTION_PRESETS,
-  getInstructionPresetLabel,
 } from '@/features/podcasts/lib/instruction-presets';
 
-interface StepInstructionsProps {
+interface StepQuickStartProps {
   instructions: string;
   onInstructionsChange: (instructions: string) => void;
 }
 
-export function StepInstructions({
+export function StepQuickStart({
   instructions,
   onInstructionsChange,
-}: StepInstructionsProps) {
+}: StepQuickStartProps) {
   const activePreset = getInstructionPresetLabel(instructions);
 
   const handlePresetClick = (preset: (typeof INSTRUCTION_PRESETS)[number]) => {
@@ -20,7 +20,6 @@ export function StepInstructions({
       onInstructionsChange('');
       return;
     }
-
     onInstructionsChange(preset.value);
   };
 
@@ -31,10 +30,10 @@ export function StepInstructions({
   return (
     <div className="setup-content">
       <div className="setup-step-header">
-        <p className="setup-step-eyebrow">Step 3 of 3</p>
+        <p className="setup-step-eyebrow">Step 3 of 4</p>
         <h2 className="setup-step-title">Custom Instructions</h2>
         <p className="setup-step-description">
-          Add any special instructions for the AI. This step is optional.
+          Add any special directions for the script. This step is optional.
         </p>
       </div>
 
@@ -57,7 +56,7 @@ export function StepInstructions({
         <textarea
           value={instructions}
           onChange={(e) => handleTextChange(e.target.value)}
-          placeholder="Add any specific instructions for the AI when generating your podcast script..."
+          placeholder="e.g. audience, angle, must-include details, or what to avoid..."
           rows={5}
           className="setup-textarea"
           aria-label="Custom instructions for podcast generation"
@@ -67,8 +66,8 @@ export function StepInstructions({
         </p>
       </div>
 
-      <p className="setup-hint text-center mt-4">
-        You can always edit these settings later in the workbench.
+      <p className="setup-hint mt-4 text-center">
+        You can always edit these later in the workbench.
       </p>
     </div>
   );

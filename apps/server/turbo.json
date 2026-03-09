@@ -5,6 +5,7 @@
     "dev": {
       "env": [
         "SERVER_*",
+        "DISABLE_DEEP_RESEARCH",
         "NODE_EXTRA_CA_CERTS",
         "PUBLIC_WEB_URL",
         "PUBLIC_SERVER_URL",
@@ -16,6 +17,7 @@
     "build": {
       "env": [
         "SERVER_*",
+        "DISABLE_DEEP_RESEARCH",
         "NODE_EXTRA_CA_CERTS",
         "PUBLIC_WEB_URL",
         "PUBLIC_SERVER_URL",
@@ -26,6 +28,7 @@
     "start": {
       "env": [
         "SERVER_*",
+        "DISABLE_DEEP_RESEARCH",
         "NODE_EXTRA_CA_CERTS",
         "PUBLIC_WEB_URL",
         "PUBLIC_SERVER_URL",

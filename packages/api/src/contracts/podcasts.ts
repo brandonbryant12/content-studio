@@ -59,6 +59,18 @@ const saveChangesErrors = {
   },
 } as const;
 
+const podcastPlanErrors = {
+  PODCAST_PLAN_SOURCES_NOT_READY: {
+    status: 409,
+    data: std(
+      Schema.Struct({
+        podcastId: Schema.String,
+        sourceIds: Schema.Array(Schema.String),
+      }),
+    ),
+  },
+} as const;
+
 const podcastContract = oc
   .prefix('/podcasts')
   .tag('podcast')
@@ -141,6 +153,18 @@ const podcastContract = oc
       .input(std(Schema.Struct({ id: PodcastIdSchema })))
       .output(std(PodcastOutputSchema)),
 
+    generatePlan: oc
+      .route({
+        method: 'POST',
+        path: '/{id}/generate-plan',
+        summary: 'Generate episode plan',
+        description:
+          'Generate a structured episode plan from the selected sources and persist it on the podcast.',
+      })
+      .errors({ ...podcastErrors, ...podcastPlanErrors })
+      .input(std(Schema.Struct({ id: PodcastIdSchema })))
+      .output(std(PodcastOutputSchema)),
+
     // Trigger full podcast generation (script + audio in one job)
     generate: oc
       .route({
@@ -156,6 +180,7 @@ const podcastContract = oc
           Schema.Struct({
             id: PodcastIdSchema,
             promptInstructions: Schema.optional(Schema.String),
+            ignoreEpisodePlan: Schema.optional(Schema.Boolean),
           }),
         ),
       )

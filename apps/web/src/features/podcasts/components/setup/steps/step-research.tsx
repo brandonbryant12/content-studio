@@ -6,6 +6,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useCallback, useEffect, useMemo, useRef } from 'react';
 import { toast } from 'sonner';
 import { apiClient } from '@/clients/apiClient';
+import { isDeepResearchEnabled } from '@/env';
 import {
   getSourceListQueryKey,
   useResearchChat,
@@ -47,6 +48,22 @@ function pickRandom<T>(items: T[], count: number): T[] {
 }
 
 export function StepResearch({
+  onSourceCreated,
+  createdSourceId,
+}: StepResearchProps) {
+  if (!isDeepResearchEnabled) {
+    return null;
+  }
+
+  return (
+    <EnabledStepResearch
+      onSourceCreated={onSourceCreated}
+      createdSourceId={createdSourceId}
+    />
+  );
+}
+
+function EnabledStepResearch({
   onSourceCreated,
   createdSourceId,
 }: StepResearchProps) {

@@ -42,7 +42,9 @@ export function ActionBar({
   );
 
   const failureMessage =
-    !isGenerating && isFailed ? getGenerationFailureMessage(errorMessage) : null;
+    !isGenerating && isFailed
+      ? getGenerationFailureMessage(errorMessage)
+      : null;
 
   const failurePanel = failureMessage ? (
     <div

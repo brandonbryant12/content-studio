@@ -2,6 +2,7 @@ import { Effect } from 'effect';
 import type { CreatePodcast } from '@repo/db/schema';
 import { defineAuthedUseCase } from '../../shared';
 import { PodcastRepo } from '../repos/podcast-repo';
+import { sanitizePodcastSetupInstructions } from '../setup-instructions';
 
 // =============================================================================
 // Types
@@ -21,13 +22,20 @@ export const createPodcast = defineAuthedUseCase<CreatePodcastInput>()({
 
       const { sourceIds: inputSourceIds, ...data } = input;
       const sourceIds = inputSourceIds ?? [];
+      const sanitizedSetupInstructions = sanitizePodcastSetupInstructions(
+        data.setupInstructions,
+      );
+      const setupInstructions =
+        sanitizedSetupInstructions === null
+          ? undefined
+          : sanitizedSetupInstructions;
 
       if (sourceIds.length > 0) {
         yield* podcastRepo.verifySourcesExist(sourceIds, user.id);
       }
 
       const podcast = yield* podcastRepo.insert(
-        { ...data, createdBy: user.id },
+        { ...data, setupInstructions, createdBy: user.id },
         sourceIds,
       );
 

@@ -15,8 +15,28 @@ const SAMPLE_INPUTS: Record<string, unknown> = {
     text: 'Welcome to the show. Today we cover practical AI workflows.',
     needsTitle: true,
   },
+  'podcast.plan.system': {
+    format: 'conversation',
+    targetDurationMinutes: 6,
+    hostPersonaName: 'Alex Stone',
+    coHostPersonaName: 'Riley Fox',
+  },
+  'podcast.plan.user': {
+    title: 'AI Team Playbook',
+    description: 'Operational guidance for shipping AI features safely',
+    setupInstructions: 'Open with the billing basics before payment options.',
+    sourceEntries: [
+      {
+        id: 'doc_alpha',
+        title: 'Source Alpha',
+        content:
+          'Clear ownership, trustworthy source handling, and rollout metrics reduce launch risk.',
+      },
+    ],
+  },
   'podcast.script.system': {
     format: 'conversation',
+    targetDurationMinutes: 8,
     customInstructions: 'Keep tone concise and practical.',
     hostPersona: {
       name: 'Alex Stone',
@@ -32,6 +52,20 @@ const SAMPLE_INPUTS: Record<string, unknown> = {
     targetSegment: {
       name: 'Product leaders',
       description: 'Heads of product and engineering managers',
+    },
+    episodePlan: {
+      angle: 'Focus on rollout discipline over hype.',
+      openingHook: 'The hard part of AI is not the model, it is the process.',
+      closingTakeaway: 'Start with one workflow and tighten feedback loops.',
+      sections: [
+        {
+          heading: 'Why launches stall',
+          summary: 'Common operational gaps that kill momentum.',
+          keyPoints: ['No owner', 'Weak source quality'],
+          sourceIds: ['doc_alpha'],
+          estimatedMinutes: 2,
+        },
+      ],
     },
   },
   'podcast.script.user': {

@@ -79,6 +79,7 @@ async function startWorker(): Promise<void> {
     storageConfig,
     useMockAI: env.USE_MOCK_AI,
     geminiApiKey: env.GEMINI_API_KEY,
+    deepResearchEnabled: !env.DISABLE_DEEP_RESEARCH,
     telemetryConfig: {
       enabled: env.TELEMETRY_ENABLED,
       serviceName: env.OTEL_SERVICE_NAME ?? 'content-studio-worker',

@@ -16,12 +16,13 @@ pnpm test:e2e:ui # Launch Playwright UI mode with the same runtime bootstrap
 
 ## Environment Variables
 
-| Variable                 | Required | Default                 | Description                                             |
-| ------------------------ | -------- | ----------------------- | ------------------------------------------------------- |
-| `PUBLIC_SERVER_URL`      | Yes      | —                       | Backend API server URL (e.g. `https://api.example.com`) |
-| `PUBLIC_SERVER_API_PATH` | No       | `/api`                  | API endpoint path prefix                                |
-| `PUBLIC_BASE_PATH`       | No       | `/`                     | App base path for sub-path deployments                  |
-| `PUBLIC_WEB_URL`         | No       | `http://localhost:8085` | Vite dev server URL (dev only)                          |
+| Variable                       | Required | Default                 | Description                                             |
+| ------------------------------ | -------- | ----------------------- | ------------------------------------------------------- |
+| `PUBLIC_SERVER_URL`            | Yes      | —                       | Backend API server URL (e.g. `https://api.example.com`) |
+| `PUBLIC_SERVER_API_PATH`       | No       | `/api`                  | API endpoint path prefix                                |
+| `PUBLIC_DISABLE_DEEP_RESEARCH` | No       | `false`                 | Hides deep research entry points in the SPA             |
+| `PUBLIC_BASE_PATH`             | No       | `/`                     | App base path for sub-path deployments                  |
+| `PUBLIC_WEB_URL`               | No       | `http://localhost:8085` | Vite dev server URL (dev only)                          |
 
 In development, these are read from [`.env` files](./.env) via Vite's `import.meta.env`.
 
@@ -42,6 +43,7 @@ docker build -f apps/web/Dockerfile -t content-studio-web .
 docker run -p 8080:8080 \
   -e PUBLIC_SERVER_URL=https://api.example.com \
   -e PUBLIC_SERVER_API_PATH=/api \
+  -e PUBLIC_DISABLE_DEEP_RESEARCH=false \
   content-studio-web
 ```
 
@@ -63,6 +65,8 @@ env:
     value: 'https://api.example.com'
   - name: PUBLIC_SERVER_API_PATH
     value: '/api'
+  - name: PUBLIC_DISABLE_DEEP_RESEARCH
+    value: 'false'
 ```
 
 The server listens on port `8080` (configurable via `PORT` env var) and exposes `/healthcheck` for liveness/readiness probes.

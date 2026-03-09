@@ -9,9 +9,11 @@ import { DatabasePolicyLive, type Policy } from '@repo/auth/policy';
 import { DbLive, type Db } from '@repo/db/effect';
 import { TelemetryLive, type TelemetryConfig } from '@repo/db/telemetry';
 import {
+  DeepResearchFeatureLive,
   MediaLive,
   UrlScraperLive,
   type Media,
+  type DeepResearchFeature,
   type UrlScraper,
 } from '@repo/media';
 import { QueueLive, type Queue } from '@repo/queue';
@@ -36,6 +38,7 @@ export type SharedServices =
   | AIUsageRecorder
   | AI
   | Media
+  | DeepResearchFeature
   | UrlScraper;
 
 /**
@@ -47,6 +50,8 @@ export interface ServerRuntimeConfig {
   useMockAI?: boolean;
   /** Gemini API key (required when useMockAI=false) */
   geminiApiKey?: string;
+  /** Enables the deep research source workflow. Defaults to true. */
+  deepResearchEnabled?: boolean;
   /** When provided, bridges Effect spans to the global OTel TracerProvider */
   telemetryConfig?: TelemetryConfig;
 }
@@ -82,6 +87,9 @@ export const createSharedLayers = (
   const mediaLayer = MediaLive.pipe(
     Layer.provide(Layer.mergeAll(dbLayer, storageLayer)),
   );
+  const deepResearchFeatureLayer = DeepResearchFeatureLive(
+    config.deepResearchEnabled ?? true,
+  );
 
   const loggerLayer = Logger.pretty;
 
@@ -97,6 +105,7 @@ export const createSharedLayers = (
     aiUsageRecorderLayer,
     aiLayer,
     mediaLayer,
+    deepResearchFeatureLayer,
     UrlScraperLive,
     loggerLayer,
     tracerLayer,

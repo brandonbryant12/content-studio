@@ -29,6 +29,7 @@ import {
   MockDbLive,
 } from '../../../test-utils/mock-repos';
 import { type SourceRepoService } from '../../repos';
+import { DeepResearchFeatureLive } from '../../services/deep-research-feature';
 import { processResearch, ResearchTimeoutError } from '../process-research';
 
 // =============================================================================
@@ -93,6 +94,62 @@ describe('processResearch', () => {
     testUser = createTestUser();
   });
 
+  it('fails immediately when deep research is disabled', async () => {
+    const doc = createTestSource({
+      source: 'research',
+      status: 'processing',
+      researchConfig: { query: 'test query' },
+    });
+    const updateStatusSpy = vi.fn();
+    const startResearchSpy = vi.fn();
+
+    const layers = Layer.mergeAll(
+      MockDbLive,
+      DeepResearchFeatureLive(false),
+      createMockPodcastRepo(),
+      createMockVoiceoverRepo(),
+      createMockInfographicRepo(),
+      createMockQueue(),
+      mockSourceRepo({
+        findById: () => Effect.succeed(doc),
+        updateStatus: (id, status, errorMessage) =>
+          Effect.sync(() => {
+            updateStatusSpy(id, status, errorMessage);
+            return { ...doc, status, errorMessage: errorMessage ?? null };
+          }),
+      }),
+      createMockActivityLogRepo(),
+      createMockDeepResearch({
+        startResearch: (query) => {
+          startResearchSpy(query);
+          return Effect.succeed({ interactionId: 'new-op-789' });
+        },
+      }),
+      createMockStorage(),
+      mockOutlineLLM(),
+    );
+
+    const result = await Effect.runPromiseExit(
+      withTestUser(testUser)(
+        processResearch({ sourceId: doc.id, query: 'test query' }).pipe(
+          Effect.provide(layers),
+        ),
+      ),
+    );
+
+    expect(result._tag).toBe('Failure');
+    expect(startResearchSpy).not.toHaveBeenCalled();
+    expect(updateStatusSpy).toHaveBeenCalledWith(
+      doc.id,
+      SourceStatus.FAILED,
+      'Deep research is currently disabled',
+    );
+    if (result._tag === 'Failure' && result.cause._tag === 'Fail') {
+      const error = result.cause.error as { _tag?: string };
+      expect(error._tag).toBe('DeepResearchDisabled');
+    }
+  });
+
   describe('resume branch', () => {
     it('skips startResearch when source has existing operationId with in_progress status', async () => {
       const startResearchSpy = vi.fn();
@@ -110,6 +167,7 @@ describe('processResearch', () => {
 
       const layers = Layer.mergeAll(
         MockDbLive,
+        DeepResearchFeatureLive(true),
         createMockPodcastRepo(),
         createMockVoiceoverRepo(),
         createMockInfographicRepo(),
@@ -164,6 +222,7 @@ describe('processResearch', () => {
 
       const layers = Layer.mergeAll(
         MockDbLive,
+        DeepResearchFeatureLive(true),
         createMockPodcastRepo(),
         createMockVoiceoverRepo(),
         createMockInfographicRepo(),
@@ -216,6 +275,7 @@ describe('processResearch', () => {
 
       const layers = Layer.mergeAll(
         MockDbLive,
+        DeepResearchFeatureLive(true),
         createMockPodcastRepo(),
         createMockVoiceoverRepo(),
         createMockInfographicRepo(),
@@ -269,6 +329,7 @@ describe('processResearch', () => {
 
       const layers = Layer.mergeAll(
         MockDbLive,
+        DeepResearchFeatureLive(true),
         createMockPodcastRepo(),
         createMockVoiceoverRepo(),
         createMockInfographicRepo(),
@@ -336,6 +397,7 @@ describe('processResearch', () => {
 
         const layers = Layer.mergeAll(
           MockDbLive,
+          DeepResearchFeatureLive(true),
           createMockPodcastRepo(),
           createMockVoiceoverRepo(),
           createMockInfographicRepo(),
@@ -423,6 +485,7 @@ describe('processResearch', () => {
 
       const layers = Layer.mergeAll(
         MockDbLive,
+        DeepResearchFeatureLive(true),
         createMockPodcastRepo(),
         createMockVoiceoverRepo(),
         createMockInfographicRepo(),
@@ -501,6 +564,7 @@ describe('processResearch', () => {
 
       const layers = Layer.mergeAll(
         MockDbLive,
+        DeepResearchFeatureLive(true),
         mockSourceRepo({
           findById: () => Effect.succeed(doc),
           updateContent: () => Effect.succeed(doc),

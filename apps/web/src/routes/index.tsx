@@ -12,7 +12,7 @@ import { createFileRoute, Link, Navigate } from '@tanstack/react-router';
 import { useEffect } from 'react';
 import { authClient } from '@/clients/authClient';
 import { AI_APP_NAME, APP_NAME, formatProductPageTitle } from '@/constants';
-import { isPasswordAuthEnabled } from '@/env';
+import { isDeepResearchEnabled, isPasswordAuthEnabled } from '@/env';
 
 export const Route = createFileRoute('/')({
   component: RouteComponent,
@@ -50,6 +50,81 @@ function RouteComponent() {
   const { data: session } = authClient.useSession();
   const primaryCtaPath = isPasswordAuthEnabled ? '/register' : '/login';
   const primaryCtaLabel = isPasswordAuthEnabled ? 'Sign up' : 'Sign in';
+  const heroSubtitle = isDeepResearchEnabled
+    ? 'Upload your sources, paste a URL, or let AI research a topic.'
+    : 'Upload your sources or paste a URL.';
+  const howItWorksSteps = [
+    {
+      step: 1,
+      icon: FileTextIcon,
+      title: 'Add your sources',
+      desc: isDeepResearchEnabled
+        ? 'Upload PDFs, paste URLs, or let AI deep-research a topic for you.'
+        : 'Upload PDFs or paste URLs to ground your content.',
+      color: 'text-sky-500',
+      bg: 'bg-sky-500',
+    },
+    {
+      step: 2,
+      icon: LightningBoltIcon,
+      title: 'AI creates your content',
+      desc: `Choose your format — podcast, voiceover, or infographic — and ${APP_NAME} generates it from your approved sources.`,
+      color: 'text-primary',
+      bg: 'bg-primary',
+    },
+    {
+      step: 3,
+      icon: CheckCircledIcon,
+      title: 'Review, refine, approve',
+      desc: 'Fine-tune scripts, swap voices, adjust styles — review every detail before finalizing.',
+      color: 'text-emerald-500',
+      bg: 'bg-emerald-500',
+    },
+  ];
+  const featureCards = [
+    {
+      icon: FileTextIcon,
+      label: 'Sources',
+      headline: 'Ground every asset in verified source material',
+      desc: isDeepResearchEnabled
+        ? 'Upload approved files, import web pages, or let AI deep-research a topic. Your source library becomes the single source of truth behind every piece of content.'
+        : 'Upload approved files or import web pages. Your source library becomes the single source of truth behind every piece of content.',
+      color: 'text-sky-400',
+      iconBg: 'bg-sky-500/10',
+    },
+    {
+      icon: MixerHorizontalIcon,
+      label: 'Podcasts',
+      headline: 'Generate a podcast episode from a single source',
+      desc: 'Select your sources, choose conversation or monologue format, assign reusable personas so each episode keeps the same host perspective and voice, then review and edit every line of the script before generating audio.',
+      color: 'text-violet-400',
+      iconBg: 'bg-violet-500/10',
+    },
+    {
+      icon: SpeakerLoudIcon,
+      label: 'Voiceovers',
+      headline: 'From script to professional narration — fully reviewable',
+      desc: 'Write or paste your script, let the built-in AI assistant refine it, pick from 30+ natural voices, and generate polished audio — perfect for compliant training, explainers, and presentations.',
+      color: 'text-emerald-400',
+      iconBg: 'bg-emerald-500/10',
+    },
+    {
+      icon: ImageIcon,
+      label: 'Infographics',
+      headline: 'Create on-brand visuals without a designer',
+      desc: 'Describe what you need, choose a format and style preset, and get review-ready images. Save your brand styles so every visual stays consistent and on-message.',
+      color: 'text-amber-400',
+      iconBg: 'bg-amber-500/10',
+    },
+  ];
+  const capabilities = [
+    '30+ natural voices',
+    'PDF, DOCX, URL import',
+    '4 infographic formats',
+    ...(isDeepResearchEnabled ? ['AI deep research'] : []),
+    'Full script review',
+    'Source-grounded output',
+  ];
 
   useEffect(() => {
     document.title = formatProductPageTitle();
@@ -94,7 +169,7 @@ function RouteComponent() {
 
           {/* Subtitle */}
           <p className="text-body-lg mt-6 max-w-xl mx-auto animate-fade-in-up stagger-2">
-            Upload your sources, paste a URL, or let AI research a topic.
+            {heroSubtitle}
             {` ${APP_NAME} generates polished podcasts, voiceovers, and visuals you can trust — grounded in your sources.`}
           </p>
 
@@ -121,57 +196,37 @@ function RouteComponent() {
             How it works
           </h2>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 sm:gap-0">
-            {[
-              {
-                step: 1,
-                icon: FileTextIcon,
-                title: 'Add your sources',
-                desc: 'Upload PDFs, paste URLs, or let AI deep-research a topic for you.',
-                color: 'text-sky-500',
-                bg: 'bg-sky-500',
-              },
-              {
-                step: 2,
-                icon: LightningBoltIcon,
-                title: 'AI creates your content',
-                desc: `Choose your format — podcast, voiceover, or infographic — and ${APP_NAME} generates it from your approved sources.`,
-                color: 'text-primary',
-                bg: 'bg-primary',
-              },
-              {
-                step: 3,
-                icon: CheckCircledIcon,
-                title: 'Review, refine, approve',
-                desc: 'Fine-tune scripts, swap voices, adjust styles — review every detail before finalizing.',
-                color: 'text-emerald-500',
-                bg: 'bg-emerald-500',
-              },
-            ].map(({ step, icon: Icon, title, desc, color, bg }, i) => (
-              <div
-                key={step}
-                className="relative flex flex-col items-center text-center px-6"
-              >
-                {/* Connector line between steps (desktop only) */}
-                {i < 2 && (
-                  <div
-                    className="hidden sm:block absolute top-5 left-[calc(50%+24px)] w-[calc(100%-48px)] border-t-2 border-dashed border-border"
+            {howItWorksSteps.map(
+              ({ step, icon: Icon, title, desc, color, bg }, i) => (
+                <div
+                  key={step}
+                  className="relative flex flex-col items-center text-center px-6"
+                >
+                  {/* Connector line between steps (desktop only) */}
+                  {i < 2 && (
+                    <div
+                      className="hidden sm:block absolute top-5 left-[calc(50%+24px)] w-[calc(100%-48px)] border-t-2 border-dashed border-border"
+                      aria-hidden="true"
+                    />
+                  )}
+                  <span
+                    className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full ${bg} text-sm font-semibold text-white mb-4`}
+                  >
+                    {step}
+                  </span>
+                  <Icon
+                    className={`w-5 h-5 ${color} mb-3`}
                     aria-hidden="true"
                   />
-                )}
-                <span
-                  className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full ${bg} text-sm font-semibold text-white mb-4`}
-                >
-                  {step}
-                </span>
-                <Icon className={`w-5 h-5 ${color} mb-3`} aria-hidden="true" />
-                <h3 className="font-serif font-semibold text-base text-foreground mb-1.5">
-                  {title}
-                </h3>
-                <p className="text-sm text-muted-foreground leading-relaxed">
-                  {desc}
-                </p>
-              </div>
-            ))}
+                  <h3 className="font-serif font-semibold text-base text-foreground mb-1.5">
+                    {title}
+                  </h3>
+                  <p className="text-sm text-muted-foreground leading-relaxed">
+                    {desc}
+                  </p>
+                </div>
+              ),
+            )}
           </div>
         </div>
       </section>
@@ -179,70 +234,33 @@ function RouteComponent() {
       {/* Features */}
       <section className="px-6 pb-20 md:pb-28">
         <div className="max-w-5xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-12 md:gap-16">
-          {[
-            {
-              icon: FileTextIcon,
-              label: 'Sources',
-              headline: 'Ground every asset in verified source material',
-              desc: 'Upload approved files, import web pages, or let AI deep-research a topic. Your source library becomes the single source of truth behind every piece of content.',
-              color: 'text-sky-400',
-              iconBg: 'bg-sky-500/10',
-            },
-            {
-              icon: MixerHorizontalIcon,
-              label: 'Podcasts',
-              headline: 'Generate a podcast episode from a single source',
-              desc: 'Select your sources, choose conversation or monologue format, assign reusable personas so each episode keeps the same host perspective and voice, then review and edit every line of the script before generating audio.',
-              color: 'text-violet-400',
-              iconBg: 'bg-violet-500/10',
-            },
-            {
-              icon: SpeakerLoudIcon,
-              label: 'Voiceovers',
-              headline:
-                'From script to professional narration — fully reviewable',
-              desc: 'Write or paste your script, let the built-in AI assistant refine it, pick from 30+ natural voices, and generate polished audio — perfect for compliant training, explainers, and presentations.',
-              color: 'text-emerald-400',
-              iconBg: 'bg-emerald-500/10',
-            },
-            {
-              icon: ImageIcon,
-              label: 'Infographics',
-              headline: 'Create on-brand visuals without a designer',
-              desc: 'Describe what you need, choose a format and style preset, and get review-ready images. Save your brand styles so every visual stays consistent and on-message.',
-              color: 'text-amber-400',
-              iconBg: 'bg-amber-500/10',
-            },
-          ].map(({ icon: Icon, label, headline, desc, color, iconBg }) => (
-            <div key={label} className="space-y-4">
-              <div
-                className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-full ${iconBg}`}
-              >
-                <Icon className={`w-4 h-4 ${color}`} aria-hidden="true" />
-                <span className={`text-sm font-medium ${color}`}>{label}</span>
+          {featureCards.map(
+            ({ icon: Icon, label, headline, desc, color, iconBg }) => (
+              <div key={label} className="space-y-4">
+                <div
+                  className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-full ${iconBg}`}
+                >
+                  <Icon className={`w-4 h-4 ${color}`} aria-hidden="true" />
+                  <span className={`text-sm font-medium ${color}`}>
+                    {label}
+                  </span>
+                </div>
+                <h3 className="font-serif font-bold text-2xl md:text-3xl text-foreground">
+                  {headline}
+                </h3>
+                <p className="text-body-lg text-muted-foreground leading-relaxed">
+                  {desc}
+                </p>
               </div>
-              <h3 className="font-serif font-bold text-2xl md:text-3xl text-foreground">
-                {headline}
-              </h3>
-              <p className="text-body-lg text-muted-foreground leading-relaxed">
-                {desc}
-              </p>
-            </div>
-          ))}
+            ),
+          )}
         </div>
       </section>
 
       {/* Capabilities */}
       <section className="px-6 pb-16 md:pb-20">
         <div className="max-w-4xl mx-auto flex flex-wrap items-center justify-center gap-x-4 gap-y-2 text-sm text-muted-foreground">
-          {[
-            '30+ natural voices',
-            'PDF, DOCX, URL import',
-            '4 infographic formats',
-            'AI deep research',
-            'Full script review',
-            'Source-grounded output',
-          ].map((item, i, arr) => (
+          {capabilities.map((item, i, arr) => (
             <span key={item} className="flex items-center gap-4">
               {item}
               {i < arr.length - 1 && (

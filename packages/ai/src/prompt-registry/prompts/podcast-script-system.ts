@@ -16,12 +16,29 @@ export interface SegmentPromptContext {
   readonly messagingTone?: string | null;
 }
 
+export interface EpisodePlanPromptContextSection {
+  readonly heading: string;
+  readonly summary: string;
+  readonly keyPoints: readonly string[];
+  readonly sourceIds?: readonly string[];
+  readonly estimatedMinutes?: number;
+}
+
+export interface EpisodePlanPromptContext {
+  readonly angle: string;
+  readonly openingHook: string;
+  readonly closingTakeaway: string;
+  readonly sections: readonly EpisodePlanPromptContextSection[];
+}
+
 export interface PodcastScriptSystemPromptInput {
   readonly format: PodcastFormat;
+  readonly targetDurationMinutes?: number | null;
   readonly customInstructions?: string;
   readonly hostPersona?: PersonaPromptContext | null;
   readonly coHostPersona?: PersonaPromptContext | null;
   readonly targetSegment?: SegmentPromptContext | null;
+  readonly episodePlan?: EpisodePlanPromptContext | null;
 }
 
 function buildPersonaSection(
@@ -65,10 +82,41 @@ function buildSegmentSection(segment: SegmentPromptContext): string {
   return lines.join('\n');
 }
 
+function buildEpisodePlanSection(plan: EpisodePlanPromptContext): string {
+  const lines: string[] = [];
+
+  lines.push(`Angle: ${plan.angle}`);
+  lines.push(`Opening hook: ${plan.openingHook}`);
+
+  plan.sections.forEach((section, index) => {
+    lines.push(`\n## Section ${index + 1}: ${section.heading}`);
+    lines.push(`Summary: ${section.summary}`);
+
+    if (section.keyPoints.length > 0) {
+      lines.push('Key points:');
+      section.keyPoints.forEach((point) => {
+        lines.push(`- ${point}`);
+      });
+    }
+
+    if (section.sourceIds && section.sourceIds.length > 0) {
+      lines.push(`Source focus: ${section.sourceIds.join(', ')}`);
+    }
+
+    if (typeof section.estimatedMinutes === 'number') {
+      lines.push(`Estimated minutes: ${section.estimatedMinutes}`);
+    }
+  });
+
+  lines.push(`\nClosing takeaway: ${plan.closingTakeaway}`);
+
+  return lines.join('\n');
+}
+
 export const podcastScriptSystemPrompt =
   definePrompt<PodcastScriptSystemPromptInput>({
     id: 'podcast.script.system',
-    version: 1,
+    version: 4,
     owner: PROMPT_OWNER,
     domain: 'podcast',
     role: 'system',
@@ -81,10 +129,17 @@ export const podcastScriptSystemPrompt =
       userContent: 'required',
       retention: 'resource-bound',
       notes:
-        'Includes persona/segment context and optional user instructions that may contain personal data.',
+        'Includes persona context, approved episode plans, and optional user instructions that may contain personal data.',
     }),
     render: (context) => {
-      const { format, hostPersona, coHostPersona, targetSegment } = context;
+      const {
+        format,
+        targetDurationMinutes,
+        hostPersona,
+        coHostPersona,
+        targetSegment,
+        episodePlan,
+      } = context;
       const instructions = context.customInstructions;
 
       const hostName = hostPersona?.name ?? 'host';
@@ -119,6 +174,12 @@ Break complex topics into digestible segments with natural transitions.`;
 
       const parts: string[] = [basePrompt];
 
+      if (typeof targetDurationMinutes === 'number') {
+        parts.push(
+          `\n\nTarget runtime: about ${targetDurationMinutes} minutes. Pace the script so the full episode lands close to that duration, with section depth and transitions sized to fit.`,
+        );
+      }
+
       if (characterSections.length > 0) {
         parts.push('\n\n# Character & Audience Context\n');
         parts.push(characterSections.join('\n\n'));
@@ -129,6 +190,14 @@ Break complex topics into digestible segments with natural transitions.`;
               'Use their speaking styles and occasional phrases that match their example quotes.',
           );
         }
+      }
+
+      if (episodePlan) {
+        parts.push('\n\n# Approved Episode Plan\n');
+        parts.push(buildEpisodePlanSection(episodePlan));
+        parts.push(
+          '\n\nTreat this plan as the required episode structure, but not as a source of factual authority. Source materials remain the ground truth. If the plan or extra instructions conflict with the sources, follow the sources and adapt the structure accordingly.',
+        );
       }
 
       if (instructions) {

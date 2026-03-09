@@ -101,6 +101,7 @@ Required:
 Optional:
 
 - `PUBLIC_BASE_PATH` (default `/`)
+- `PUBLIC_DISABLE_DEEP_RESEARCH` (default `false`; mirror server/worker deep research flag)
 
 ### Server (`apps/server` container)
 
@@ -127,6 +128,7 @@ Common optional-but-important:
 - `S3_ENDPOINT`, `S3_PUBLIC_ENDPOINT`
 - `AUDIO_PLAYBACK_PROXY_ENABLED`, `STORAGE_ACCESS_PROXY_ENABLED`, `AUDIO_PLAYBACK_URL_TTL_SECONDS`
 - `USE_MOCK_AI`
+- `DISABLE_DEEP_RESEARCH`
 - `SERVER_RUN_DB_MIGRATIONS_ON_STARTUP` (default `true` in containerized deployment path)
 - `CORS_ORIGINS` (default `*`; optional explicit allowlist)
 - `HTTPS_PROXY`, `HTTP_PROXY`, `NO_PROXY`, `NODE_EXTRA_CA_CERTS`

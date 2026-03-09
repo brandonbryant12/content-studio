@@ -8,6 +8,20 @@
       "when": 1772828331514,
       "tag": "0000_broad_schema_baseline",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1773094053631,
+      "tag": "0001_add-podcast-episode-plan",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1773095452751,
+      "tag": "0002_add-podcast-setup-instructions",
+      "breakpoints": true
     }
   ]
 }

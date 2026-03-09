@@ -30,7 +30,8 @@ export const createGeneratePodcastHandler = (publishEvent: PublishEvent) =>
     }),
     run: (job) =>
       Effect.gen(function* () {
-        const { podcastId, promptInstructions } = job.payload;
+        const { podcastId, promptInstructions, ignoreEpisodePlan } =
+          job.payload;
 
         // Wait for any pending research sources before generating script
         const podcastRepo = yield* PodcastRepo;
@@ -50,6 +51,7 @@ export const createGeneratePodcastHandler = (publishEvent: PublishEvent) =>
         const scriptResult: UseCaseScriptResult = yield* generateScript({
           podcastId,
           promptInstructions,
+          ignoreEpisodePlan,
         });
 
         emitEntityChange(
@@ -86,11 +88,12 @@ export const handleGenerateScript = defineJobHandler<GenerateScriptPayload>()({
   }),
   run: (job) =>
     Effect.gen(function* () {
-      const { podcastId, promptInstructions } = job.payload;
+      const { podcastId, promptInstructions, ignoreEpisodePlan } = job.payload;
 
       const result: UseCaseScriptResult = yield* generateScript({
         podcastId,
         promptInstructions,
+        ignoreEpisodePlan,
       });
 
       yield* syncEntityTitle(result.podcast.id, result.podcast.title);

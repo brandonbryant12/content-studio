@@ -15,7 +15,7 @@ export const QUEUE_DEFAULTS = {
 export const WORKER_DB_POOL_MAX = 12;
 
 /** Maximum number of jobs processed concurrently */
-export const MAX_CONCURRENT_JOBS = 5;
+export const MAX_CONCURRENT_JOBS = 20;
 
 /** Per-type concurrency limits (clamped by MAX_CONCURRENT_JOBS) */
 export const DEFAULT_PER_TYPE_CONCURRENCY = {

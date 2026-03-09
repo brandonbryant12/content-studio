@@ -6,6 +6,7 @@ export {
   SourceParseError,
   SourceContentNotFound,
   SourceAlreadyProcessing,
+  DeepResearchDisabled,
   PodcastNotFound,
   ScriptNotFound,
   PodcastError,
@@ -34,6 +35,7 @@ import type {
   SourceParseError,
   SourceContentNotFound,
   SourceAlreadyProcessing,
+  DeepResearchDisabled,
   PodcastNotFound,
   ScriptNotFound,
   PodcastError,
@@ -64,6 +66,7 @@ export type MediaError =
   | UrlFetchError
   | InvalidUrlError
   | SourceAlreadyProcessing
+  | DeepResearchDisabled
   | PodcastNotFound
   | ScriptNotFound
   | PodcastError
