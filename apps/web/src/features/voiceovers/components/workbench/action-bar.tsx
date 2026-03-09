@@ -33,10 +33,12 @@ export function ActionBar({
   onGenerate,
   disabled,
 }: ActionBarProps) {
+  const isFailed = status === VoiceoverStatus.FAILED;
+  const isReady = status === VoiceoverStatus.READY;
+  const isDrafting = status === VoiceoverStatus.DRAFTING;
+
   const failureMessage =
-    !isGenerating && status === VoiceoverStatus.FAILED
-      ? getGenerationFailureMessage(errorMessage)
-      : null;
+    !isGenerating && isFailed ? getGenerationFailureMessage(errorMessage) : null;
 
   const failurePanel = failureMessage ? (
     <div
@@ -126,19 +128,23 @@ export function ActionBar({
     );
   }
 
-  const statusIcon =
-    status === VoiceoverStatus.READY ? (
-      <CheckIcon className="w-4 h-4" />
-    ) : status === VoiceoverStatus.FAILED ? (
-      <ExclamationTriangleIcon className="w-4 h-4" />
-    ) : null;
+  const statusLabel = isReady
+    ? GENERATION_LABELS.statusReady
+    : isFailed
+      ? GENERATION_LABELS.statusFailed
+      : GENERATION_LABELS.statusDraft;
 
-  const statusLabel =
-    status === VoiceoverStatus.READY
-      ? GENERATION_LABELS.statusReady
-      : status === VoiceoverStatus.FAILED
-        ? GENERATION_LABELS.statusFailed
-        : GENERATION_LABELS.statusDraft;
+  const generateAction = isDrafting
+    ? {
+        label: 'Generate Audio',
+        icon: <LightningBoltIcon className="w-3.5 h-3.5 mr-1.5" />,
+      }
+    : isFailed
+      ? {
+          label: GENERATION_LABELS.retry,
+          icon: <ReloadIcon className="w-3.5 h-3.5 mr-1.5" />,
+        }
+      : null;
 
   return (
     <>
@@ -146,30 +152,20 @@ export function ActionBar({
       <div className="global-action-bar" role="status" aria-live="polite">
         <div className="global-action-bar-content">
           <div className="global-action-bar-status ready">
-            {statusIcon}
+            {isReady && <CheckIcon className="w-4 h-4" />}
+            {isFailed && <ExclamationTriangleIcon className="w-4 h-4" />}
             <span className="global-action-bar-status-text">{statusLabel}</span>
           </div>
           <div className="global-action-bar-actions">
-            {status === VoiceoverStatus.DRAFTING && hasText && (
+            {generateAction && (isFailed || hasText) && (
               <Button
                 size="sm"
                 onClick={onGenerate}
                 disabled={disabled}
                 className="global-action-bar-btn-primary"
               >
-                <LightningBoltIcon className="w-3.5 h-3.5 mr-1.5" />
-                Generate Audio
-              </Button>
-            )}
-            {status === VoiceoverStatus.FAILED && (
-              <Button
-                size="sm"
-                onClick={onGenerate}
-                disabled={disabled}
-                className="global-action-bar-btn-primary"
-              >
-                <ReloadIcon className="w-3.5 h-3.5 mr-1.5" />
-                {GENERATION_LABELS.retry}
+                {generateAction.icon}
+                {generateAction.label}
               </Button>
             )}
           </div>
