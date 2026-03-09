@@ -131,13 +131,13 @@ export const infographicGenerationUserPrompt =
 
       if (isEdit) {
         const editPreamble = hasStyles
-          ? 'The attached image is an existing infographic. Modify it according to the instructions below. Preserve the overall layout unless the instructions say otherwise. Apply the style directives provided.'
-          : 'The attached image is an existing infographic. Modify it according to the instructions below. Preserve the overall layout, typography, and color scheme unless the instructions say otherwise.';
+          ? 'The attached image is the current design. Modify it according to the instructions below. Preserve the overall layout unless the instructions say otherwise. Apply the style directives provided.'
+          : 'The attached image is the current design. Modify it according to the instructions below. Preserve the overall layout, typography, and color scheme unless the instructions say otherwise.';
         parts.push(editPreamble);
         parts.push(`Edit instructions: ${prompt}`);
       } else {
         parts.push(
-          'You are designing an infographic. Create a visually compelling, well-organized design with clear hierarchy and legible text.',
+          'You are designing an image. Use only the content and data the user provides below. Do not invent statistics, quotes, bullet points, or filler text. If the user gives a topic without specifics, create a visual layout with clear placeholder labels (e.g. "[Your metric here]") rather than fabricating content. Keep text minimal — prefer visuals, icons, and whitespace over dense paragraphs.',
         );
         parts.push(`Content direction: ${prompt}`);
       }

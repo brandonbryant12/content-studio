@@ -119,24 +119,18 @@ function PresetCard({
       onClick={onClick}
       aria-pressed={selected}
       disabled={disabled}
-      className={`text-left p-2.5 rounded-lg border transition-all duration-150 disabled:opacity-50 disabled:pointer-events-none ${
+      title={description}
+      className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-md border text-xs font-medium transition-all duration-150 disabled:opacity-50 disabled:pointer-events-none ${
         selected
           ? 'border-primary/60 bg-primary/10'
           : 'border-border/50 hover:border-primary/40 hover:bg-primary/5'
       }`}
     >
-      <div className="flex items-center gap-1.5">
-        <ColorDots properties={properties} />
-        <span className="text-xs font-medium truncate">{name}</span>
-        {selected ? (
-          <CheckIcon className="w-3.5 h-3.5 text-primary shrink-0 ml-auto" />
-        ) : null}
-      </div>
-      {description && (
-        <p className="text-xs text-muted-foreground mt-0.5 line-clamp-1 leading-snug">
-          {description}
-        </p>
-      )}
+      <ColorDots properties={properties} />
+      <span className="truncate">{name}</span>
+      {selected ? (
+        <CheckIcon className="w-3.5 h-3.5 text-primary shrink-0" />
+      ) : null}
     </button>
   );
 }
@@ -231,11 +225,29 @@ export function PresetPicker({
   const hasPresets =
     builtIn.length > 0 || examplePresets.length > 0 || userOwned.length > 0;
 
+  const categoryLabels: Record<string, string> = {
+    layout: 'Layout',
+    palette: 'Palette',
+    tone: 'Tone',
+    extras: 'Extras',
+  };
+  const categoryOrder = ['layout', 'palette', 'tone', 'extras'] as const;
+
+  const examplesByCategory = useMemo(() => {
+    const grouped = new Map<string, typeof examplePresets>();
+    for (const preset of examplePresets) {
+      const category = preset.category ?? 'extras';
+      const existing = grouped.get(category) ?? [];
+      grouped.set(category, [...existing, preset]);
+    }
+    return grouped;
+  }, [examplePresets]);
+
   return (
     <>
       <div className="space-y-3">
-        {/* Built-in + Example presets as a 2-column grid */}
-        {(builtIn.length > 0 || examplePresets.length > 0) && (
+        {/* Built-in presets */}
+        {builtIn.length > 0 && (
           <div className="grid grid-cols-2 gap-1.5">
             {builtIn.map((preset) => {
               const selected = selectedPresetIds.includes(preset.id);
@@ -250,22 +262,37 @@ export function PresetPicker({
                 />
               );
             })}
-            {examplePresets.map((preset) => {
-              const selected = selectedPresetIds.includes(preset.id);
-              return (
-                <PresetCard
-                  key={preset.id}
-                  name={preset.name}
-                  description={preset.description}
-                  properties={preset.properties}
-                  onClick={() => handleTogglePreset(preset.id)}
-                  selected={selected}
-                  disabled={disabled}
-                />
-              );
-            })}
           </div>
         )}
+
+        {/* Example presets grouped by category */}
+        {categoryOrder.map((category) => {
+          const items = examplesByCategory.get(category);
+          if (!items || items.length === 0) return null;
+          return (
+            <div key={category}>
+              <p className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground/70 mb-1.5">
+                {categoryLabels[category]}
+              </p>
+              <div className="flex flex-wrap gap-1.5">
+                {items.map((preset) => {
+                  const selected = selectedPresetIds.includes(preset.id);
+                  return (
+                    <PresetCard
+                      key={preset.id}
+                      name={preset.name}
+                      description={preset.description}
+                      properties={preset.properties}
+                      onClick={() => handleTogglePreset(preset.id)}
+                      selected={selected}
+                      disabled={disabled}
+                    />
+                  );
+                })}
+              </div>
+            </div>
+          );
+        })}
 
         {/* User-saved presets as pills */}
         {userOwned.length > 0 && (

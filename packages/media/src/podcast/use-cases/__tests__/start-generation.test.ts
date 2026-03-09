@@ -197,7 +197,7 @@ describe('startGeneration', () => {
   });
 
   describe('status handling', () => {
-    it('updates podcast status to drafting', async () => {
+    it('updates podcast status to generating_script', async () => {
       const user = createTestUser();
       const podcast = createTestPodcast({
         createdBy: user.id,
@@ -220,7 +220,10 @@ describe('startGeneration', () => {
       );
 
       expect(updateStatusSpy).toHaveBeenCalledOnce();
-      expect(updateStatusSpy).toHaveBeenCalledWith(podcast.id, 'drafting');
+      expect(updateStatusSpy).toHaveBeenCalledWith(
+        podcast.id,
+        'generating_script',
+      );
     });
   });
 
@@ -394,7 +397,7 @@ describe('startGeneration', () => {
       expect(updateStatusSpy).toHaveBeenNthCalledWith(
         1,
         podcast.id,
-        'drafting',
+        'generating_script',
       );
       expect(updateStatusSpy).toHaveBeenNthCalledWith(2, podcast.id, 'ready');
       if (result._tag === 'Failure') {

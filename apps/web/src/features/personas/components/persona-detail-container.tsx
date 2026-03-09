@@ -14,6 +14,7 @@ import {
 } from '../lib/persona-form-values';
 import { PersonaDetail } from './persona-detail';
 import { useNavigationBlock } from '@/shared/hooks';
+import { UnsavedChangesDialog } from '@/shared/components/unsaved-changes-dialog';
 
 interface PersonaDetailContainerProps {
   personaId: string;
@@ -37,7 +38,7 @@ export function PersonaDetailContainer({
 
   const hasChanges = hasPersonaFormChanges(formValues, persona);
 
-  useNavigationBlock({ shouldBlock: hasChanges });
+  const navBlocker = useNavigationBlock({ shouldBlock: hasChanges });
 
   const clearDraft = useCallback((id: string) => {
     setDraftsByPersonaId((current) => {
@@ -91,18 +92,21 @@ export function PersonaDetailContainer({
   }, [avatarMutation, personaId]);
 
   return (
-    <PersonaDetail
-      persona={persona}
-      formValues={formValues}
-      hasChanges={hasChanges}
-      isSaving={updateMutation.isPending}
-      isDeleting={deleteMutation.isPending}
-      isGeneratingAvatar={avatarMutation.isPending}
-      onFormChange={handleFormChange}
-      onSave={handleSave}
-      onDiscard={handleDiscard}
-      onDelete={handleDelete}
-      onGenerateAvatar={handleGenerateAvatar}
-    />
+    <>
+      <PersonaDetail
+        persona={persona}
+        formValues={formValues}
+        hasChanges={hasChanges}
+        isSaving={updateMutation.isPending}
+        isDeleting={deleteMutation.isPending}
+        isGeneratingAvatar={avatarMutation.isPending}
+        onFormChange={handleFormChange}
+        onSave={handleSave}
+        onDiscard={handleDiscard}
+        onDelete={handleDelete}
+        onGenerateAvatar={handleGenerateAvatar}
+      />
+      <UnsavedChangesDialog blocker={navBlocker} />
+    </>
   );
 }

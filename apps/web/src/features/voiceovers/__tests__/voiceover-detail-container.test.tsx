@@ -49,7 +49,9 @@ vi.mock('../components/workbench/writing-assistant-container', () => ({
 
 vi.mock('@/shared/hooks', () => ({
   useKeyboardShortcut: vi.fn(),
-  useNavigationBlock: vi.fn(),
+  useNavigationBlock: vi
+    .fn()
+    .mockReturnValue({ isBlocked: false, proceed: vi.fn(), reset: vi.fn() }),
   useSessionGuard: vi.fn(),
   useIsAdmin: vi.fn(),
 }));
@@ -151,6 +153,11 @@ describe('VoiceoverDetailContainer', () => {
   beforeEach(() => {
     vi.clearAllMocks();
 
+    vi.mocked(useNavigationBlock).mockReturnValue({
+      isBlocked: false,
+      proceed: vi.fn(),
+      reset: vi.fn(),
+    });
     vi.mocked(useSessionGuard).mockReturnValue({
       user: { id: 'user-1' },
     } as never);

@@ -298,8 +298,15 @@ const renderPage = (
   overrides: Partial<ComponentProps<typeof AdminUserDetailPage>> = {},
 ) => render(<AdminUserDetailPage {...createProps(overrides)} />);
 
+const selectSection = async (
+  user: ReturnType<typeof userEvent.setup>,
+  value: string,
+) => {
+  await user.selectOptions(screen.getByLabelText('Select section'), value);
+};
+
 describe('AdminUserDetailPage', () => {
-  it('renders the section tabs and switches between detail areas', async () => {
+  it('renders the section selector and switches between detail areas', async () => {
     const user = userEvent.setup();
     renderPage();
 
@@ -307,43 +314,40 @@ describe('AdminUserDetailPage', () => {
       screen.getByRole('heading', { name: 'Alice Example' }),
     ).toBeInTheDocument();
     expect(screen.getByText('alice@example.com')).toBeInTheDocument();
-    expect(
-      screen.getByRole('tab', { name: /entity explorer/i }),
-    ).toBeInTheDocument();
-    expect(screen.getByRole('tab', { name: /AI usage/i })).toBeInTheDocument();
+    expect(screen.getByLabelText('Select section')).toHaveValue('sources');
     expect(screen.getByText('Quarterly Source')).toBeInTheDocument();
     expect(screen.queryByText('Quarterly Podcast')).not.toBeInTheDocument();
-    expect(screen.queryByText('Provider activity')).not.toBeInTheDocument();
+    expect(screen.queryByText('AI Activity')).not.toBeInTheDocument();
 
-    await user.click(screen.getByRole('tab', { name: /podcasts/i }));
+    await selectSection(user, 'podcasts');
 
     expect(screen.getByText('Quarterly Podcast')).toBeInTheDocument();
     expect(screen.queryByText('Quarterly Source')).not.toBeInTheDocument();
 
-    await user.click(screen.getByRole('tab', { name: /voiceovers/i }));
+    await selectSection(user, 'voiceovers');
 
     expect(screen.getByText('Narration Track')).toBeInTheDocument();
 
-    await user.click(screen.getByRole('tab', { name: /personas/i }));
+    await selectSection(user, 'personas');
 
     expect(screen.getByText('Host Persona')).toBeInTheDocument();
 
-    await user.click(screen.getByRole('tab', { name: /infographics/i }));
+    await selectSection(user, 'infographics');
 
     expect(screen.getByText('Quarterly Infographic')).toBeInTheDocument();
 
-    await user.click(screen.getByRole('tab', { name: /entity explorer/i }));
+    await selectSection(user, 'entity-explorer');
 
     expect(
-      screen.getByRole('textbox', { name: 'Search user entities' }),
+      screen.getByRole('textbox', { name: 'Search content' }),
     ).toBeInTheDocument();
     expect(
-      screen.getByText('Search everything this user created'),
+      screen.getByRole('heading', { name: 'All Content' }),
     ).toBeInTheDocument();
 
-    await user.click(screen.getByRole('tab', { name: /AI usage/i }));
+    await selectSection(user, 'ai-usage');
 
-    expect(screen.getByText('Provider activity')).toBeInTheDocument();
+    expect(screen.getByText('AI Activity')).toBeInTheDocument();
     expect(screen.getByText(/generate-content/)).toBeInTheDocument();
     expect(screen.getByText('TTSQuotaExceededError')).toBeInTheDocument();
     expect(screen.getAllByText('$0.0060').length).toBeGreaterThan(0);
@@ -356,7 +360,7 @@ describe('AdminUserDetailPage', () => {
     const onUsagePeriodChange = vi.fn();
     renderPage({ onUsagePeriodChange });
 
-    await user.click(screen.getByRole('tab', { name: /AI usage/i }));
+    await selectSection(user, 'ai-usage');
     await user.click(screen.getByRole('tab', { name: '90d' }));
 
     expect(onUsagePeriodChange).toHaveBeenCalledWith('90d');
@@ -400,11 +404,11 @@ describe('AdminUserDetailPage', () => {
 
     expect(screen.getByText('No sources yet.')).toBeInTheDocument();
 
-    await user.click(screen.getByRole('tab', { name: /entity explorer/i }));
+    await selectSection(user, 'entity-explorer');
 
-    expect(screen.getByText('No entities yet')).toBeInTheDocument();
+    expect(screen.getByText('No content yet')).toBeInTheDocument();
 
-    await user.click(screen.getByRole('tab', { name: /AI usage/i }));
+    await selectSection(user, 'ai-usage');
 
     expect(
       screen.getAllByText('No usage in this period.').length,
@@ -455,7 +459,7 @@ describe('AdminUserDetailPage', () => {
       },
     });
 
-    await user.click(screen.getByRole('tab', { name: /AI usage/i }));
+    await selectSection(user, 'ai-usage');
 
     expect(screen.getAllByText('Pricing pending').length).toBeGreaterThan(1);
     expect(

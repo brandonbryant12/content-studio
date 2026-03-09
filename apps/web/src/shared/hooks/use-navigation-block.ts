@@ -1,27 +1,31 @@
 import { useBlocker } from '@tanstack/react-router';
-import { useCallback, useEffect } from 'react';
+import { useEffect } from 'react';
 
 interface UseNavigationBlockOptions {
   shouldBlock: boolean;
-  confirmMessage?: string;
 }
 
-const DEFAULT_CONFIRM_MESSAGE =
-  'You have unsaved changes. If you leave this page, your changes will be lost.';
+export interface NavigationBlocker {
+  isBlocked: boolean;
+  proceed: () => void;
+  reset: () => void;
+}
+
+const IDLE_BLOCKER: NavigationBlocker = {
+  isBlocked: false,
+  proceed: () => {},
+  reset: () => {},
+};
 
 export function useNavigationBlock({
   shouldBlock,
-  confirmMessage = DEFAULT_CONFIRM_MESSAGE,
-}: UseNavigationBlockOptions) {
-  const shouldBlockNavigation = useCallback(() => {
-    if (!shouldBlock) return false;
-    return !window.confirm(confirmMessage);
-  }, [shouldBlock, confirmMessage]);
-
-  useBlocker({
-    shouldBlockFn: shouldBlockNavigation,
+}: UseNavigationBlockOptions): NavigationBlocker {
+  const resolver = useBlocker({
+    shouldBlockFn: () => shouldBlock,
+    withResolver: true,
   });
 
+  // Browser-level protection for tab close / hard refresh
   useEffect(() => {
     if (!shouldBlock) return;
 
@@ -33,4 +37,14 @@ export function useNavigationBlock({
     window.addEventListener('beforeunload', handleBeforeUnload);
     return () => window.removeEventListener('beforeunload', handleBeforeUnload);
   }, [shouldBlock]);
+
+  if (resolver.status === 'blocked') {
+    return {
+      isBlocked: true,
+      proceed: resolver.proceed,
+      reset: resolver.reset,
+    };
+  }
+
+  return IDLE_BLOCKER;
 }

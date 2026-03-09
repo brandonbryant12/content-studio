@@ -8,61 +8,76 @@ vi.mock('@tanstack/react-router', () => ({
 }));
 
 describe('useNavigationBlock', () => {
-  const getBlockerConfig = () =>
-    vi.mocked(useBlocker).mock.calls[0]?.[0] as
-      | { shouldBlockFn: () => boolean }
-      | undefined;
+  const mockUseBlocker = vi.mocked(useBlocker);
 
   beforeEach(() => {
     vi.clearAllMocks();
+    // Default: idle state
+    mockUseBlocker.mockReturnValue({
+      status: 'idle',
+      current: undefined,
+      next: undefined,
+      action: undefined,
+      proceed: undefined,
+      reset: undefined,
+    } as ReturnType<typeof useBlocker>);
   });
 
-  it('blocks in-app navigation when user cancels the unsaved-changes warning', () => {
-    const confirmSpy = vi.spyOn(window, 'confirm').mockReturnValue(false);
-
+  it('passes shouldBlock and withResolver to useBlocker', () => {
     renderHook(() => useNavigationBlock({ shouldBlock: true }));
 
-    const config = getBlockerConfig();
-    expect(config).toBeDefined();
+    expect(mockUseBlocker).toHaveBeenCalledWith({
+      shouldBlockFn: expect.any(Function),
+      withResolver: true,
+    });
+  });
 
-    expect(config?.shouldBlockFn()).toBe(true);
-    expect(confirmSpy).toHaveBeenCalledWith(
-      'You have unsaved changes. If you leave this page, your changes will be lost.',
+  it('returns idle blocker when not blocked', () => {
+    const { result } = renderHook(() =>
+      useNavigationBlock({ shouldBlock: false }),
     );
+
+    expect(result.current.isBlocked).toBe(false);
   });
 
-  it('allows in-app navigation when user confirms leaving', () => {
-    vi.spyOn(window, 'confirm').mockReturnValue(true);
+  it('returns blocked state with proceed and reset when blocked', () => {
+    const proceed = vi.fn();
+    const reset = vi.fn();
 
+    mockUseBlocker.mockReturnValue({
+      status: 'blocked',
+      current: {} as never,
+      next: {} as never,
+      action: 'PUSH' as never,
+      proceed,
+      reset,
+    } as unknown as ReturnType<typeof useBlocker>);
+
+    const { result } = renderHook(() =>
+      useNavigationBlock({ shouldBlock: true }),
+    );
+
+    expect(result.current.isBlocked).toBe(true);
+    expect(result.current.proceed).toBe(proceed);
+    expect(result.current.reset).toBe(reset);
+  });
+
+  it('shouldBlockFn returns the shouldBlock value', () => {
     renderHook(() => useNavigationBlock({ shouldBlock: true }));
 
-    const config = getBlockerConfig();
-    expect(config?.shouldBlockFn()).toBe(false);
+    const opts = mockUseBlocker.mock.calls[0]?.[0] as unknown as {
+      shouldBlockFn: () => boolean;
+    };
+    expect(opts.shouldBlockFn()).toBe(true);
   });
 
-  it('does not prompt when blocking is disabled', () => {
-    const confirmSpy = vi.spyOn(window, 'confirm');
-
+  it('shouldBlockFn returns false when blocking is disabled', () => {
     renderHook(() => useNavigationBlock({ shouldBlock: false }));
 
-    const config = getBlockerConfig();
-    expect(config?.shouldBlockFn()).toBe(false);
-    expect(confirmSpy).not.toHaveBeenCalled();
-  });
-
-  it('uses a custom confirm message when provided', () => {
-    const confirmSpy = vi.spyOn(window, 'confirm').mockReturnValue(false);
-
-    renderHook(() =>
-      useNavigationBlock({
-        shouldBlock: true,
-        confirmMessage: 'Custom unsaved changes warning',
-      }),
-    );
-
-    const config = getBlockerConfig();
-    expect(config?.shouldBlockFn()).toBe(true);
-    expect(confirmSpy).toHaveBeenCalledWith('Custom unsaved changes warning');
+    const opts = mockUseBlocker.mock.calls[0]?.[0] as unknown as {
+      shouldBlockFn: () => boolean;
+    };
+    expect(opts.shouldBlockFn()).toBe(false);
   });
 
   it('registers and cleans beforeunload protection only while blocking', () => {

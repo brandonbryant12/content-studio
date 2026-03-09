@@ -18,6 +18,7 @@ import { apiClient } from '@/clients/apiClient';
 import { getInfographicListQueryKey } from '@/features/infographics/hooks/use-infographic-list';
 import { getVoiceoverListQueryKey } from '@/features/voiceovers/hooks/use-voiceover-list';
 import { ConfirmationDialog } from '@/shared/components/confirmation-dialog/confirmation-dialog';
+import { UnsavedChangesDialog } from '@/shared/components/unsaved-changes-dialog';
 import { useKeyboardShortcut, useNavigationBlock } from '@/shared/hooks';
 import { getErrorMessage } from '@/shared/lib/errors';
 import { downloadTextFile, toFileSlug } from '@/shared/lib/file-download';
@@ -118,6 +119,10 @@ export function SourceDetailContainer({
     downloadTextFile(text, fileName);
   }, [source, getExportContext]);
 
+  const handleCreatePodcast = useCallback(() => {
+    navigate({ to: '/podcasts/new', search: { sourceId: source.id } });
+  }, [navigate, source.id]);
+
   const handleCreateVoiceover = useCallback(() => {
     createVoiceoverMutation.mutate({
       title: `Voiceover: ${source.title}`,
@@ -146,7 +151,7 @@ export function SourceDetailContainer({
     onTrigger: search.open,
   });
 
-  useNavigationBlock({
+  const navBlocker = useNavigationBlock({
     shouldBlock: actions.hasChanges,
   });
 
@@ -170,6 +175,7 @@ export function SourceDetailContainer({
         canCreateFromSource={isReady}
         isCreatingVoiceover={createVoiceoverMutation.isPending}
         isCreatingInfographic={createInfographicMutation.isPending}
+        onCreatePodcast={handleCreatePodcast}
         onCreateVoiceover={handleCreateVoiceover}
         onCreateInfographic={handleCreateInfographic}
         onExportMarkdown={handleExportMarkdown}
@@ -185,6 +191,7 @@ export function SourceDetailContainer({
         isLoading={actions.isDeleting}
         onConfirm={actions.handleDelete}
       />
+      <UnsavedChangesDialog blocker={navBlocker} />
     </>
   );
 }

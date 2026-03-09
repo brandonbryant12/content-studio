@@ -53,6 +53,11 @@ ssePublisher.publish(userId, {
 
 The `ssePublisher` is fire-and-forget -- it logs errors internally but never throws.
 
+Multi-phase jobs can also publish intermediate `entity_change` updates before the
+terminal `*_job_completion` event. Podcast generation uses this after script
+generation so the workbench can render script content while audio is still
+processing.
+
 ## Client: Subscribing to Events
 
 The `useSSE` hook connects via oRPC event iterator and dispatches to typed handlers.

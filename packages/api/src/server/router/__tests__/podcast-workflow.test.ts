@@ -192,12 +192,12 @@ describe('podcast job workflow', () => {
       expect(startResult.jobId).toMatch(/^job_/);
       expect(startResult.status).toBe('pending');
 
-      // Verify: Podcast status was updated to drafting
+      // Verify: Podcast status was updated to generating_script
       const [afterStart] = await ctx.db
         .select()
         .from(podcastTable)
         .where(eq(podcastTable.id, podcast.id));
-      expect(afterStart?.status).toBe(VersionStatus.DRAFTING);
+      expect(afterStart?.status).toBe(VersionStatus.GENERATING_SCRIPT);
 
       // Step 2: Worker runs generateScript
       const scriptResult = await runtime.runPromise(
@@ -399,7 +399,7 @@ describe('podcast job workflow', () => {
 
       expect(statusHistory).toEqual([
         VersionStatus.DRAFTING, // Initial
-        VersionStatus.DRAFTING, // After API (startGeneration keeps drafting)
+        VersionStatus.GENERATING_SCRIPT, // After API enqueues generation
         VersionStatus.SCRIPT_READY, // After script generation
         VersionStatus.READY, // After audio generation
       ]);

@@ -15,7 +15,9 @@ vi.mock('../hooks/use-persona-mutations', () => ({
 }));
 
 vi.mock('@/shared/hooks', () => ({
-  useNavigationBlock: vi.fn(),
+  useNavigationBlock: vi
+    .fn()
+    .mockReturnValue({ isBlocked: false, proceed: vi.fn(), reset: vi.fn() }),
 }));
 
 vi.mock('../components/persona-create', () => ({
@@ -48,6 +50,11 @@ describe('PersonaCreateContainer', () => {
   beforeEach(() => {
     vi.clearAllMocks();
 
+    vi.mocked(useNavigationBlock).mockReturnValue({
+      isBlocked: false,
+      proceed: vi.fn(),
+      reset: vi.fn(),
+    });
     vi.mocked(useCreatePersona).mockReturnValue({
       mutate: createMutate,
       isPending: false,

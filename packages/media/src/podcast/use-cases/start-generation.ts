@@ -53,7 +53,10 @@ export const startGeneration = (input: StartGenerationInput) =>
 
     const job = yield* withTransactionalStateAndEnqueue(
       Effect.gen(function* () {
-        yield* podcastRepo.updateStatus(podcast.id, VersionStatus.DRAFTING);
+        yield* podcastRepo.updateStatus(
+          podcast.id,
+          VersionStatus.GENERATING_SCRIPT,
+        );
         yield* podcastRepo.clearApproval(podcast.id);
         return yield* enqueueJob({
           type: 'generate-podcast',

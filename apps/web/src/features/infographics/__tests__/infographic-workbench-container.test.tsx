@@ -47,7 +47,9 @@ vi.mock('../hooks/use-approve-infographic', () => ({
 vi.mock('@/shared/hooks', () => ({
   useSessionGuard: vi.fn(),
   useKeyboardShortcut: vi.fn(),
-  useNavigationBlock: vi.fn(),
+  useNavigationBlock: vi
+    .fn()
+    .mockReturnValue({ isBlocked: false, proceed: vi.fn(), reset: vi.fn() }),
 }));
 
 vi.mock('@/shared/hooks/use-is-admin', () => ({
@@ -211,6 +213,11 @@ describe('InfographicWorkbenchContainer', () => {
   beforeEach(() => {
     vi.clearAllMocks();
 
+    vi.mocked(useNavigationBlock).mockReturnValue({
+      isBlocked: false,
+      proceed: vi.fn(),
+      reset: vi.fn(),
+    });
     vi.mocked(useSessionGuard).mockReturnValue({
       user: { id: 'user-1' },
     } as never);

@@ -3,6 +3,7 @@ import { Button } from '@repo/ui/components/button';
 import { Link } from '@tanstack/react-router';
 import { PersonaForm, type PersonaFormValues } from './persona-form';
 import { PersonaGuidancePanel } from './persona-guidance-panel';
+import { PersonaSaveBar } from './persona-save-bar';
 import { PersonaVoiceSection } from './persona-voice-section';
 
 interface PersonaCreateProps {
@@ -113,6 +114,17 @@ export function PersonaCreate({
           onFormChange({ ...formValues, voiceId, voiceName })
         }
         description="Set an optional default voice now, or leave it blank and choose a voice later when a podcast uses this persona."
+      />
+
+      <PersonaSaveBar
+        formValues={formValues}
+        isSaving={isSaving}
+        hasChanges={hasChanges}
+        onSave={onSave}
+        onDiscard={onDiscard}
+        saveLabel="Create Persona"
+        savingLabel="Creating..."
+        discardLabel="Clear"
       />
     </div>
   );

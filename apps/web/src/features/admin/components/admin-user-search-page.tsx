@@ -72,34 +72,25 @@ export function AdminUserSearchPage({
   const hasSearch = searchQuery.trim().length > 0;
 
   return (
-    <div className="page-container">
-      <div className="mb-8 flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
-        <div>
-          <p className="page-eyebrow">Admin</p>
-          <h1 className="page-title">User search</h1>
-          <p className="mt-2 max-w-2xl text-sm text-muted-foreground">
-            Find a user by name or email, then inspect their recent entities and
-            AI usage from one place.
-          </p>
-        </div>
-        {isFetching ? (
-          <div className="inline-flex items-center gap-2 rounded-full border border-border/60 bg-card/70 px-3 py-1 text-xs text-muted-foreground">
-            <Spinner className="h-3.5 w-3.5" />
-            Updating results
+    <div>
+      <div className="mb-6 rounded-3xl border border-border/60 bg-card/70 p-4 shadow-sm">
+        <div className="relative flex items-center gap-3">
+          <div className="relative flex-1">
+            <MagnifyingGlassIcon className="search-icon" />
+            <Input
+              value={searchQuery}
+              onChange={(event) => onSearchChange(event.target.value)}
+              placeholder="Search by name or email"
+              className="search-input"
+              aria-label="Search users"
+            />
           </div>
-        ) : null}
-      </div>
-
-      <div className="mb-8 rounded-3xl border border-border/60 bg-card/70 p-4 shadow-sm">
-        <div className="relative">
-          <MagnifyingGlassIcon className="search-icon" />
-          <Input
-            value={searchQuery}
-            onChange={(event) => onSearchChange(event.target.value)}
-            placeholder="Search by name or email"
-            className="search-input"
-            aria-label="Search users"
-          />
+          {isFetching ? (
+            <div className="inline-flex shrink-0 items-center gap-2 rounded-full border border-border/60 bg-card/70 px-3 py-1 text-xs text-muted-foreground">
+              <Spinner className="h-3.5 w-3.5" />
+              Updating
+            </div>
+          ) : null}
         </div>
       </div>
 

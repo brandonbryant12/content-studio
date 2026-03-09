@@ -11,6 +11,7 @@ import {
 import { PersonaChatContainer } from './persona-chat-container';
 import { PersonaCreate } from './persona-create';
 import { useNavigationBlock } from '@/shared/hooks';
+import { UnsavedChangesDialog } from '@/shared/components/unsaved-changes-dialog';
 
 export function PersonaCreateContainer() {
   const createMutation = useCreatePersona();
@@ -21,7 +22,7 @@ export function PersonaCreateContainer() {
 
   const hasChanges = hasPersonaDraftChanges(formValues);
 
-  useNavigationBlock({ shouldBlock: hasChanges });
+  const navBlocker = useNavigationBlock({ shouldBlock: hasChanges });
 
   const handleSave = useCallback(() => {
     createMutation.mutate({
@@ -71,6 +72,7 @@ export function PersonaCreateContainer() {
         errorMessage="Failed to generate persona draft. Please try again."
         followUpPlaceholder="Add more details or click Use AI Draft..."
       />
+      <UnsavedChangesDialog blocker={navBlocker} />
     </>
   );
 }

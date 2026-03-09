@@ -74,9 +74,7 @@ describe('AdminUserEntityBrowser', () => {
     renderBrowser();
 
     expect(
-      screen.getByRole('heading', {
-        name: 'Search everything this user created',
-      }),
+      screen.getByRole('heading', { name: 'All Content' }),
     ).toBeInTheDocument();
     expect(screen.getByText('Alpha Podcast')).toBeInTheDocument();
     expect(screen.getByText('Alpha Source')).toBeInTheDocument();
@@ -100,7 +98,7 @@ describe('AdminUserEntityBrowser', () => {
     });
 
     await user.type(
-      screen.getByRole('textbox', { name: 'Search user entities' }),
+      screen.getByRole('textbox', { name: 'Search content' }),
       'Alpha',
     );
     await user.click(screen.getByRole('button', { name: 'Podcasts' }));
@@ -122,7 +120,7 @@ describe('AdminUserEntityBrowser', () => {
       entityType: 'source',
     });
 
-    expect(screen.getByText('No entities found')).toBeInTheDocument();
+    expect(screen.getByText('No content found')).toBeInTheDocument();
     expect(
       screen.getByText(
         'Try a different search term or change the type filter.',

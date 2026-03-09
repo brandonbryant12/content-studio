@@ -19,7 +19,11 @@ import {
 } from '@repo/queue';
 import { Deferred, Effect, Exit, Fiber, Ref, Schedule, Scope } from 'effect';
 import type { CloseableScope, Scope as ScopeType } from 'effect/Scope';
-import { WORKER_DEFAULTS, MAX_CONCURRENT_JOBS } from './constants';
+import {
+  WORKER_DEFAULTS,
+  MAX_CONCURRENT_JOBS,
+  WORKER_DB_POOL_MAX,
+} from './constants';
 
 export interface BaseWorkerConfig {
   pollInterval?: number;
@@ -119,7 +123,7 @@ const createWorkerRuntime = (
 
   const db = createDb({
     databaseUrl: config.databaseUrl,
-    max: 5,
+    max: WORKER_DB_POOL_MAX,
     idleTimeoutMillis: 60_000,
     connectionTimeoutMillis: 10_000,
   });
@@ -155,9 +159,21 @@ const handleJobFailure = <TPayload>(
   queue: QueueService,
   job: Job,
   errorMessage: string,
+  onJobFailure:
+    | ((
+        job: Job<TPayload>,
+        errorMessage: string,
+      ) => Effect.Effect<void, never, SharedServices>)
+    | undefined,
   onJobComplete: ((job: Job<TPayload>) => void) | undefined,
 ) =>
-  queue.updateJobStatus(job.id, JobStatus.FAILED, undefined, errorMessage).pipe(
+  (onJobFailure
+    ? onJobFailure(job as Job<TPayload>, errorMessage)
+    : Effect.void
+  ).pipe(
+    Effect.zipRight(
+      queue.updateJobStatus(job.id, JobStatus.FAILED, undefined, errorMessage),
+    ),
     Effect.tap((result) =>
       Effect.logError(
         `Job ${result.type} ${result.id} failed: ${result.error ?? 'unknown error'}`,
@@ -183,6 +199,10 @@ export interface CreateWorkerOptions<
   processJob: (
     job: Job<TPayload>,
   ) => Effect.Effect<void, JobProcessingError, R>;
+  onJobFailure?: (
+    job: Job<TPayload>,
+    errorMessage: string,
+  ) => Effect.Effect<void, never, SharedServices>;
   onJobComplete?: (job: Job<TPayload>) => void;
   onPollCycle?: (
     pollCount: number,
@@ -201,6 +221,7 @@ export const createWorker = <
     jobTypes,
     config,
     processJob,
+    onJobFailure,
     onJobComplete,
     onPollCycle,
     onStart,
@@ -290,13 +311,20 @@ export const createWorker = <
         ),
         Effect.tap(notifyJobComplete),
         Effect.catchAll((err) =>
-          handleJobFailure(queue, job, formatError(err), onJobComplete),
+          handleJobFailure(
+            queue,
+            job,
+            formatError(err),
+            onJobFailure,
+            onJobComplete,
+          ),
         ),
         Effect.catchAllDefect((defect) =>
           handleJobFailure(
             queue,
             job,
             `Unexpected defect: ${formatError(defect)}`,
+            onJobFailure,
             onJobComplete,
           ),
         ),

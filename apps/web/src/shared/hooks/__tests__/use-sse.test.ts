@@ -18,6 +18,10 @@ vi.mock('../sse-handlers', () => ({
   handleActivityLogged: vi.fn(),
 }));
 
+vi.mock('@repo/api/client', () => ({
+  getEventMeta: (event: { __meta?: { id?: string } }) => event.__meta,
+}));
+
 function createMockIterator() {
   const events: Array<Record<string, unknown>> = [];
   let resolve: (() => void) | null = null;
@@ -226,6 +230,50 @@ describe('useSSE', () => {
 
       await waitFor(() => {
         expect(mockSubscribe).toHaveBeenCalledTimes(2);
+      });
+    });
+
+    it('passes the last seen event id when reconnecting', async () => {
+      const stream1 = createMockIterator();
+      const stream2 = createMockIterator();
+      mockSubscribe
+        .mockResolvedValueOnce(stream1.iterator)
+        .mockResolvedValueOnce(stream2.iterator);
+
+      renderHook(() => useSSE({ enabled: true }), {
+        wrapper: createWrapper(),
+      });
+
+      await act(async () => {
+        stream1.push({
+          type: 'connected',
+          userId: 'user-123',
+          __meta: { id: '0' },
+        });
+        stream1.push(
+          {
+            type: 'entity_change',
+            entityType: 'podcast',
+            changeType: 'update',
+            entityId: 'podcast-123',
+            userId: 'user-456',
+            timestamp: new Date().toISOString(),
+            __meta: { id: '42' },
+          },
+        );
+      });
+
+      await act(async () => {
+        stream1.end();
+        await new Promise((r) => setTimeout(r, 3000));
+      });
+
+      await waitFor(() => {
+        expect(mockSubscribe).toHaveBeenCalledTimes(2);
+      });
+
+      expect(mockSubscribe.mock.calls[1]?.[1]).toMatchObject({
+        lastEventId: '42',
       });
     });
 

@@ -14,6 +14,7 @@ import { isSetupMode } from '../lib/status';
 import { PodcastDetail } from './podcast-detail';
 import { SetupWizard } from './setup';
 import { ConfirmationDialog } from '@/shared/components/confirmation-dialog/confirmation-dialog';
+import { UnsavedChangesDialog } from '@/shared/components/unsaved-changes-dialog';
 import {
   useKeyboardShortcut,
   useNavigationBlock,
@@ -70,7 +71,7 @@ export function PodcastDetailContainer({
   const isAdmin = useIsAdmin();
   const isApproved = podcast.approvedBy !== null;
 
-  useNavigationBlock({
+  const navBlocker = useNavigationBlock({
     shouldBlock: actions.hasAnyChanges && !actions.isGenerating,
   });
 
@@ -213,6 +214,7 @@ export function PodcastDetailContainer({
           void actions.handleSave();
         }}
       />
+      <UnsavedChangesDialog blocker={navBlocker} />
     </>
   );
 }

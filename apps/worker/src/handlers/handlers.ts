@@ -19,9 +19,10 @@ import type {
   GenerateAudioResult,
 } from '@repo/queue';
 import { defineJobHandler } from './job-handler';
+import { emitEntityChange, type PublishEvent } from '../events';
 
-export const handleGeneratePodcast = defineJobHandler<GeneratePodcastPayload>()(
-  {
+export const createGeneratePodcastHandler = (publishEvent: PublishEvent) =>
+  defineJobHandler<GeneratePodcastPayload>()({
     span: 'worker.handleGeneratePodcast',
     errorMessage: 'Failed to generate podcast',
     attributes: (job) => ({
@@ -51,6 +52,13 @@ export const handleGeneratePodcast = defineJobHandler<GeneratePodcastPayload>()(
           promptInstructions,
         });
 
+        emitEntityChange(
+          publishEvent,
+          job.payload.userId,
+          'podcast',
+          scriptResult.podcast.id,
+        );
+
         yield* syncEntityTitle(
           scriptResult.podcast.id,
           scriptResult.podcast.title,
@@ -68,8 +76,7 @@ export const handleGeneratePodcast = defineJobHandler<GeneratePodcastPayload>()(
           duration: audioResult.duration,
         } satisfies GeneratePodcastResult;
       }),
-  },
-);
+  });
 
 export const handleGenerateScript = defineJobHandler<GenerateScriptPayload>()({
   span: 'worker.handleGenerateScript',

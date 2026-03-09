@@ -19,9 +19,10 @@ const TOTAL_STEPS = 3;
 
 interface SetupWizardProps {
   podcast?: PodcastFullOutput;
+  initialSourceIds?: string[];
 }
 
-export function SetupWizard({ podcast }: SetupWizardProps) {
+export function SetupWizard({ podcast, initialSourceIds }: SetupWizardProps) {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [currentStep, setCurrentStep] = useState(() => {
@@ -43,7 +44,7 @@ export function SetupWizard({ podcast }: SetupWizardProps) {
 
   // Step 2 state
   const [selectedDocIds, setSelectedDocIds] = useState<string[]>(
-    () => podcast?.sources.map((d) => d.id) ?? [],
+    () => podcast?.sources.map((d) => d.id) ?? initialSourceIds ?? [],
   );
   const [researchDocId, setResearchDocId] = useState<string | null>(null);
 

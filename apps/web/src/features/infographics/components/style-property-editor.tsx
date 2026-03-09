@@ -57,7 +57,7 @@ export function StylePropertyEditor({
     <div className="space-y-2.5">
       {properties.map((prop, index) => (
         <div
-          key={`${index}-${prop.key}-${prop.type}`}
+          key={index}
           className="rounded-lg border border-border/40 bg-muted/10 p-2 space-y-1.5"
         >
           <div className="flex items-center gap-1.5">

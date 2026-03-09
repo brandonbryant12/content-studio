@@ -297,19 +297,16 @@ export function handleEntityChange(
   event: EntityChangeEvent,
   queryClient: QueryClient,
 ): void {
-  const { entityType, changeType, entityId } = event;
+  const { entityType, entityId } = event;
   const keys = entityQueryKeys[entityType];
   if (!keys) return;
 
   queryClient.invalidateQueries({ queryKey: keys.get(entityId) });
+  queryClient.invalidateQueries({ queryKey: keys.list() });
 
   if (entityType === 'infographic') {
     queryClient.invalidateQueries({
       queryKey: getInfographicVersionsQueryKey(entityId),
     });
-  }
-
-  if (changeType === 'insert' || changeType === 'delete') {
-    queryClient.invalidateQueries({ queryKey: keys.list() });
   }
 }

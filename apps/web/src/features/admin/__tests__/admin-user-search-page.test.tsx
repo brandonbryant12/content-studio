@@ -63,9 +63,6 @@ describe('AdminUserSearchPage', () => {
   it('renders search input and user result cards', () => {
     renderPage();
 
-    expect(
-      screen.getByRole('heading', { name: 'User search' }),
-    ).toBeInTheDocument();
     expect(screen.getByRole('textbox', { name: 'Search users' })).toHaveValue(
       '',
     );

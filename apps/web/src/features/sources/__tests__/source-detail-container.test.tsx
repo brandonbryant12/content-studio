@@ -8,6 +8,7 @@ import { useRetryProcessing } from '../hooks/use-retry-processing';
 import { useSource, useSourceContentOptional } from '../hooks/use-source';
 import { useSourceActions } from '../hooks/use-source-actions';
 import { useSourceSearch } from '../hooks/use-source-search';
+import { useNavigationBlock } from '@/shared/hooks';
 import { render } from '@/test-utils';
 
 const {
@@ -60,7 +61,9 @@ vi.mock('@/shared/components/confirmation-dialog/confirmation-dialog', () => ({
 
 vi.mock('@/shared/hooks', () => ({
   useKeyboardShortcut: vi.fn(),
-  useNavigationBlock: vi.fn(),
+  useNavigationBlock: vi
+    .fn()
+    .mockReturnValue({ isBlocked: false, proceed: vi.fn(), reset: vi.fn() }),
 }));
 
 vi.mock('@/env', () => ({
@@ -143,6 +146,12 @@ const getDetailProps = () => getLastDetailProps<DetailProps>();
 describe('SourceDetailContainer', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+
+    vi.mocked(useNavigationBlock).mockReturnValue({
+      isBlocked: false,
+      proceed: vi.fn(),
+      reset: vi.fn(),
+    });
 
     setupSource({});
 

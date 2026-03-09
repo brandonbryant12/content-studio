@@ -124,7 +124,7 @@ export function ActivityFilters({
       </div>
       <div className="flex flex-wrap items-end gap-4">
         <FilterSelect
-          label="Entity Type"
+          label="Type"
           value={entityType}
           onValueChange={onEntityTypeChange}
           options={ENTITY_TYPES}

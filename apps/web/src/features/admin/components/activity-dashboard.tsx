@@ -51,14 +51,7 @@ export function ActivityDashboard({
   feedLoading,
 }: ActivityDashboardProps) {
   return (
-    <div className="page-container">
-      <div className="mb-8 animate-fade-in-up">
-        <h1 className="page-title-lg">Activity</h1>
-        <p className="text-body-lg mt-2">
-          Monitor all user activity across the platform.
-        </p>
-      </div>
-
+    <div>
       <div className="animate-fade-in-up stagger-1">
         <ActivityStats
           total={statsTotal}

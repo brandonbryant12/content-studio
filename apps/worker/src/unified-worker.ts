@@ -33,14 +33,15 @@ import {
 } from './constants';
 import { emitEntityChange, type PublishEvent } from './events';
 import {
+  createGeneratePodcastHandler,
   handleGenerateAudio,
-  handleGeneratePodcast,
   handleGenerateScript,
 } from './handlers/handlers';
 import { handleGenerateInfographic } from './handlers/infographic-handlers';
 import { handleProcessResearch } from './handlers/research-handlers';
 import { handleProcessUrl } from './handlers/source-handlers';
 import { handleGenerateVoiceover } from './handlers/voiceover-handlers';
+import { syncFailedEntityStateForJob } from './entity-failure';
 import { recoverOrphanedResearch } from './research-recovery';
 import { reapStaleJobs } from './stale-job-reaper';
 
@@ -85,6 +86,7 @@ const logAndReFail = (job: Job, label: string, error: unknown) =>
 
 export function createUnifiedWorker(config: UnifiedWorkerConfig): Worker {
   const publishEvent = config.publishEvent ?? noop;
+  const handleGeneratePodcast = createGeneratePodcastHandler(publishEvent);
   let lastStaleSweepAt = 0;
 
   const processJob = (job: Job<WorkerPayload>) =>
@@ -222,6 +224,16 @@ export function createUnifiedWorker(config: UnifiedWorkerConfig): Worker {
       Effect.flatMap(() => recoverOrphanedResearch(publishEvent)),
     );
 
+  const onJobFailure = (job: Job<WorkerPayload>, errorMessage: string) =>
+    syncFailedEntityStateForJob(job, errorMessage).pipe(
+      Effect.catchAll((error) =>
+        Effect.logError(
+          `Failed to sync entity failure state for ${job.type} job ${job.id}: ${formatError(error)}`,
+        ),
+      ),
+      Effect.annotateLogs('worker', 'UnifiedWorker'),
+    );
+
   const onPollCycle = (_pollCount: number) =>
     Effect.gen(function* () {
       const now = Date.now();
@@ -244,6 +256,7 @@ export function createUnifiedWorker(config: UnifiedWorkerConfig): Worker {
       },
     },
     processJob,
+    onJobFailure,
     onJobComplete,
     onPollCycle,
     onStart,

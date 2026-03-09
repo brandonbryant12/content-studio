@@ -9,7 +9,8 @@ describe('buildInfographicPrompt', () => {
       prompt: 'Create a timeline of company history',
     });
 
-    expect(result).toContain('You are designing an infographic');
+    expect(result).toContain('You are designing an image');
+    expect(result).toContain('Do not invent statistics');
     expect(result).toContain(
       'Content direction: Create a timeline of company history',
     );
@@ -94,7 +95,7 @@ describe('buildInfographicPrompt', () => {
       isEdit: true,
     });
 
-    expect(result).toContain('existing infographic');
+    expect(result).toContain('current design');
     expect(result).toContain('Apply the style directives provided');
     expect(result).not.toContain(
       'Preserve the overall layout, typography, and color scheme',

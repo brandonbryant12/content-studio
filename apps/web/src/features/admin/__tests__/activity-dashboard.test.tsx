@@ -103,15 +103,9 @@ const renderDashboard = (
 ) => render(<ActivityDashboard {...createProps(overrides)} />);
 
 describe('ActivityDashboard', () => {
-  it('renders heading, overview text, and core stat cards', () => {
+  it('renders core stat cards', () => {
     renderDashboard();
 
-    expect(
-      screen.getByRole('heading', { name: 'Activity' }),
-    ).toBeInTheDocument();
-    expect(
-      screen.getByText('Monitor all user activity across the platform.'),
-    ).toBeInTheDocument();
     expect(screen.getByText('Total Activities')).toBeInTheDocument();
     expect(screen.getByText('46')).toBeInTheDocument();
     expect(screen.getByText('Documents')).toBeInTheDocument();
@@ -303,7 +297,7 @@ describe('ActivityDashboard', () => {
   ])('$name', ({ topUsers, shouldShowUserFilter }) => {
     renderDashboard({ topUsers });
 
-    expect(screen.getByText('Entity Type')).toBeInTheDocument();
+    expect(screen.getByText('Type')).toBeInTheDocument();
     if (shouldShowUserFilter) {
       expect(screen.getByText('User')).toBeInTheDocument();
     } else {

@@ -10,6 +10,7 @@ import {
 } from '../lib/export';
 import { VoiceoverDetail } from './voiceover-detail';
 import { WritingAssistantContainer } from './workbench/writing-assistant-container';
+import { UnsavedChangesDialog } from '@/shared/components/unsaved-changes-dialog';
 import {
   useKeyboardShortcut,
   useNavigationBlock,
@@ -72,7 +73,7 @@ export function VoiceoverDetailContainer({
     enabled: actions.hasText && !actions.isGenerating,
   });
 
-  useNavigationBlock({
+  const navBlocker = useNavigationBlock({
     shouldBlock: actions.hasChanges && !actions.isGenerating,
   });
 
@@ -166,29 +167,32 @@ export function VoiceoverDetailContainer({
   }, [revoke, voiceoverId]);
 
   return (
-    <VoiceoverDetail
-      voiceover={voiceover}
-      settings={settings}
-      displayAudio={displayAudio}
-      assistantPanel={
-        <WritingAssistantContainer
-          voiceoverId={voiceoverId}
-          manuscriptText={settings.text}
-          onSetManuscriptText={settings.setText}
-        />
-      }
-      workbenchState={workbenchState}
-      approvalState={approvalState}
-      onSave={handleSave}
-      onGenerate={actions.handleGenerate}
-      onDelete={actions.handleDelete}
-      onApprove={handleApprove}
-      onRevoke={handleRevoke}
-      canExportAudio={canExportAudio}
-      canExportScript={canExportScript}
-      onExportAudio={handleExportAudio}
-      onExportScript={handleExportScript}
-      onCopyTranscript={handleCopyTranscript}
-    />
+    <>
+      <VoiceoverDetail
+        voiceover={voiceover}
+        settings={settings}
+        displayAudio={displayAudio}
+        assistantPanel={
+          <WritingAssistantContainer
+            voiceoverId={voiceoverId}
+            manuscriptText={settings.text}
+            onSetManuscriptText={settings.setText}
+          />
+        }
+        workbenchState={workbenchState}
+        approvalState={approvalState}
+        onSave={handleSave}
+        onGenerate={actions.handleGenerate}
+        onDelete={actions.handleDelete}
+        onApprove={handleApprove}
+        onRevoke={handleRevoke}
+        canExportAudio={canExportAudio}
+        canExportScript={canExportScript}
+        onExportAudio={handleExportAudio}
+        onExportScript={handleExportScript}
+        onCopyTranscript={handleCopyTranscript}
+      />
+      <UnsavedChangesDialog blocker={navBlocker} />
+    </>
   );
 }

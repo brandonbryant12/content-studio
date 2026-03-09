@@ -11,6 +11,9 @@ export const QUEUE_DEFAULTS = {
   POLL_INTERVAL_MS: 60_000,
 } as const;
 
+/** Maximum number of Postgres connections in a worker process pool */
+export const WORKER_DB_POOL_MAX = 12;
+
 /** Maximum number of jobs processed concurrently */
 export const MAX_CONCURRENT_JOBS = 5;
 
