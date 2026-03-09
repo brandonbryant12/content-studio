@@ -14,7 +14,7 @@ function getExportTitle(title: string): string {
 }
 
 function buildResearchSourcesMarkdown(source: Source): string[] {
-  const sources = source.researchConfig?.sources ?? [];
+  const sources = getResearchSources(source);
   if (sources.length === 0) return [];
 
   return [
@@ -26,10 +26,14 @@ function buildResearchSourcesMarkdown(source: Source): string[] {
 }
 
 function buildResearchSourcesText(source: Source): string[] {
-  const sources = source.researchConfig?.sources ?? [];
+  const sources = getResearchSources(source);
   if (sources.length === 0) return [];
 
   return ['Sources:', ...sources.map((s) => `- ${s.title}: ${s.url}`), ''];
+}
+
+function getResearchSources(source: Source) {
+  return source.researchConfig?.sources ?? [];
 }
 
 export function buildSourceMarkdownExport({
