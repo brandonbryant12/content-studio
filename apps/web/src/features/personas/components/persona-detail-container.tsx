@@ -13,8 +13,8 @@ import {
   toOptionalText,
 } from '../lib/persona-form-values';
 import { PersonaDetail } from './persona-detail';
-import { useNavigationBlock } from '@/shared/hooks';
 import { UnsavedChangesDialog } from '@/shared/components/unsaved-changes-dialog';
+import { useNavigationBlock } from '@/shared/hooks';
 
 interface PersonaDetailContainerProps {
   personaId: string;

@@ -227,17 +227,13 @@ describe('VoiceoverDetailContainer', () => {
     );
   });
 
-  it('maps Cmd+S to save (not generate)', () => {
-    const saveSettings = vi.fn().mockResolvedValue(undefined);
-    setSettings({ hasChanges: true, saveSettings });
-
-    const handleGenerate = vi.fn();
-    setActions({ hasChanges: true, handleGenerate });
+  it('does not register a standalone Cmd+S shortcut for voiceovers', () => {
+    setSettings({ hasChanges: true });
+    setActions({ hasChanges: true });
 
     renderContainer();
 
-    expect(getShortcutConfig('s')).toBeDefined();
-    expect(getShortcutConfig('s')?.onTrigger).not.toBe(handleGenerate);
+    expect(getShortcutConfig('s')).toBeUndefined();
   });
 
   it('maps Cmd+Enter to generate', () => {

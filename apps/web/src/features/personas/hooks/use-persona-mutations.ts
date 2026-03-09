@@ -7,21 +7,16 @@ import { apiClient, rawApiClient } from '@/clients/apiClient';
 import { getErrorMessage } from '@/shared/lib/errors';
 
 /**
- * Create persona mutation with navigation on success.
+ * Create persona mutation with cache invalidation and avatar generation.
  * Uses standard mutation since the ID is server-generated.
  */
 export function useCreatePersona() {
-  const navigate = useNavigate();
   const queryClient = useQueryClient();
 
   return useMutation(
     apiClient.personas.create.mutationOptions({
       onSuccess: (data) => {
         queryClient.invalidateQueries({ queryKey: getPersonaListQueryKey() });
-        navigate({
-          to: '/personas/$personaId',
-          params: { personaId: data.id },
-        });
 
         rawApiClient.personas
           .generateAvatar({ id: data.id })
@@ -36,7 +31,7 @@ export function useCreatePersona() {
           });
       },
       onError: (error) => {
-        toast.error(getErrorMessage(error, 'Failed to create persona'));
+        toast.error(getErrorMessage(error, 'Failed to save persona'));
       },
     }),
   );

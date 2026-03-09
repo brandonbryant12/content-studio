@@ -4,11 +4,99 @@ interface StaticInfographicPreset {
   id: string;
   name: string;
   description: string;
-  category: 'layout' | 'palette' | 'tone' | 'extras';
+  category: 'type' | 'layout' | 'palette' | 'tone' | 'extras';
   properties: StyleProperty[];
 }
 
+export const DEFAULT_INFOGRAPHIC_TYPE_PRESET_ID = 'type-infographic';
+
 export const STATIC_INFOGRAPHIC_PRESETS: readonly StaticInfographicPreset[] = [
+  // Content type presets
+  {
+    id: DEFAULT_INFOGRAPHIC_TYPE_PRESET_ID,
+    name: 'Infographic',
+    description: 'General-purpose infographic with clear visual storytelling',
+    category: 'type',
+    properties: [
+      {
+        key: 'style',
+        value: 'Infographic — data-driven visual summary',
+      },
+    ],
+  },
+  {
+    id: 'type-data-visualization',
+    name: 'Data Visualization',
+    description: 'Chart-forward layout with annotated figures and evidence',
+    category: 'type',
+    properties: [
+      {
+        key: 'style',
+        value: 'Data visualization — charts, graphs, and annotated figures',
+      },
+    ],
+  },
+  {
+    id: 'type-process-diagram',
+    name: 'Process Diagram',
+    description: 'Flowchart, system map, or step-by-step explanation',
+    category: 'type',
+    properties: [
+      {
+        key: 'style',
+        value: 'Diagram — flowchart, process map, or system overview',
+      },
+    ],
+  },
+  {
+    id: 'type-dashboard',
+    name: 'Dashboard',
+    description: 'Dense modules for metrics, KPIs, and status snapshots',
+    category: 'type',
+    properties: [
+      {
+        key: 'style',
+        value: 'Dashboard — dense data modules on dark or light background',
+      },
+    ],
+  },
+  {
+    id: 'type-social-card',
+    name: 'Social Card',
+    description: 'Scroll-stopping visual for feeds, stories, and promotion',
+    category: 'type',
+    properties: [
+      {
+        key: 'style',
+        value: 'Social media card — punchy, visual-first, shareable',
+      },
+    ],
+  },
+  {
+    id: 'type-illustrated-explainer',
+    name: 'Illustrated Explainer',
+    description: 'Friendly icons and education-first visual explanations',
+    category: 'type',
+    properties: [
+      {
+        key: 'style',
+        value: 'Illustrated explainer — friendly icons and step-by-step',
+      },
+    ],
+  },
+  {
+    id: 'type-comparison',
+    name: 'Comparison',
+    description: 'Side-by-side columns for options, features, or outcomes',
+    category: 'type',
+    properties: [
+      {
+        key: 'style',
+        value: 'Comparison — structured table or side-by-side columns',
+      },
+    ],
+  },
+
   // Layout presets
   {
     id: 'layout-grid-dashboard',

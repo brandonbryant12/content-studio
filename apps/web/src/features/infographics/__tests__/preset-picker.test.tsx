@@ -123,6 +123,53 @@ describe('PresetPicker', () => {
     ).toBe('#ff3366');
   });
 
+  it('shows infographic as the default selected content type', () => {
+    render(
+      <ControlledPresetPicker initialProperties={[]} onApplyPreset={vi.fn()} />,
+    );
+
+    expect(screen.getByRole('button', { name: 'Infographic' })).toHaveAttribute(
+      'aria-pressed',
+      'true',
+    );
+  });
+
+  it('replaces the default content type when another type is selected', async () => {
+    const user = userEvent.setup();
+    const onApplyPreset = vi.fn();
+
+    render(
+      <ControlledPresetPicker
+        initialProperties={[]}
+        onApplyPreset={onApplyPreset}
+      />,
+    );
+
+    await user.click(screen.getByRole('button', { name: 'Social Card' }));
+
+    expect(screen.getByRole('button', { name: 'Social Card' })).toHaveAttribute(
+      'aria-pressed',
+      'true',
+    );
+    expect(screen.getByRole('button', { name: 'Infographic' })).toHaveAttribute(
+      'aria-pressed',
+      'false',
+    );
+
+    const latestProperties = onApplyPreset.mock.calls[
+      onApplyPreset.mock.calls.length - 1
+    ]?.[0] as StyleProperty[] | undefined;
+
+    expect(latestProperties).toEqual(
+      expect.arrayContaining([
+        {
+          key: 'style',
+          value: 'Social media card — punchy, visual-first, shareable',
+        },
+      ]),
+    );
+  });
+
   it('keeps multi-select working when an overlapping preset is deselected', async () => {
     const user = userEvent.setup();
     const onApplyPreset = vi.fn();

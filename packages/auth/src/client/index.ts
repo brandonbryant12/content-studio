@@ -24,7 +24,7 @@ export const createAuthClient = ({
   createBetterAuthClient({
     baseURL: urlJoin(apiBaseUrl, apiBasePath, 'auth'),
     fetchOptions: {
-      credentials: 'omit',
+      credentials: 'include',
       auth: getAccessToken
         ? {
             type: 'Bearer',

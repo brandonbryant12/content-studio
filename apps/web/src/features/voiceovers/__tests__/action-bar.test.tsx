@@ -51,7 +51,6 @@ interface ActionBarProps {
   hasChanges: boolean;
   hasText: boolean;
   isSaving: boolean;
-  onSave: () => void;
   onGenerate: () => void;
   disabled?: boolean;
 }
@@ -64,7 +63,6 @@ const createDefaultProps = (
   hasChanges: false,
   hasText: true,
   isSaving: false,
-  onSave: vi.fn(),
   onGenerate: vi.fn(),
   ...overrides,
 });
@@ -88,41 +86,40 @@ describe('ActionBar', () => {
     expect(screen.queryByRole('alert')).not.toBeInTheDocument();
   });
 
-  it('shows save and regenerate actions for unsaved text and invokes callbacks', async () => {
-    const onSave = vi.fn();
+  it('shows only save and regenerate for unsaved text and invokes generate', async () => {
     const onGenerate = vi.fn();
     const { user } = renderActionBar({
       hasChanges: true,
       hasText: true,
       status: VoiceoverStatus.READY,
-      onSave,
       onGenerate,
     });
 
     expect(screen.getByText('Unsaved changes')).toBeInTheDocument();
-    await user.click(screen.getByRole('button', { name: /save draft/i }));
     await user.click(
       screen.getByRole('button', { name: /save & regenerate/i }),
     );
 
-    expect(onSave).toHaveBeenCalledTimes(1);
     expect(onGenerate).toHaveBeenCalledTimes(1);
+    expect(
+      screen.queryByRole('button', { name: /save draft/i }),
+    ).not.toBeInTheDocument();
   });
 
-  it('shows only save action for unsaved empty text', () => {
+  it('shows no actions for unsaved empty text', () => {
     renderActionBar({
       hasChanges: true,
       hasText: false,
       status: VoiceoverStatus.DRAFTING,
     });
 
-    expect(screen.getByRole('button', { name: /save draft/i })).toBeVisible();
     expect(
       screen.queryByRole('button', { name: /save & regenerate/i }),
     ).not.toBeInTheDocument();
+    expect(screen.queryByRole('button')).not.toBeInTheDocument();
   });
 
-  it('renders saving state as disabled actions with loading indicators', () => {
+  it('renders saving state as a single disabled loading action', () => {
     renderActionBar({
       hasChanges: true,
       hasText: true,
@@ -131,11 +128,9 @@ describe('ActionBar', () => {
     });
 
     const savingButtons = screen.getAllByRole('button', { name: /saving/i });
-    expect(savingButtons).toHaveLength(2);
-    expect(
-      savingButtons.every((button) => button.hasAttribute('disabled')),
-    ).toBe(true);
-    expect(screen.getAllByTestId('spinner')).toHaveLength(2);
+    expect(savingButtons).toHaveLength(1);
+    expect(savingButtons[0]).toBeDisabled();
+    expect(screen.getAllByTestId('spinner')).toHaveLength(1);
   });
 
   it.each([

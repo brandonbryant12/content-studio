@@ -1,9 +1,11 @@
 import { createAuthClient } from '@repo/auth/client';
+import urlJoin from 'url-join';
 import { env } from '@/env';
 import {
   applyAuthToken,
   clearAuthToken,
   getAuthToken,
+  setAuthToken,
 } from '@/shared/lib/auth-token';
 
 export const authClient = createAuthClient({
@@ -13,34 +15,41 @@ export const authClient = createAuthClient({
   onAccessToken: applyAuthToken,
 });
 
-const isUnauthorizedAuthError = (error: unknown): boolean => {
-  if (typeof error !== 'object' || error === null) {
-    return false;
-  }
-
-  const status = (error as { status?: unknown }).status;
-  const code = (error as { code?: unknown }).code;
-
-  return status === 401 || code === 'UNAUTHORIZED';
-};
+const accessTokenEndpoint = urlJoin(
+  env.PUBLIC_SERVER_URL,
+  env.PUBLIC_SERVER_API_PATH,
+  'auth',
+  'access-token',
+);
 
 export const refreshAccessToken = async (): Promise<boolean> => {
-  const session = await authClient.getSession();
+  const response = await globalThis.fetch(accessTokenEndpoint, {
+    method: 'GET',
+    credentials: 'include',
+  });
 
-  if (!session.error && session.data?.user) {
-    return true;
-  }
-
-  if (!session.error) {
+  if (response.status === 401) {
     clearAuthToken();
     return false;
   }
 
-  if (isUnauthorizedAuthError(session.error)) {
-    clearAuthToken();
+  if (!response.ok) {
+    return false;
   }
 
-  return false;
+  const nextToken = response.headers.get('set-auth-token');
+  if (!nextToken) {
+    clearAuthToken();
+    return false;
+  }
+
+  if (!nextToken.includes('.')) {
+    clearAuthToken();
+    return false;
+  }
+
+  setAuthToken(nextToken);
+  return true;
 };
 
 export type AuthSession =

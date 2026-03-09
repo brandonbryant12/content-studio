@@ -2,7 +2,6 @@ import { onError } from '@orpc/client';
 import { OpenAPIHandler } from '@orpc/openapi/fetch';
 import { OpenAPIReferencePlugin } from '@orpc/openapi/plugins';
 import { StrictGetMethodPlugin } from '@orpc/server/plugins';
-import { Effect } from 'effect';
 import urlJoin from 'url-join';
 import type { ServerRuntime } from './runtime';
 import type { AuthInstance } from '@repo/auth/server';
@@ -75,9 +74,7 @@ export const createApi = ({
         },
       }),
     ],
-    clientInterceptors: [
-      onError((error) => Effect.runSync(handleORPCError(error))),
-    ],
+    clientInterceptors: [onError((error) => handleORPCError(error))],
   });
   return {
     handler: async (request: Request, requestId: string) => {

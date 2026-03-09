@@ -47,11 +47,7 @@ export function PersonaSaveBar({
   const isComplete = filled === total;
 
   return (
-    <div
-      className="persona-save-bar"
-      role="toolbar"
-      aria-label="Save persona"
-    >
+    <div className="persona-save-bar" role="toolbar" aria-label="Save persona">
       <div className="flex items-center gap-3">
         <div className="flex items-center gap-2">
           {isComplete ? (

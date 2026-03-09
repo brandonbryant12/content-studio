@@ -5,10 +5,10 @@ import {
   createMockVoiceoverRepo,
   MockDbLive,
 } from '@repo/media/test-utils';
-import type { Job } from '@repo/queue';
 import { Effect, Layer } from 'effect';
 import { describe, expect, it, vi } from 'vitest';
 import type { JobId, JobStatus } from '@repo/db/schema';
+import type { Job } from '@repo/queue';
 import { syncFailedEntityStateForJob } from '../entity-failure';
 
 const createTestJob = (overrides: Partial<Job> = {}): Job => ({

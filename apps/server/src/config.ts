@@ -1,6 +1,9 @@
 import type { StorageConfig } from '@repo/api/server';
 import { env } from './env';
-import { createBearerCorsPolicy } from './middleware/cors-policy';
+import {
+  createAuthCorsPolicy,
+  createBearerCorsPolicy,
+} from './middleware/cors-policy';
 
 export const buildStorageConfig = (): StorageConfig => {
   if (
@@ -26,6 +29,11 @@ export const buildStorageConfig = (): StorageConfig => {
 };
 
 export const bearerCorsPolicy = createBearerCorsPolicy({
+  publicWebUrl: env.PUBLIC_WEB_URL,
+  corsOrigins: env.CORS_ORIGINS,
+});
+
+export const authCorsPolicy = createAuthCorsPolicy({
   publicWebUrl: env.PUBLIC_WEB_URL,
   corsOrigins: env.CORS_ORIGINS,
 });

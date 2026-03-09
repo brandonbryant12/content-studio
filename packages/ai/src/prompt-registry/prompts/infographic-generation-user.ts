@@ -4,6 +4,12 @@ import { buildCompliance, PROMPT_OWNER } from './shared';
 
 const VALID_STYLE_TYPES: ReadonlySet<NonNullable<StyleProperty['type']>> =
   new Set(['text', 'color', 'number']);
+const CONTENT_TYPE_KEYS = new Set(['style', 'content type']);
+const DEFAULT_INFOGRAPHIC_STYLE_PROPERTY: StyleProperty = {
+  key: 'Style',
+  value: 'Infographic — data-driven visual summary',
+  type: 'text',
+};
 
 const normalizeStyleType = (
   type: StyleProperty['type'],
@@ -42,6 +48,11 @@ const sanitizeStyleProperties = (
 
   return result;
 };
+
+const hasContentTypeProperty = (properties: readonly StyleProperty[]) =>
+  properties.some((property) =>
+    CONTENT_TYPE_KEYS.has(property.key.trim().toLowerCase()),
+  );
 
 function formatStyleProperty(prop: StyleProperty): string {
   switch (prop.type) {
@@ -108,7 +119,7 @@ export const INFOGRAPHIC_FORMAT_DIMENSIONS: Record<
 export const infographicGenerationUserPrompt =
   definePrompt<InfographicGenerationPromptInput>({
     id: 'infographic.generate.user',
-    version: 1,
+    version: 2,
     owner: PROMPT_OWNER,
     domain: 'infographic',
     role: 'user',
@@ -126,11 +137,15 @@ export const infographicGenerationUserPrompt =
     render: (input) => {
       const { isEdit, prompt, styleProperties } = input;
       const sanitizedStyles = sanitizeStyleProperties(styleProperties);
-      const hasStyles = sanitizedStyles.length > 0;
+      const effectiveStyles = hasContentTypeProperty(sanitizedStyles)
+        ? sanitizedStyles
+        : [DEFAULT_INFOGRAPHIC_STYLE_PROPERTY, ...sanitizedStyles];
+      const hasExplicitStyles = sanitizedStyles.length > 0;
+      const hasStyles = effectiveStyles.length > 0;
       const parts: string[] = [];
 
       if (isEdit) {
-        const editPreamble = hasStyles
+        const editPreamble = hasExplicitStyles
           ? 'The attached image is the current design. Modify it according to the instructions below. Preserve the overall layout unless the instructions say otherwise. Apply the style directives provided.'
           : 'The attached image is the current design. Modify it according to the instructions below. Preserve the overall layout, typography, and color scheme unless the instructions say otherwise.';
         parts.push(editPreamble);
@@ -143,7 +158,7 @@ export const infographicGenerationUserPrompt =
       }
 
       if (hasStyles) {
-        parts.push(buildStyleSection(sanitizedStyles));
+        parts.push(buildStyleSection(effectiveStyles));
       }
 
       const dims = INFOGRAPHIC_FORMAT_DIMENSIONS[input.format];

@@ -45,12 +45,7 @@ const updateEntityForJob = (job: Job, publishEvent: PublishEvent) =>
 
     const infographicId = getStringField(job.payload, 'infographicId');
     if (infographicId) {
-      emitEntityChange(
-        publishEvent,
-        userId,
-        'infographic',
-        infographicId,
-      );
+      emitEntityChange(publishEvent, userId, 'infographic', infographicId);
     }
   }).pipe(Effect.catchAll(() => Effect.void));
 

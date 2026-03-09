@@ -1707,7 +1707,7 @@
   }
 
   .workbench-panel-left {
-    @apply flex-1 lg:w-3/5 overflow-hidden bg-card;
+    @apply flex-1 flex flex-col lg:w-3/5 overflow-hidden bg-card;
   }
 
   .workbench-panel-right {

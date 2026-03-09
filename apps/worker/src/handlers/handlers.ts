@@ -18,8 +18,8 @@ import type {
   GenerateAudioPayload,
   GenerateAudioResult,
 } from '@repo/queue';
-import { defineJobHandler } from './job-handler';
 import { emitEntityChange, type PublishEvent } from '../events';
+import { defineJobHandler } from './job-handler';
 
 export const createGeneratePodcastHandler = (publishEvent: PublishEvent) =>
   defineJobHandler<GeneratePodcastPayload>()({

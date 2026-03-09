@@ -17,7 +17,6 @@ interface ActionBarProps {
   hasChanges: boolean;
   hasText: boolean;
   isSaving: boolean;
-  onSave: () => void;
   onGenerate: () => void;
   disabled?: boolean;
 }
@@ -29,7 +28,6 @@ export function ActionBar({
   hasChanges,
   hasText,
   isSaving,
-  onSave,
   onGenerate,
   disabled,
 }: ActionBarProps) {
@@ -74,7 +72,7 @@ export function ActionBar({
     );
   }
 
-  // Has changes: always expose explicit save action. Generate is separate.
+  // Unsaved changes collapse into a single primary action.
   if (hasChanges) {
     return (
       <>
@@ -88,18 +86,6 @@ export function ActionBar({
               </span>
             </div>
             <div className="global-action-bar-actions">
-              <span className="hidden text-xs text-muted-foreground sm:inline">
-                Cmd/Ctrl+S
-              </span>
-              <Button
-                size="sm"
-                variant="outline"
-                onClick={onSave}
-                disabled={isSaving || disabled}
-                className="global-action-bar-btn-secondary"
-              >
-                {isSaving ? savingContent : 'Save Draft'}
-              </Button>
               {hasText && (
                 <Button
                   size="sm"

@@ -1,3 +1,4 @@
+import { getSessionCookie } from 'better-auth/cookies';
 import { Effect } from 'effect';
 import type { AuthInstance } from './auth';
 import type { User } from '../policy/types';
@@ -16,6 +17,23 @@ const getBearerOnlyHeaders = (headers: Headers): Headers => {
   return bearerHeaders;
 };
 
+const lookupSession = (
+  auth: AuthInstance,
+  headers: Headers,
+  spanName: string,
+): Effect.Effect<Session | null, AuthSessionLookupError> =>
+  Effect.tryPromise({
+    try: () => auth.api.getSession({ headers }),
+    catch: (error) =>
+      new AuthSessionLookupError({
+        message: 'Session lookup failed',
+        cause: error,
+      }),
+  }).pipe(
+    Effect.map((session) => session ?? null),
+    Effect.withSpan(spanName),
+  );
+
 /**
  * Get session from headers - Effect wrapper around better-auth.
  * Returns null if no session exists or if there's an auth error.
@@ -24,16 +42,25 @@ export const getSession = (
   auth: AuthInstance,
   headers: Headers,
 ): Effect.Effect<Session | null, AuthSessionLookupError> =>
-  Effect.tryPromise({
-    try: () => auth.api.getSession({ headers: getBearerOnlyHeaders(headers) }),
-    catch: (error) =>
-      new AuthSessionLookupError({
-        message: 'Session lookup failed',
-        cause: error,
-      }),
-  }).pipe(
-    Effect.map((s) => s ?? null),
-    Effect.withSpan('auth.getSession'),
+  lookupSession(auth, getBearerOnlyHeaders(headers), 'auth.getSession');
+
+/**
+ * Resolve the signed session token from cookie-backed auth so the SPA can
+ * rehydrate its bearer token after a reload without enabling cookie auth on
+ * normal API routes.
+ */
+export const getSessionAccessToken = (
+  auth: AuthInstance,
+  headers: Headers,
+): Effect.Effect<string | null, AuthSessionLookupError> =>
+  lookupSession(auth, headers, 'auth.getSessionAccessToken').pipe(
+    Effect.map((session) => {
+      if (!session?.user) {
+        return null;
+      }
+
+      return getSessionCookie(headers);
+    }),
   );
 
 /**

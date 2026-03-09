@@ -31,6 +31,7 @@ import {
   DEFAULT_PER_TYPE_CONCURRENCY,
   STALE_CHECK_INTERVAL_MS,
 } from './constants';
+import { syncFailedEntityStateForJob } from './entity-failure';
 import { emitEntityChange, type PublishEvent } from './events';
 import {
   createGeneratePodcastHandler,
@@ -41,7 +42,6 @@ import { handleGenerateInfographic } from './handlers/infographic-handlers';
 import { handleProcessResearch } from './handlers/research-handlers';
 import { handleProcessUrl } from './handlers/source-handlers';
 import { handleGenerateVoiceover } from './handlers/voiceover-handlers';
-import { syncFailedEntityStateForJob } from './entity-failure';
 import { recoverOrphanedResearch } from './research-recovery';
 import { reapStaleJobs } from './stale-job-reaper';
 

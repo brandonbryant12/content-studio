@@ -6,8 +6,8 @@ It assumes split frontend/backend domains (`studio.*` and `api.*`) and external 
 ## Recommendation Summary
 
 1. Use Helm charts as the default deployment mechanism.
-2. Keep bearer-only auth transport (`Authorization` header), with cookie fallback disabled.
-3. Keep permissive CORS (`CORS_ORIGINS=*`) as the default unless compliance requires an allowlist.
+2. Keep bearer auth on `/api/*`, and allow `/api/auth/*` to use the Better Auth session cookie only for bearer-token rehydration.
+3. Keep permissive CORS (`CORS_ORIGINS=*`) for bearer API calls unless compliance requires an allowlist; auth routes should stay on the explicit trusted-origin allowlist.
 4. Run DB migrations in a controlled release step (details below).
 
 ## Recommended Chart Topology
@@ -81,7 +81,7 @@ metadata:
 
 1. `CORS_ORIGINS=*` is the deployment default for bearer-token browser calls.
 2. `TRUST_PROXY=true` is required behind ingress.
-3. No cookie auth fallback is used.
+3. `/api/*` stays bearer-only; only `/api/auth/*` may use the Better Auth session cookie to reissue a bearer token for the SPA.
 
 ## Implementation Follow-Ups
 

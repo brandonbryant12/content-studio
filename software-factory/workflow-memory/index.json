@@ -1,5 +1,61 @@
 [
   {
+    "id": "2026-03-09-feature-delivery-auth-access-token-route-must-map-session-lookup-failures-to-50",
+    "date": "2026-03-09",
+    "month": "2026-03",
+    "workflow": "Feature Delivery",
+    "title": "Auth access-token route must map session lookup failures to 503",
+    "severity": "medium",
+    "status": "closed",
+    "tags": [
+      "skill:debug-fix",
+      "skill:feature-delivery",
+      "server",
+      "auth",
+      "error-handling"
+    ],
+    "importance": 0.84,
+    "confidence": 0.95,
+    "eventFile": "events/2026-03.jsonl"
+  },
+  {
+    "id": "2026-03-09-feature-delivery-orpc-auth-middleware-must-preserve-401s-through-openapi-client-i",
+    "date": "2026-03-09",
+    "month": "2026-03",
+    "workflow": "Feature Delivery",
+    "title": "oRPC auth middleware must preserve 401s through OpenAPI client interceptors",
+    "severity": "high",
+    "status": "closed",
+    "tags": [
+      "skill:debug-fix",
+      "skill:feature-delivery",
+      "api",
+      "auth",
+      "orpc",
+      "error-handling"
+    ],
+    "importance": 0.91,
+    "confidence": 0.97,
+    "eventFile": "events/2026-03.jsonl"
+  },
+  {
+    "id": "2026-03-09-feature-delivery-persona-ai-draft-uses-save-oriented-cta-and-redirect-safe-blocke",
+    "date": "2026-03-09",
+    "month": "2026-03",
+    "workflow": "Feature Delivery",
+    "title": "Persona AI draft uses save-oriented CTA and redirect-safe blocker",
+    "severity": "medium",
+    "status": "done",
+    "tags": [
+      "skill:feature-delivery",
+      "skill:frontend-design",
+      "frontend",
+      "personas",
+      "ux"
+    ],
+    "eventFile": "events/2026-03.jsonl"
+  },
+  {
     "id": "2026-03-09-feature-delivery-podcast-sse-now-exposes-script-ready-phase-and-durable-failure-s",
     "date": "2026-03-09",
     "month": "2026-03",
@@ -20,6 +76,120 @@
     ],
     "importance": 0.88,
     "confidence": 0.91,
+    "eventFile": "events/2026-03.jsonl"
+  },
+  {
+    "id": "2026-03-09-feature-delivery-podcast-wizard-planning-should-replace-generic-instructions-with",
+    "date": "2026-03-09",
+    "month": "2026-03",
+    "workflow": "Feature Delivery",
+    "title": "Podcast wizard planning should replace generic instructions with a persisted outline approval step",
+    "severity": "medium",
+    "status": "proposed",
+    "tags": [
+      "skill:intake-triage",
+      "skill:frontend-design",
+      "podcast",
+      "setup-wizard",
+      "ux",
+      "planning",
+      "outline"
+    ],
+    "importance": 0.76,
+    "confidence": 0.88,
+    "eventFile": "events/2026-03.jsonl"
+  },
+  {
+    "id": "2026-03-09-feature-delivery-reload-safe-auth-now-rehydrates-bearer-state-from-the-better-aut",
+    "date": "2026-03-09",
+    "month": "2026-03",
+    "workflow": "Feature Delivery",
+    "title": "Reload-safe auth now rehydrates bearer state from the Better Auth session",
+    "severity": "high",
+    "status": "closed",
+    "tags": [
+      "skill:feature-delivery",
+      "skill:debug-fix",
+      "skill:tanstack-vite",
+      "auth",
+      "reload",
+      "session-rehydration"
+    ],
+    "importance": 0.9,
+    "confidence": 0.96,
+    "eventFile": "events/2026-03.jsonl"
+  },
+  {
+    "id": "2026-03-09-feature-delivery-restore-infographic-default-content-type-via-presets",
+    "date": "2026-03-09",
+    "month": "2026-03",
+    "workflow": "Feature Delivery",
+    "title": "Restore infographic default content type via presets",
+    "severity": "medium",
+    "status": "done",
+    "tags": [
+      "skill:feature-delivery",
+      "domain:infographics",
+      "prompt-registry",
+      "ui-presets"
+    ],
+    "confidence": 0.92,
+    "eventFile": "events/2026-03.jsonl"
+  },
+  {
+    "id": "2026-03-09-feature-delivery-voiceover-assistant-now-forces-rewrite-tool-on-direct-edit-reque",
+    "date": "2026-03-09",
+    "month": "2026-03",
+    "workflow": "Feature Delivery",
+    "title": "Voiceover assistant now forces rewrite tool on direct edit requests",
+    "severity": "medium",
+    "status": "closed",
+    "tags": [
+      "skill:feature-delivery",
+      "voiceover",
+      "writing-assistant",
+      "tool-calling",
+      "prompt-registry"
+    ],
+    "importance": 0.82,
+    "confidence": 0.92,
+    "eventFile": "events/2026-03.jsonl"
+  },
+  {
+    "id": "2026-03-09-feature-delivery-voiceover-unsaved-state-now-uses-a-single-save-regenerate-action",
+    "date": "2026-03-09",
+    "month": "2026-03",
+    "workflow": "Feature Delivery",
+    "title": "Voiceover unsaved state now uses a single Save & Regenerate action",
+    "severity": "low",
+    "status": "closed",
+    "tags": [
+      "skill:feature-delivery",
+      "voiceover",
+      "action-bar",
+      "ux-simplification"
+    ],
+    "importance": 0.64,
+    "confidence": 0.93,
+    "eventFile": "events/2026-03.jsonl"
+  },
+  {
+    "id": "2026-03-09-feature-delivery-voiceover-workbench-needs-bottom-clearance-and-explicit-rewrite-",
+    "date": "2026-03-09",
+    "month": "2026-03",
+    "workflow": "Feature Delivery",
+    "title": "Voiceover workbench needs bottom clearance and explicit rewrite confirmation",
+    "severity": "medium",
+    "status": "closed",
+    "tags": [
+      "skill:feature-delivery",
+      "voiceover",
+      "writing-assistant",
+      "layout",
+      "chat-feedback"
+    ],
+    "importance": 0.76,
+    "confidence": 0.9,
     "eventFile": "events/2026-03.jsonl"
   },
   {

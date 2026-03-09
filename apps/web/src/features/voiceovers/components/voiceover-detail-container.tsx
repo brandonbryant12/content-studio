@@ -49,23 +49,6 @@ export function VoiceoverDetailContainer({
   const isAdmin = useIsAdmin();
   const isApproved = voiceover.approvedBy !== null;
 
-  const handleSave = useCallback(async () => {
-    if (!settings.hasChanges) return;
-    try {
-      await settings.saveSettings();
-      toast.success('Voiceover saved');
-    } catch {
-      // Error toast is handled by the mutation in useVoiceoverSettings
-    }
-  }, [settings]);
-
-  useKeyboardShortcut({
-    key: 's',
-    cmdOrCtrl: true,
-    onTrigger: handleSave,
-    enabled: settings.hasChanges,
-  });
-
   useKeyboardShortcut({
     key: 'Enter',
     cmdOrCtrl: true,
@@ -181,7 +164,6 @@ export function VoiceoverDetailContainer({
         }
         workbenchState={workbenchState}
         approvalState={approvalState}
-        onSave={handleSave}
         onGenerate={actions.handleGenerate}
         onDelete={actions.handleDelete}
         onApprove={handleApprove}

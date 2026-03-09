@@ -289,10 +289,7 @@ export function AdminUserEntityBrowser({
           />
         </div>
 
-        <div
-          className="mt-4 flex flex-wrap gap-2"
-          aria-label="Filter by type"
-        >
+        <div className="mt-4 flex flex-wrap gap-2" aria-label="Filter by type">
           {FILTER_OPTIONS.map((option) => (
             <Button
               key={option.value}

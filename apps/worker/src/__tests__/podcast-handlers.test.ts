@@ -1,5 +1,4 @@
 import {
-  type PodcastWithSources,
   awaitSourcesReady,
   generateAudio,
   generateCoverImage,
@@ -14,14 +13,14 @@ import {
 } from '@repo/testing';
 import { Effect } from 'effect';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import type { GeneratePodcastPayload, Job } from '@repo/queue';
 import type { JobId, JobStatus } from '@repo/db/schema';
+import type * as Media from '@repo/media';
+import type { PodcastWithSources } from '@repo/media';
+import type { GeneratePodcastPayload, Job } from '@repo/queue';
 import { createGeneratePodcastHandler } from '../handlers/handlers';
 
 vi.mock('@repo/media', async () => {
-  const actual = await vi.importActual<typeof import('@repo/media')>(
-    '@repo/media',
-  );
+  const actual = await vi.importActual<typeof Media>('@repo/media');
 
   return {
     ...actual,

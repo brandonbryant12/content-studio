@@ -43,10 +43,7 @@ function AdminPage() {
         </p>
       </div>
 
-      <Tabs
-        value={tab}
-        onValueChange={(v) => setTab(v as AdminTab)}
-      >
+      <Tabs value={tab} onValueChange={(v) => setTab(v as AdminTab)}>
         <TabsList className="mb-6">
           <TabsTrigger value="users">Users</TabsTrigger>
           <TabsTrigger value="activity">Activity</TabsTrigger>

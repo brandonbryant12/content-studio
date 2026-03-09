@@ -291,7 +291,10 @@ describe('SSE Handlers', () => {
       {
         name: 'source update',
         event: createEntityChangeEvent('source', 'update', 'doc-123'),
-        expectedQueryKeys: [getSourceQueryKey('doc-123'), getSourceListQueryKey()],
+        expectedQueryKeys: [
+          getSourceQueryKey('doc-123'),
+          getSourceListQueryKey(),
+        ],
       },
       {
         name: 'source insert',

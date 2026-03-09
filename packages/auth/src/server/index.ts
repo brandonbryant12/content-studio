@@ -16,7 +16,12 @@ export {
 } from './microsoft-role-sync';
 
 // Effect-based session wrappers
-export { getSession, getSessionWithRole, requireSession } from './session';
+export {
+  getSession,
+  getSessionAccessToken,
+  getSessionWithRole,
+  requireSession,
+} from './session';
 
 // Auth domain errors
 export { AuthSessionLookupError } from '../errors';

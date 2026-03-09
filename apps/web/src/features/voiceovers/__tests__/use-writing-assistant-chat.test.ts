@@ -62,14 +62,15 @@ describe('useWritingAssistantChat', () => {
 
   it('applies transcript writes from tool calls and acknowledges the tool output', async () => {
     const onApplyTranscriptEdit = vi.fn();
+    const initialMessages = [
+      pendingTranscriptWriteMessage(
+        'tool-1',
+        'Updated transcript for stronger pacing.',
+      ),
+    ];
 
     useChatMock.mockReturnValue({
-      messages: [
-        pendingTranscriptWriteMessage(
-          'tool-1',
-          'Updated transcript for stronger pacing.',
-        ),
-      ],
+      messages: initialMessages,
       sendMessage: sendMessageSpy,
       status: 'ready',
       error: undefined,
@@ -101,6 +102,31 @@ describe('useWritingAssistantChat', () => {
     expect(sendMessageSpy).toHaveBeenCalledWith(undefined, {
       body: { transcript: 'Updated transcript for stronger pacing.' },
     });
+
+    await waitFor(() => {
+      expect(setMessagesSpy).toHaveBeenCalled();
+    });
+
+    const appendMessages = vi.mocked(setMessagesSpy).mock.calls[0]?.[0];
+    expect(typeof appendMessages).toBe('function');
+
+    const nextMessages =
+      typeof appendMessages === 'function'
+        ? appendMessages(initialMessages)
+        : appendMessages;
+
+    expect(nextMessages).toContainEqual(
+      expect.objectContaining({
+        id: 'assistant-confirmation-tool-1',
+        role: 'assistant',
+        parts: [
+          expect.objectContaining({
+            type: 'text',
+            text: expect.stringContaining('updated the script in the editor'),
+          }),
+        ],
+      }),
+    );
   });
 
   it('sends user messages with transcript context', async () => {

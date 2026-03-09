@@ -41,7 +41,6 @@ export interface VoiceoverDetailProps {
   assistantPanel?: ReactNode;
   workbenchState: VoiceoverWorkbenchState;
   approvalState: VoiceoverApprovalState;
-  onSave: () => void;
   onGenerate: () => void;
   onDelete: () => void;
   onApprove: () => void;
@@ -60,7 +59,6 @@ export function VoiceoverDetail({
   assistantPanel,
   workbenchState,
   approvalState,
-  onSave,
   onGenerate,
   onDelete,
   onApprove,
@@ -126,12 +124,11 @@ export function VoiceoverDetail({
           hasChanges={hasChanges}
           hasText={hasText}
           isSaving={isSaving}
-          onSave={onSave}
           onGenerate={onGenerate}
         />
       }
     >
-      <div className="flex flex-col gap-6 px-4 py-6 sm:px-6 lg:px-8 lg:py-8 min-h-full">
+      <div className="flex min-h-full flex-col gap-6 px-4 pt-6 pb-28 sm:px-6 lg:px-8 lg:pt-8 lg:pb-32">
         {voiceover.status === 'failed' && failureMessage ? (
           <section
             className="rounded-2xl border border-destructive/25 bg-destructive/5 p-4"

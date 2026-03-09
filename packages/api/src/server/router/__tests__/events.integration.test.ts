@@ -1,8 +1,8 @@
 import { getEventMeta } from '@repo/api/client';
-import type { SSEEvent } from '@repo/api/contracts';
 import { createTestUser } from '@repo/testing';
 import { Layer } from 'effect';
 import { afterEach, describe, expect, it } from 'vitest';
+import type { SSEEvent } from '@repo/api/contracts';
 import {
   configureSSEPublisher,
   publishSSEEvent,
@@ -32,12 +32,14 @@ const callSubscribe = async (args: {
   signal?: AbortSignal;
   lastEventId?: string;
 }) =>
-  ((await (eventsRouter.subscribe as unknown as ORPCProcedure)['~orpc'].handler(
-    {
+  (
+    (await (eventsRouter.subscribe as unknown as ORPCProcedure)[
+      '~orpc'
+    ].handler({
       ...args,
       errors: createMockErrors(),
-    },
-  )) as AsyncIterable<SSEEvent>)[Symbol.asyncIterator]();
+    })) as AsyncIterable<SSEEvent>
+  )[Symbol.asyncIterator]();
 
 const createEntityChangeEvent = (
   userId: string,
@@ -67,7 +69,10 @@ describe('events.subscribe', () => {
       user,
     );
 
-    await publishSSEEvent(user.id, createEntityChangeEvent(user.id, 'podcast-1'));
+    await publishSSEEvent(
+      user.id,
+      createEntityChangeEvent(user.id, 'podcast-1'),
+    );
 
     const abort = new AbortController();
     const iterator = await callSubscribe({
@@ -84,7 +89,10 @@ describe('events.subscribe', () => {
     });
     expect(getEventMeta(connected.value)?.id).toBe('0');
 
-    await publishSSEEvent(user.id, createEntityChangeEvent(user.id, 'podcast-2'));
+    await publishSSEEvent(
+      user.id,
+      createEntityChangeEvent(user.id, 'podcast-2'),
+    );
 
     const replayed = await iterator.next();
     expect(replayed.done).toBe(false);
@@ -93,11 +101,16 @@ describe('events.subscribe', () => {
     );
     expect(getEventMeta(replayed.value)?.id).toBe('2');
 
-    await publishSSEEvent(user.id, createEntityChangeEvent(user.id, 'podcast-3'));
+    await publishSSEEvent(
+      user.id,
+      createEntityChangeEvent(user.id, 'podcast-3'),
+    );
 
     const live = await iterator.next();
     expect(live.done).toBe(false);
-    expect(live.value).toMatchObject(createEntityChangeEvent(user.id, 'podcast-3'));
+    expect(live.value).toMatchObject(
+      createEntityChangeEvent(user.id, 'podcast-3'),
+    );
     expect(getEventMeta(live.value)?.id).toBe('3');
 
     abort.abort();

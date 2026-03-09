@@ -3,6 +3,7 @@ import { Effect, Layer } from 'effect';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import type { ServerRuntime } from '../runtime';
 import type { AuthInstance } from '@repo/auth/server';
+import { createApi } from '../index';
 import { createORPCContext } from '../orpc';
 
 const policyLayer = Layer.succeed(Policy, {
@@ -82,5 +83,33 @@ describe('createORPCContext integration', () => {
       '[errorTag:AuthSessionLookupError]',
       expect.any(String),
     );
+  });
+});
+
+describe('createApi auth integration', () => {
+  it('returns 401 UNAUTHORIZED for protected routes when no user session exists', async () => {
+    const api = createApi({
+      auth: createAuth(async () => null),
+      serverRuntime: createRuntime(),
+      serverUrl: 'http://localhost:3036',
+      apiPath: '/api',
+    });
+
+    const { matched, response } = await api.handler(
+      new Request('http://localhost:3036/api/events'),
+      'req-no-session',
+    );
+
+    expect(matched).toBe(true);
+    expect(response).toBeDefined();
+    if (!response) {
+      throw new Error('Expected matched API response');
+    }
+    expect(response.status).toBe(401);
+    await expect(response.json()).resolves.toMatchObject({
+      code: 'UNAUTHORIZED',
+      message: 'Missing user session. Please log in!',
+      status: 401,
+    });
   });
 });

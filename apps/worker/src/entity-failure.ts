@@ -10,8 +10,8 @@ import {
   SourceRepo,
   VoiceoverRepo,
 } from '@repo/media';
-import type { Job } from '@repo/queue';
 import { Effect } from 'effect';
+import type { Job } from '@repo/queue';
 
 const getStringField = (
   payload: unknown,

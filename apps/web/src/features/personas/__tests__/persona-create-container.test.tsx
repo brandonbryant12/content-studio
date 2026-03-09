@@ -2,16 +2,22 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { PersonaCreateContainer } from '../components/persona-create-container';
 import { useCreatePersona } from '../hooks/use-persona-mutations';
 import { useNavigationBlock } from '@/shared/hooks';
-import { act, render } from '@/test-utils';
+import { act, render, waitFor } from '@/test-utils';
 
-const { personaCreateSpy, personaChatSpy, createMutate } = vi.hoisted(() => ({
-  personaCreateSpy: vi.fn(),
-  personaChatSpy: vi.fn(),
-  createMutate: vi.fn(),
-}));
+const { navigateSpy, personaCreateSpy, personaChatSpy, createMutate } =
+  vi.hoisted(() => ({
+    navigateSpy: vi.fn(),
+    personaCreateSpy: vi.fn(),
+    personaChatSpy: vi.fn(),
+    createMutate: vi.fn(),
+  }));
 
 vi.mock('../hooks/use-persona-mutations', () => ({
   useCreatePersona: vi.fn(),
+}));
+
+vi.mock('@tanstack/react-router', () => ({
+  useNavigate: () => navigateSpy,
 }));
 
 vi.mock('@/shared/hooks', () => ({
@@ -117,15 +123,20 @@ describe('PersonaCreateContainer', () => {
       getLastCreateProps<{ onSave: () => void }>()?.onSave();
     });
 
-    expect(createMutate).toHaveBeenCalledWith({
-      name: 'Draft Persona',
-      role: undefined,
-      personalityDescription: undefined,
-      speakingStyle: 'Measured and direct',
-      exampleQuotes: ['Keep me'],
-      voiceId: undefined,
-      voiceName: undefined,
-    });
+    expect(createMutate).toHaveBeenCalledWith(
+      {
+        name: 'Draft Persona',
+        role: undefined,
+        personalityDescription: undefined,
+        speakingStyle: 'Measured and direct',
+        exampleQuotes: ['Keep me'],
+        voiceId: undefined,
+        voiceName: undefined,
+      },
+      expect.objectContaining({
+        onSuccess: expect.any(Function),
+      }),
+    );
   });
 
   it('applies the AI draft to the form values', () => {
@@ -176,6 +187,57 @@ describe('PersonaCreateContainer', () => {
     });
     expect(vi.mocked(useNavigationBlock)).toHaveBeenLastCalledWith({
       shouldBlock: true,
+    });
+  });
+
+  it('drops the navigation blocker before redirecting to the saved persona', async () => {
+    createMutate.mockImplementation(
+      (
+        _values: unknown,
+        options?: {
+          onSuccess?: (data: { id: string }) => void;
+        },
+      ) => {
+        options?.onSuccess?.({ id: 'persona_saved' });
+      },
+    );
+
+    render(<PersonaCreateContainer />);
+
+    act(() => {
+      getLastCreateProps<{
+        onFormChange: (values: {
+          name: string;
+          role: string;
+          personalityDescription: string;
+          speakingStyle: string;
+          exampleQuotes: string[];
+          voiceId: string;
+          voiceName: string;
+        }) => void;
+      }>()?.onFormChange({
+        name: 'Saved Persona',
+        role: '',
+        personalityDescription: '',
+        speakingStyle: '',
+        exampleQuotes: [],
+        voiceId: '',
+        voiceName: '',
+      });
+    });
+
+    act(() => {
+      getLastCreateProps<{ onSave: () => void }>()?.onSave();
+    });
+
+    await waitFor(() => {
+      expect(navigateSpy).toHaveBeenCalledWith({
+        to: '/personas/$personaId',
+        params: { personaId: 'persona_saved' },
+      });
+    });
+    expect(vi.mocked(useNavigationBlock)).toHaveBeenLastCalledWith({
+      shouldBlock: false,
     });
   });
 });

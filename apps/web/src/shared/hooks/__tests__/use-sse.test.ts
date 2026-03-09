@@ -250,17 +250,15 @@ describe('useSSE', () => {
           userId: 'user-123',
           __meta: { id: '0' },
         });
-        stream1.push(
-          {
-            type: 'entity_change',
-            entityType: 'podcast',
-            changeType: 'update',
-            entityId: 'podcast-123',
-            userId: 'user-456',
-            timestamp: new Date().toISOString(),
-            __meta: { id: '42' },
-          },
-        );
+        stream1.push({
+          type: 'entity_change',
+          entityType: 'podcast',
+          changeType: 'update',
+          entityId: 'podcast-123',
+          userId: 'user-456',
+          timestamp: new Date().toISOString(),
+          __meta: { id: '42' },
+        });
       });
 
       await act(async () => {

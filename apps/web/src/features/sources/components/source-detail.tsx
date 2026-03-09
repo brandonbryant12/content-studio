@@ -140,7 +140,7 @@ export function SourceDetail({
 
             <div className="workbench-meta">
               <div className="workbench-actions">
-                {(isCreatingVoiceover || isCreatingInfographic) ? (
+                {isCreatingVoiceover || isCreatingInfographic ? (
                   <Button variant="outline" size="sm" disabled>
                     <Spinner className="w-4 h-4 mr-2" />
                     Creating...

@@ -40,7 +40,7 @@ export function PersonaCreate({
         <div className="max-w-2xl">
           <p className="page-eyebrow">New Persona</p>
           <h1 className="page-title">
-            {formValues.name.trim() || 'Create Persona'}
+            {formValues.name.trim() || 'New Persona'}
           </h1>
           <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
             Start with a blank persona or let AI draft one for you, then review
@@ -72,7 +72,7 @@ export function PersonaCreate({
             onClick={onSave}
             disabled={isSaving || !formValues.name.trim()}
           >
-            {isSaving ? 'Creating…' : 'Create Persona'}
+            {isSaving ? 'Saving…' : 'Save Persona'}
           </Button>
         </div>
       </div>
@@ -122,8 +122,8 @@ export function PersonaCreate({
         hasChanges={hasChanges}
         onSave={onSave}
         onDiscard={onDiscard}
-        saveLabel="Create Persona"
-        savingLabel="Creating..."
+        saveLabel="Save Persona"
+        savingLabel="Saving..."
         discardLabel="Clear"
       />
     </div>
