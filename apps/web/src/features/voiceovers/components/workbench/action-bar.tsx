@@ -36,6 +36,12 @@ export function ActionBar({
   const isFailed = status === VoiceoverStatus.FAILED;
   const isReady = status === VoiceoverStatus.READY;
   const isDrafting = status === VoiceoverStatus.DRAFTING;
+  const savingContent = (
+    <>
+      <Spinner className="w-3.5 h-3.5 mr-1.5" />
+      {GENERATION_LABELS.saving}
+    </>
+  );
 
   const failureMessage =
     !isGenerating && isFailed ? getGenerationFailureMessage(errorMessage) : null;
@@ -92,14 +98,7 @@ export function ActionBar({
                 disabled={isSaving || disabled}
                 className="global-action-bar-btn-secondary"
               >
-                {isSaving ? (
-                  <>
-                    <Spinner className="w-3.5 h-3.5 mr-1.5" />
-                    {GENERATION_LABELS.saving}
-                  </>
-                ) : (
-                  'Save Draft'
-                )}
+                {isSaving ? savingContent : 'Save Draft'}
               </Button>
               {hasText && (
                 <Button
@@ -109,10 +108,7 @@ export function ActionBar({
                   className="global-action-bar-btn-primary"
                 >
                   {isSaving ? (
-                    <>
-                      <Spinner className="w-3.5 h-3.5 mr-1.5" />
-                      {GENERATION_LABELS.saving}
-                    </>
+                    savingContent
                   ) : (
                     <>
                       <LightningBoltIcon className="w-3.5 h-3.5 mr-1.5" />
@@ -135,15 +131,19 @@ export function ActionBar({
       : GENERATION_LABELS.statusDraft;
 
   const generateAction = isDrafting
-    ? {
-        label: 'Generate Audio',
-        icon: <LightningBoltIcon className="w-3.5 h-3.5 mr-1.5" />,
-      }
+    ? (
+        <>
+          <LightningBoltIcon className="w-3.5 h-3.5 mr-1.5" />
+          Generate Audio
+        </>
+      )
     : isFailed
-      ? {
-          label: GENERATION_LABELS.retry,
-          icon: <ReloadIcon className="w-3.5 h-3.5 mr-1.5" />,
-        }
+      ? (
+          <>
+            <ReloadIcon className="w-3.5 h-3.5 mr-1.5" />
+            {GENERATION_LABELS.retry}
+          </>
+        )
       : null;
 
   return (
@@ -164,8 +164,7 @@ export function ActionBar({
                 disabled={disabled}
                 className="global-action-bar-btn-primary"
               >
-                {generateAction.icon}
-                {generateAction.label}
+                {generateAction}
               </Button>
             )}
           </div>
