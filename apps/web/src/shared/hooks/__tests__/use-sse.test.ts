@@ -4,6 +4,7 @@ import { createElement, type ReactNode } from 'react';
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import {
   handleJobCompletion,
+  handleSourceJobCompletion,
   handleVoiceoverJobCompletion,
   handleEntityChange,
 } from '../sse-handlers';
@@ -194,6 +195,17 @@ describe('useSSE', () => {
           voiceoverId: 'voiceover-456',
         },
         handler: handleVoiceoverJobCompletion,
+      },
+      {
+        name: 'source_job_completion',
+        event: {
+          type: 'source_job_completion',
+          jobId: 'job-123',
+          jobType: 'process-research',
+          status: 'completed',
+          sourceId: 'doc-456',
+        },
+        handler: handleSourceJobCompletion,
       },
     ])('handles $name events', async ({ event, handler }) => {
       const { stream } = renderEnabledSSE();

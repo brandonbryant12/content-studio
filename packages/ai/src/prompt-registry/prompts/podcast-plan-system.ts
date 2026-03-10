@@ -19,16 +19,29 @@ const buildSectionGuidance = (targetDurationMinutes?: number | null) => {
   }
 
   if (targetDurationMinutes <= 10) {
-    return 'There is no fixed section count. For this runtime, use only as many sections as needed to create a clean arc without making the episode feel rushed or repetitive.';
+    return 'There is no fixed section count. For this runtime, use enough sections and depth to fill the episode naturally. Avoid both rushed under-planning and shallow filler.';
   }
 
   return 'There is no fixed section count. For this longer runtime, you may use more sections when the material genuinely supports them, but avoid splitting the episode into shallow filler segments.';
 };
 
+const buildDurationToleranceGuidance = (
+  targetDurationMinutes?: number | null,
+) => {
+  if (typeof targetDurationMinutes !== 'number') {
+    return 'Keep the section estimates realistic for a concise but fully developed episode.';
+  }
+
+  const tolerance = targetDurationMinutes <= 10 ? 1 : 2;
+  const unit = tolerance === 1 ? 'minute' : 'minutes';
+
+  return `Keep the sum of section estimatedMinutes within about ${tolerance} ${unit} of the target runtime. Do not under-plan a full episode into a quick overview.`;
+};
+
 export const podcastPlanSystemPrompt =
   definePrompt<PodcastPlanSystemPromptInput>({
     id: 'podcast.plan.system',
-    version: 4,
+    version: 5,
     owner: PROMPT_OWNER,
     domain: 'podcast',
     role: 'system',
@@ -62,6 +75,9 @@ export const podcastPlanSystemPrompt =
           : `Plan for a single-host narrated episode led by "${hostLabel}".`;
 
       const sectionGuidance = buildSectionGuidance(targetDurationMinutes);
+      const durationToleranceGuidance = buildDurationToleranceGuidance(
+        targetDurationMinutes,
+      );
 
       return `You are an editorial planner for podcast production.
 
@@ -82,7 +98,7 @@ Output requirements:
   - 2 to 4 key points
   - sourceIds that reference only the supplied source IDs
   - estimatedMinutes for that section
-- Keep the sum of section estimatedMinutes realistic for the target runtime rather than padding or compressing unnaturally.
+- ${durationToleranceGuidance}
 - If a section draws from the overall source set but not one clear document, use an empty sourceIds array instead of inventing IDs.
 - Keep the opening hook sharp and listener-facing.
 - Keep the closing takeaway concrete and memorable.

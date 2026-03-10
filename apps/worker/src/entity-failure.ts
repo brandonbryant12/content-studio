@@ -30,6 +30,15 @@ export const syncFailedEntityStateForJob = (job: Job, errorMessage: string) =>
     const sourceId = getStringField(job.payload, 'sourceId');
     if (sourceId) {
       const repo = yield* SourceRepo;
+      const source = yield* repo.findById(sourceId);
+
+      if (source.status === SourceStatus.READY) {
+        yield* Effect.logInfo(
+          `Skipping source failure sync for ${sourceId} because the source is already ready`,
+        );
+        return;
+      }
+
       yield* repo.updateStatus(sourceId, SourceStatus.FAILED, errorMessage);
       return;
     }

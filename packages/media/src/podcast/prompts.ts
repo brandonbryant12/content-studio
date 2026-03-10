@@ -50,12 +50,17 @@ export const buildSystemPrompt = (
  * Build the user prompt with source content for script generation.
  */
 export const buildUserPrompt = (
-  podcast: { title?: string | null; description?: string | null },
+  podcast: {
+    title?: string | null;
+    description?: string | null;
+    targetDurationMinutes?: number | null;
+  },
   sourceContent: string,
 ): string =>
   renderPrompt(podcastScriptUserPrompt, {
     title: podcast.title,
     description: podcast.description,
+    targetDurationMinutes: podcast.targetDurationMinutes,
     sourceContent,
   });
 

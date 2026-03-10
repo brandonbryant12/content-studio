@@ -60,7 +60,13 @@ describe('syncFailedEntityStateForJob', () => {
 
     const layers = Layer.mergeAll(
       createMockPodcastRepo(),
-      createMockSourceRepo({ updateStatus: updateStatusSpy }),
+      createMockSourceRepo({
+        findById: () =>
+          Effect.succeed({
+            status: 'processing',
+          } as never),
+        updateStatus: updateStatusSpy,
+      }),
       createMockVoiceoverRepo(),
       createMockInfographicRepo(),
       MockDbLive,
@@ -84,6 +90,39 @@ describe('syncFailedEntityStateForJob', () => {
       'failed',
       'Source processing failed',
     );
+  });
+
+  it('does not overwrite a source that is already ready', async () => {
+    const updateStatusSpy = vi.fn(() => Effect.succeed({} as never));
+
+    const layers = Layer.mergeAll(
+      createMockPodcastRepo(),
+      createMockSourceRepo({
+        findById: () =>
+          Effect.succeed({
+            status: 'ready',
+          } as never),
+        updateStatus: updateStatusSpy,
+      }),
+      createMockVoiceoverRepo(),
+      createMockInfographicRepo(),
+      MockDbLive,
+    );
+
+    await Effect.runPromise(
+      syncFailedEntityStateForJob(
+        createTestJob({
+          type: 'process-research',
+          payload: {
+            sourceId: 'src_ready',
+            userId: 'user_1',
+          },
+        }),
+        'Late stale failure',
+      ).pipe(Effect.provide(layers)),
+    );
+
+    expect(updateStatusSpy).not.toHaveBeenCalled();
   });
 
   it('marks voiceover jobs as failed with the provided message', async () => {

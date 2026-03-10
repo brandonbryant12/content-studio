@@ -4,13 +4,14 @@ import { buildCompliance, PROMPT_OWNER } from './shared';
 export interface PodcastScriptUserPromptInput {
   readonly title?: string | null;
   readonly description?: string | null;
+  readonly targetDurationMinutes?: number | null;
   readonly sourceContent: string;
 }
 
 export const podcastScriptUserPrompt =
   definePrompt<PodcastScriptUserPromptInput>({
     id: 'podcast.script.user',
-    version: 1,
+    version: 2,
     owner: PROMPT_OWNER,
     domain: 'podcast',
     role: 'user',
@@ -29,10 +30,14 @@ export const podcastScriptUserPrompt =
       const existingContext = input.title
         ? `Working title: "${input.title}"${input.description ? `\nWorking description: ${input.description}` : ''}\n\n`
         : '';
+      const runtimeContext =
+        typeof input.targetDurationMinutes === 'number'
+          ? `Target spoken runtime: about ${input.targetDurationMinutes} minutes. Write enough detailed dialogue or narration to fill that runtime, and do not compress the material into a brief recap.\n\n`
+          : '';
 
       return `Create a podcast episode based on the following source material.
 
-${existingContext}Source content:
+${existingContext}${runtimeContext}Source content:
 ---
 ${input.sourceContent}
 ---
@@ -45,6 +50,6 @@ Generate:
 5. The full script with speaker segments
 
 Each segment should have a speaker and their line of dialogue.
-The script should flow naturally and cover the key points from the source material.`;
+The script should flow naturally, cover the key points from the source material, and be substantial enough to satisfy the requested runtime.`;
     },
   });

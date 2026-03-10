@@ -144,7 +144,11 @@ export const generateScript = (input: GenerateScriptInput) =>
     };
     const systemPrompt = buildSystemPrompt(promptContext);
     const userPrompt = buildUserPrompt(
-      { title: podcast.title, description: podcast.description },
+      {
+        title: podcast.title,
+        description: podcast.description,
+        targetDurationMinutes: podcast.targetDurationMinutes,
+      },
       combinedContent,
     );
 

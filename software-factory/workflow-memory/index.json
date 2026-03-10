@@ -1,5 +1,64 @@
 [
   {
+    "id": "2026-03-10-feature-delivery-compose-credentials-moved-out-of-tracked-yaml",
+    "date": "2026-03-10",
+    "month": "2026-03",
+    "workflow": "Feature Delivery",
+    "title": "Compose credentials moved out of tracked YAML",
+    "severity": "medium",
+    "status": "closed",
+    "tags": [
+      "skill:feature-delivery",
+      "docker-compose",
+      "secret-scanning",
+      "deploy",
+      "local-dev"
+    ],
+    "importance": 0.72,
+    "confidence": 0.92,
+    "eventFile": "events/2026-03.jsonl"
+  },
+  {
+    "id": "2026-03-10-feature-delivery-deep-research-duplicate-worker-recovery-can-regress-ready-source",
+    "date": "2026-03-10",
+    "month": "2026-03",
+    "workflow": "Feature Delivery",
+    "title": "Deep research duplicate worker recovery can regress ready sources",
+    "severity": "high",
+    "status": "closed",
+    "tags": [
+      "skill:debug-fix",
+      "worker",
+      "deep-research",
+      "job-queue",
+      "stale-job",
+      "duplicate-job"
+    ],
+    "importance": 0.86,
+    "confidence": 0.92,
+    "eventFile": "events/2026-03.jsonl"
+  },
+  {
+    "id": "2026-03-10-feature-delivery-deep-research-sse-completion-path-covered-with-worker-and-client",
+    "date": "2026-03-10",
+    "month": "2026-03",
+    "workflow": "Feature Delivery",
+    "title": "Deep research SSE completion path covered with worker and client tests",
+    "severity": "medium",
+    "status": "closed",
+    "tags": [
+      "skill:debug-fix",
+      "sse",
+      "deep-research",
+      "worker",
+      "web",
+      "regression-test"
+    ],
+    "importance": 0.71,
+    "confidence": 0.94,
+    "eventFile": "events/2026-03.jsonl"
+  },
+  {
     "id": "2026-03-09-architecture-adr-guard-ai-interaction-limit-plan-was-written-under-docs-plans",
     "date": "2026-03-09",
     "month": "2026-03",

@@ -57,7 +57,7 @@ export const reapStaleJobs = (
     const queue = yield* Queue;
     const staleJobs = yield* queue.failStaleJobs(maxAgeMs);
 
-    if (staleJobs.length === 0) return;
+    if (staleJobs.length === 0) return [];
 
     for (const staleJob of staleJobs) {
       yield* updateEntityForJob(staleJob, publishEvent);
@@ -66,9 +66,12 @@ export const reapStaleJobs = (
     const summary = staleJobs.map((j) => `${j.id} (${j.type})`).join(', ');
 
     yield* Effect.logInfo(`Reaped ${staleJobs.length} stale jobs: ${summary}`);
+    return staleJobs;
   }).pipe(
     Effect.catchAll((error) =>
-      Effect.logError(`Stale job reaper error: ${formatError(error)}`),
+      Effect.logError(`Stale job reaper error: ${formatError(error)}`).pipe(
+        Effect.as([]),
+      ),
     ),
     Effect.annotateLogs('worker', 'StaleJobReaper'),
   );

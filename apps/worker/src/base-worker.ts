@@ -22,6 +22,7 @@ import type { CloseableScope, Scope as ScopeType } from 'effect/Scope';
 import {
   WORKER_DEFAULTS,
   MAX_CONCURRENT_JOBS,
+  PROCESSING_JOB_HEARTBEAT_MS,
   WORKER_DB_POOL_MAX,
 } from './constants';
 
@@ -150,6 +151,41 @@ const logAndSwallow = (label: string, error: unknown) =>
     Effect.annotateLogs('stack', errorStack(error)),
     Effect.map(() => null),
   );
+
+const logHeartbeatFailure = (jobId: string, error: unknown) =>
+  Effect.logWarning(
+    `Failed to heartbeat processing job ${jobId}: ${formatError(error)}`,
+  ).pipe(Effect.annotateLogs('stack', errorStack(error)));
+
+export const keepJobHeartbeatAlive = (
+  queue: QueueService,
+  jobId: JobId,
+  intervalMs: number = PROCESSING_JOB_HEARTBEAT_MS,
+) => {
+  const touchProcessingJob = queue.touchProcessingJob;
+
+  if (!touchProcessingJob) {
+    return Effect.void;
+  }
+
+  return Effect.gen(function* () {
+    while (true) {
+      yield* Effect.sleep(intervalMs);
+      const touched = yield* touchProcessingJob(jobId).pipe(
+        Effect.catchAll((error) =>
+          logHeartbeatFailure(jobId, error).pipe(Effect.as(null)),
+        ),
+        Effect.catchAllDefect((defect) =>
+          logHeartbeatFailure(jobId, defect).pipe(Effect.as(null)),
+        ),
+      );
+
+      if (!touched) {
+        return;
+      }
+    }
+  });
+};
 
 /**
  * Handle a job failure (error or defect) by marking it failed and notifying.
@@ -300,10 +336,24 @@ export const createWorker = <
     jobScope: ScopeType,
   ) =>
     Effect.forkIn(jobScope)(
-      processJob(job as Job<TPayload>).pipe(
-        Effect.flatMap(() =>
-          queue.updateJobStatus(job.id, JobStatus.COMPLETED),
-        ),
+      Effect.gen(function* () {
+        yield* Effect.acquireRelease(
+          Effect.fork(
+            keepJobHeartbeatAlive(queue, job.id).pipe(
+              Effect.annotateLogs('worker', name),
+              Effect.annotateLogs('job.id', job.id),
+              Effect.annotateLogs('job.type', job.type),
+            ),
+          ),
+          (fiber) => Fiber.interrupt(fiber).pipe(Effect.ignore),
+        );
+
+        return yield* processJob(job as Job<TPayload>).pipe(
+          Effect.flatMap(() =>
+            queue.updateJobStatus(job.id, JobStatus.COMPLETED),
+          ),
+        );
+      }).pipe(
         Effect.tap((result) =>
           Effect.logInfo(
             `Finished processing ${result.type} job ${result.id}, status: ${result.status}`,

@@ -71,6 +71,7 @@ const SAMPLE_INPUTS: Record<string, unknown> = {
   'podcast.script.user': {
     title: 'AI Team Playbook',
     description: 'Operational guidance for shipping AI features safely',
+    targetDurationMinutes: 8,
     sourceContent:
       'Use clear ownership, safety checks, and measurable outcomes.',
   },

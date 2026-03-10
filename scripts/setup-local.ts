@@ -4,6 +4,7 @@ import path from 'node:path';
 import process from 'node:process';
 import { setTimeout as delay } from 'node:timers/promises';
 import { fileURLToPath } from 'node:url';
+import { buildComposeRuntimeEnv } from './compose-runtime-env.ts';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -88,7 +89,10 @@ const waitForHttp = async (
   throw new Error(`${label} did not respond successfully at ${url}`);
 };
 
-const waitForMinioInit = async (timeoutMs: number): Promise<void> => {
+const waitForMinioInit = async (
+  timeoutMs: number,
+  env: NodeJS.ProcessEnv,
+): Promise<void> => {
   const deadline = Date.now() + timeoutMs;
 
   while (Date.now() < deadline) {
@@ -98,7 +102,7 @@ const waitForMinioInit = async (timeoutMs: number): Promise<void> => {
         ['compose', 'logs', '--no-log-prefix', 'minio-init'],
         {
           cwd: repoRoot,
-          env: process.env,
+          env,
           stdio: ['ignore', 'pipe', 'pipe'],
         },
       );
@@ -133,6 +137,8 @@ const waitForMinioInit = async (timeoutMs: number): Promise<void> => {
 };
 
 const main = async (): Promise<void> => {
+  const composeEnv = buildComposeRuntimeEnv(process.env);
+
   console.log('Copying .env.example files...');
   await runCommand('pnpm', ['env:copy-example']);
 
@@ -148,13 +154,13 @@ const main = async (): Promise<void> => {
     'redis',
     'minio',
     'minio-init',
-  ]);
+  ], repoRoot, composeEnv);
 
   console.log('Waiting for local services...');
   await waitForTcp(5432, 'PostgreSQL', 60_000);
   await waitForTcp(6379, 'Redis', 60_000);
   await waitForHttp('http://127.0.0.1:9001/minio/health/live', 'MinIO', 60_000);
-  await waitForMinioInit(60_000);
+  await waitForMinioInit(60_000, composeEnv);
 
   console.log('Pushing the development schema...');
   await runCommand('pnpm', ['--filter', '@repo/db', 'push']);
