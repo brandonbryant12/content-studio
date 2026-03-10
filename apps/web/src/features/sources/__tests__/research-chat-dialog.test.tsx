@@ -46,6 +46,14 @@ const createProps = (
 const renderDialog = (overrides: Partial<ResearchChatDialogProps> = {}) =>
   render(<ResearchChatDialog {...createProps(overrides)} />);
 
+const getSuggestionChips = () =>
+  screen
+    .getByText(
+      'What topic should become a reusable research source? Try one of these:',
+    )
+    .closest('div')
+    ?.querySelectorAll('button') ?? [];
+
 describe('ResearchChatDialog', () => {
   it('renders dialog title and empty-state topic chips', () => {
     renderDialog();
@@ -62,12 +70,7 @@ describe('ResearchChatDialog', () => {
       ),
     ).toBeInTheDocument();
     // 3 randomly selected topic chips are rendered
-    const chips = screen
-      .getByText(
-        'What topic should become a reusable research source? Try one of these:',
-      )
-      .closest('div')!
-      .querySelectorAll('button');
+    const chips = getSuggestionChips();
     expect(chips).toHaveLength(3);
   });
 
@@ -226,12 +229,7 @@ describe('ResearchChatDialog', () => {
     const user = userEvent.setup();
     renderDialog({ onSendMessage });
 
-    const chips = screen
-      .getByText(
-        'What topic should become a reusable research source? Try one of these:',
-      )
-      .closest('div')!
-      .querySelectorAll('button');
+    const chips = getSuggestionChips();
     const firstChip = chips[0]!;
     await user.click(firstChip);
     expect(onSendMessage).toHaveBeenCalledWith(firstChip.textContent);
