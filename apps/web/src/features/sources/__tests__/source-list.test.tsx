@@ -11,6 +11,15 @@ vi.mock('@tanstack/react-router', () => ({
   ),
 }));
 
+vi.mock('@/env', () => ({
+  env: {
+    PUBLIC_SERVER_URL: 'http://localhost:3035',
+    PUBLIC_SERVER_API_PATH: '/api',
+    PUBLIC_BASE_PATH: '/',
+  },
+  isDeepResearchEnabled: true,
+}));
+
 vi.mock('../components/upload-source-dialog', () => ({
   UploadSourceDialog: ({
     open,

@@ -181,7 +181,6 @@ function createDefaultProps(
       isApprovalPending: false,
       ...approvalStateOverride,
     },
-    onSave: vi.fn(),
     onGenerate: vi.fn(),
     onDelete: vi.fn(),
     onApprove: vi.fn(),
@@ -216,6 +215,17 @@ describe('VoiceoverDetail', () => {
     expect(screen.getByTestId('action-bar')).toBeInTheDocument();
     expect(screen.getByTestId('text-editor')).toBeInTheDocument();
     expect(screen.getByTestId('voice-selector')).toBeInTheDocument();
+  });
+
+  it('adds bottom clearance so long script content can scroll above the action bar', () => {
+    renderVoiceoverDetail();
+
+    const contentWrapper = screen.getByTestId('workbench-content')
+      .firstElementChild as HTMLElement | null;
+
+    expect(contentWrapper).not.toBeNull();
+    expect(contentWrapper).toHaveClass('pb-28');
+    expect(contentWrapper?.className).toContain('lg:pb-32');
   });
 
   it('passes settings values to editor controls', () => {

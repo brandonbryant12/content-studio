@@ -11,6 +11,7 @@ vi.mock('@/env', () => ({
     PUBLIC_SERVER_API_PATH: '/api',
     PUBLIC_BASE_PATH: '/',
   },
+  isDeepResearchEnabled: true,
 }));
 
 // Stub TanStack Router

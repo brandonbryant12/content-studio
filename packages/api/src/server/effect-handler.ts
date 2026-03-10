@@ -509,68 +509,59 @@ const formatStackTrace = (error: Error): string => {
   return messageLine + '\n' + appFrames.join('\n');
 };
 
-/**
- * Transform classified error to ORPCError and throw.
- * Uses Match.exhaustive to ensure all cases are handled.
- */
-const throwTransformed = (classified: ClassifiedError): never =>
-  pipe(
-    classified,
-    Match.value,
-    Match.tag('InputValidation', ({ issues, cause }) => {
-      const summary = formatValidationIssues(issues);
-      console.error('[INPUT_VALIDATION]', summary);
-      throw new ORPCError('INPUT_VALIDATION_FAILED', {
-        status: 422,
-        message: summary,
-        cause,
-      });
-    }),
-    Match.tag('OutputValidation', ({ issues, data, cause }) => {
-      const summary = formatValidationIssues(issues);
-      console.error('[OUTPUT_VALIDATION] Response does not match contract:');
-      console.error('  Issues:', summary);
-      if (data !== undefined) {
-        console.error(
-          '  Response payload omitted from logs to avoid leaking user data.',
-        );
-      }
-      throw new ORPCError('INTERNAL_SERVER_ERROR', {
-        status: 500,
-        message: `Output validation failed: ${summary}`,
-        cause,
-      });
-    }),
-    Match.tag('Passthrough', ({ error }) => {
-      throw error;
-    }),
-    Match.exhaustive,
-  );
+const getORPCStatus = (error: unknown): number | undefined => {
+  if (typeof error !== 'object' || error === null) {
+    return undefined;
+  }
+
+  const status = (error as { status?: unknown }).status;
+  return typeof status === 'number' ? status : undefined;
+};
 
 /**
- * Handle oRPC errors with Effect-based classification and transformation.
+ * Handle oRPC errors for server-side diagnostics without replacing the original
+ * error object that the OpenAPI adapter will encode into the HTTP response.
  *
  * This function:
  * 1. Classifies the error (input validation, output validation, or passthrough)
  * 2. Logs the error with a cleaned stack trace
- * 3. Transforms validation errors into more descriptive ORPCErrors
+ * 3. Leaves passthrough protocol errors untouched so their HTTP status survives
  *
  * Use with oRPC's onError interceptor:
  * @example
  * ```typescript
  * clientInterceptors: [
- *   onError((error) => Effect.runSync(handleORPCError(error))),
+ *   onError((error) => handleORPCError(error)),
  * ],
  * ```
  */
-export const handleORPCError = (
-  error: unknown,
-): Effect.Effect<never, never, never> => {
+export const handleORPCError = (error: unknown): void => {
   const classified = classifyError(error);
-  return pipe(
-    error instanceof Error
-      ? Effect.logError(formatStackTrace(error))
-      : Effect.void,
-    Effect.flatMap(() => Effect.sync(() => throwTransformed(classified))),
+  pipe(
+    classified,
+    Match.value,
+    Match.tag('InputValidation', ({ issues }) => {
+      console.error('[INPUT_VALIDATION]', formatValidationIssues(issues));
+    }),
+    Match.tag('OutputValidation', ({ issues, data }) => {
+      console.error('[OUTPUT_VALIDATION] Response does not match contract:');
+      console.error('  Issues:', formatValidationIssues(issues));
+      if (data !== undefined) {
+        console.error(
+          '  Response payload omitted from logs to avoid leaking user data.',
+        );
+      }
+    }),
+    Match.tag('Passthrough', ({ error: passthroughError }) => {
+      const status = getORPCStatus(passthroughError);
+      if (status === 401 || status === 403 || status === 404) {
+        return;
+      }
+
+      if (passthroughError instanceof Error) {
+        console.error(formatStackTrace(passthroughError));
+      }
+    }),
+    Match.exhaustive,
   );
 };

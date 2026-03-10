@@ -21,7 +21,19 @@ import {
   useCreateStylePreset,
   useDeleteStylePreset,
 } from '../hooks/use-style-presets';
-import { STATIC_INFOGRAPHIC_PRESETS } from '../lib/static-presets';
+import {
+  DEFAULT_INFOGRAPHIC_TYPE_PRESET_ID,
+  STATIC_INFOGRAPHIC_PRESETS,
+} from '../lib/static-presets';
+
+const CATEGORY_LABELS: Record<string, string> = {
+  type: 'Content Type',
+  layout: 'Layout',
+  palette: 'Palette',
+  tone: 'Tone',
+  extras: 'Extras',
+};
+const CATEGORY_ORDER = ['type', 'layout', 'palette', 'tone', 'extras'] as const;
 
 interface PresetPickerProps {
   currentProperties: StyleProperty[];
@@ -31,6 +43,8 @@ interface PresetPickerProps {
 
 const getPropertyKey = (property: StyleProperty) =>
   property.key.trim().toLowerCase();
+
+const CONTENT_TYPE_KEYS = new Set(['style', 'content type']);
 
 const mergeStyleProperties = (
   currentProperties: readonly StyleProperty[],
@@ -79,6 +93,30 @@ const mergePresetPropertiesBySelection = (
   return [...merged.values()];
 };
 
+const hasMatchingProperty = (
+  currentProperties: readonly StyleProperty[],
+  presetProperty: StyleProperty,
+) =>
+  currentProperties.some(
+    (property) =>
+      getPropertyKey(property) === getPropertyKey(presetProperty) &&
+      property.value.trim() === presetProperty.value.trim() &&
+      (property.type ?? 'text') === (presetProperty.type ?? 'text'),
+  );
+
+const matchesPreset = (
+  currentProperties: readonly StyleProperty[],
+  presetProperties: readonly StyleProperty[],
+) =>
+  presetProperties.every((property) =>
+    hasMatchingProperty(currentProperties, property),
+  );
+
+const hasExplicitContentType = (properties: readonly StyleProperty[]) =>
+  properties.some((property) =>
+    CONTENT_TYPE_KEYS.has(getPropertyKey(property)),
+  );
+
 function ColorDots({ properties }: { properties: readonly StyleProperty[] }) {
   const colors = properties
     .filter((p) => p.type === 'color' && p.value)
@@ -119,25 +157,86 @@ function PresetCard({
       onClick={onClick}
       aria-pressed={selected}
       disabled={disabled}
-      className={`text-left p-2.5 rounded-lg border transition-all duration-150 disabled:opacity-50 disabled:pointer-events-none ${
+      title={description}
+      className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-md border text-xs font-medium transition-all duration-150 disabled:opacity-50 disabled:pointer-events-none ${
         selected
           ? 'border-primary/60 bg-primary/10'
           : 'border-border/50 hover:border-primary/40 hover:bg-primary/5'
       }`}
     >
-      <div className="flex items-center gap-1.5">
-        <ColorDots properties={properties} />
-        <span className="text-xs font-medium truncate">{name}</span>
-        {selected ? (
-          <CheckIcon className="w-3.5 h-3.5 text-primary shrink-0 ml-auto" />
-        ) : null}
-      </div>
-      {description && (
-        <p className="text-xs text-muted-foreground mt-0.5 line-clamp-1 leading-snug">
-          {description}
-        </p>
-      )}
+      <ColorDots properties={properties} />
+      <span className="truncate">{name}</span>
+      {selected ? (
+        <CheckIcon className="w-3.5 h-3.5 text-primary shrink-0" />
+      ) : null}
     </button>
+  );
+}
+
+function SavePresetDialog({
+  open,
+  onOpenChange,
+  currentProperties,
+}: {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  currentProperties: StyleProperty[];
+}) {
+  const createPreset = useCreateStylePreset();
+  const [presetName, setPresetName] = useState('');
+
+  const handleSave = useCallback(() => {
+    if (!presetName.trim()) return;
+    createPreset.mutate(
+      { name: presetName.trim(), properties: currentProperties },
+      {
+        onSuccess: () => {
+          onOpenChange(false);
+          setPresetName('');
+        },
+      },
+    );
+  }, [presetName, currentProperties, createPreset, onOpenChange]);
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="sm:max-w-sm">
+        <DialogHeader>
+          <DialogTitle>Save Style Preset</DialogTitle>
+        </DialogHeader>
+        <div className="py-2">
+          <p className="text-xs text-muted-foreground mb-2 leading-relaxed">
+            Presets can be anything: brand rules, layout notes, color tokens, or
+            tone directions.
+          </p>
+          <Input
+            value={presetName}
+            onChange={(e) => setPresetName(e.target.value)}
+            placeholder="Preset name"
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') handleSave();
+            }}
+            autoFocus
+          />
+        </div>
+        <DialogFooter>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => onOpenChange(false)}
+          >
+            Cancel
+          </Button>
+          <Button
+            size="sm"
+            onClick={handleSave}
+            disabled={!presetName.trim() || createPreset.isPending}
+          >
+            Save
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 }
 
@@ -147,10 +246,8 @@ export function PresetPicker({
   disabled,
 }: PresetPickerProps) {
   const { data: presets = [] } = useStylePresets();
-  const createPreset = useCreateStylePreset();
   const deletePreset = useDeleteStylePreset();
   const [saveDialogOpen, setSaveDialogOpen] = useState(false);
-  const [presetName, setPresetName] = useState('');
   const [selectedPresetIds, setSelectedPresetIds] = useState<string[]>([]);
 
   const builtIn = presets.filter((p) => p.isBuiltIn);
@@ -171,53 +268,31 @@ export function PresetPicker({
   );
 
   const handleTogglePreset = (presetId: string) => {
-    setSelectedPresetIds((previousSelectedPresetIds) => {
-      const currentSelectedPresetIds = previousSelectedPresetIds.filter((id) =>
-        presetById.has(id),
-      );
-      const wasSelected = currentSelectedPresetIds.includes(presetId);
-      const nextSelectedPresetIds = wasSelected
-        ? currentSelectedPresetIds.filter((id) => id !== presetId)
-        : [...currentSelectedPresetIds, presetId];
-
-      const managedPresetKeys = getManagedPresetKeys(
-        currentSelectedPresetIds,
-        presetById,
-      );
-      const manualProperties = currentProperties.filter(
-        (property) => !managedPresetKeys.has(getPropertyKey(property)),
-      );
-      const mergedPresetProperties = mergePresetPropertiesBySelection(
-        nextSelectedPresetIds,
-        presetById,
-      );
-
-      onApplyPreset(
-        mergeStyleProperties(manualProperties, mergedPresetProperties),
-      );
-
-      return nextSelectedPresetIds;
-    });
-  };
-
-  const handleSavePreset = useCallback(() => {
-    if (!presetName.trim()) return;
-    createPreset.mutate(
-      { name: presetName.trim(), properties: currentProperties },
-      {
-        onSuccess: () => {
-          setSaveDialogOpen(false);
-          setPresetName('');
-        },
-      },
+    const currentSelectedPresetIds = selectedPresetIds.filter((id) =>
+      presetById.has(id),
     );
-  }, [
-    presetName,
-    currentProperties,
-    createPreset,
-    setSaveDialogOpen,
-    setPresetName,
-  ]);
+    const wasSelected = currentSelectedPresetIds.includes(presetId);
+    const nextSelectedPresetIds = wasSelected
+      ? currentSelectedPresetIds.filter((id) => id !== presetId)
+      : [...currentSelectedPresetIds, presetId];
+
+    const managedPresetKeys = getManagedPresetKeys(
+      currentSelectedPresetIds,
+      presetById,
+    );
+    const manualProperties = currentProperties.filter(
+      (property) => !managedPresetKeys.has(getPropertyKey(property)),
+    );
+    const mergedPresetProperties = mergePresetPropertiesBySelection(
+      nextSelectedPresetIds,
+      presetById,
+    );
+
+    setSelectedPresetIds(nextSelectedPresetIds);
+    onApplyPreset(
+      mergeStyleProperties(manualProperties, mergedPresetProperties),
+    );
+  };
 
   const handleDeletePreset = useCallback(
     (id: string, e: MouseEvent<HTMLButtonElement>) => {
@@ -231,11 +306,58 @@ export function PresetPicker({
   const hasPresets =
     builtIn.length > 0 || examplePresets.length > 0 || userOwned.length > 0;
 
+  const examplesByCategory = useMemo(() => {
+    const grouped = new Map<string, typeof examplePresets>();
+    for (const preset of examplePresets) {
+      const category = preset.category ?? 'extras';
+      const existing = grouped.get(category) ?? [];
+      grouped.set(category, [...existing, preset]);
+    }
+    return grouped;
+  }, [examplePresets]);
+
+  const contentTypePresets = useMemo(
+    () => examplesByCategory.get('type') ?? [],
+    [examplesByCategory],
+  );
+  const nonTypeKeys = useMemo(
+    () =>
+      getManagedPresetKeys(
+        contentTypePresets.map((preset) => preset.id),
+        new Map(contentTypePresets.map((preset) => [preset.id, preset])),
+      ),
+    [contentTypePresets],
+  );
+
+  const activeContentTypePresetId = useMemo(() => {
+    const matchedPreset = contentTypePresets.find((preset) =>
+      matchesPreset(currentProperties, preset.properties),
+    );
+    if (matchedPreset) return matchedPreset.id;
+    return hasExplicitContentType(currentProperties)
+      ? undefined
+      : DEFAULT_INFOGRAPHIC_TYPE_PRESET_ID;
+  }, [contentTypePresets, currentProperties]);
+
+  const handleSelectContentTypePreset = useCallback(
+    (presetId: string) => {
+      const preset = contentTypePresets.find((item) => item.id === presetId);
+      if (!preset) return;
+
+      const manualProperties = currentProperties.filter(
+        (property) => !nonTypeKeys.has(getPropertyKey(property)),
+      );
+
+      onApplyPreset(mergeStyleProperties(manualProperties, preset.properties));
+    },
+    [contentTypePresets, currentProperties, nonTypeKeys, onApplyPreset],
+  );
+
   return (
     <>
       <div className="space-y-3">
-        {/* Built-in + Example presets as a 2-column grid */}
-        {(builtIn.length > 0 || examplePresets.length > 0) && (
+        {/* Built-in presets */}
+        {builtIn.length > 0 && (
           <div className="grid grid-cols-2 gap-1.5">
             {builtIn.map((preset) => {
               const selected = selectedPresetIds.includes(preset.id);
@@ -250,22 +372,44 @@ export function PresetPicker({
                 />
               );
             })}
-            {examplePresets.map((preset) => {
-              const selected = selectedPresetIds.includes(preset.id);
-              return (
-                <PresetCard
-                  key={preset.id}
-                  name={preset.name}
-                  description={preset.description}
-                  properties={preset.properties}
-                  onClick={() => handleTogglePreset(preset.id)}
-                  selected={selected}
-                  disabled={disabled}
-                />
-              );
-            })}
           </div>
         )}
+
+        {/* Example presets grouped by category */}
+        {CATEGORY_ORDER.map((category) => {
+          const items = examplesByCategory.get(category);
+          if (!items || items.length === 0) return null;
+          return (
+            <div key={category}>
+              <p className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground/70 mb-1.5">
+                {CATEGORY_LABELS[category]}
+              </p>
+              <div className="flex flex-wrap gap-1.5">
+                {items.map((preset) => {
+                  const selected =
+                    category === 'type'
+                      ? activeContentTypePresetId === preset.id
+                      : selectedPresetIds.includes(preset.id);
+                  return (
+                    <PresetCard
+                      key={preset.id}
+                      name={preset.name}
+                      description={preset.description}
+                      properties={preset.properties}
+                      onClick={() =>
+                        category === 'type'
+                          ? handleSelectContentTypePreset(preset.id)
+                          : handleTogglePreset(preset.id)
+                      }
+                      selected={selected}
+                      disabled={disabled}
+                    />
+                  );
+                })}
+              </div>
+            </div>
+          );
+        })}
 
         {/* User-saved presets as pills */}
         {userOwned.length > 0 && (
@@ -342,44 +486,11 @@ export function PresetPicker({
         )}
       </div>
 
-      <Dialog open={saveDialogOpen} onOpenChange={setSaveDialogOpen}>
-        <DialogContent className="sm:max-w-sm">
-          <DialogHeader>
-            <DialogTitle>Save Style Preset</DialogTitle>
-          </DialogHeader>
-          <div className="py-2">
-            <p className="text-xs text-muted-foreground mb-2 leading-relaxed">
-              Presets can be anything: brand rules, layout notes, color tokens,
-              or tone directions.
-            </p>
-            <Input
-              value={presetName}
-              onChange={(e) => setPresetName(e.target.value)}
-              placeholder="Preset name"
-              onKeyDown={(e) => {
-                if (e.key === 'Enter') handleSavePreset();
-              }}
-              autoFocus
-            />
-          </div>
-          <DialogFooter>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setSaveDialogOpen(false)}
-            >
-              Cancel
-            </Button>
-            <Button
-              size="sm"
-              onClick={handleSavePreset}
-              disabled={!presetName.trim() || createPreset.isPending}
-            >
-              Save
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <SavePresetDialog
+        open={saveDialogOpen}
+        onOpenChange={setSaveDialogOpen}
+        currentProperties={currentProperties}
+      />
     </>
   );
 }

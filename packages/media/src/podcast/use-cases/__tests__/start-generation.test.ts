@@ -194,10 +194,41 @@ describe('startGeneration', () => {
         user.id,
       );
     });
+
+    it('can request quick-start generation without a saved plan', async () => {
+      const user = createTestUser();
+      const podcast = createTestPodcast({ createdBy: user.id });
+      const enqueueSpy = vi.fn();
+
+      const layers = Layer.mergeAll(
+        MockDbLive,
+        createMockPodcastRepo({ podcast }),
+        createMockQueue({ podcast }, { onEnqueue: enqueueSpy }),
+      );
+
+      await Effect.runPromise(
+        withTestUser(user)(
+          startGeneration({
+            podcastId: podcast.id,
+            promptInstructions: 'Lead with the billing basics.',
+            ignoreEpisodePlan: true,
+          }).pipe(Effect.provide(layers)),
+        ),
+      );
+
+      expect(enqueueSpy).toHaveBeenCalledWith(
+        'generate-podcast',
+        expect.objectContaining({
+          promptInstructions: 'Lead with the billing basics.',
+          ignoreEpisodePlan: true,
+        }),
+        user.id,
+      );
+    });
   });
 
   describe('status handling', () => {
-    it('updates podcast status to drafting', async () => {
+    it('updates podcast status to generating_script', async () => {
       const user = createTestUser();
       const podcast = createTestPodcast({
         createdBy: user.id,
@@ -220,7 +251,10 @@ describe('startGeneration', () => {
       );
 
       expect(updateStatusSpy).toHaveBeenCalledOnce();
-      expect(updateStatusSpy).toHaveBeenCalledWith(podcast.id, 'drafting');
+      expect(updateStatusSpy).toHaveBeenCalledWith(
+        podcast.id,
+        'generating_script',
+      );
     });
   });
 
@@ -394,7 +428,7 @@ describe('startGeneration', () => {
       expect(updateStatusSpy).toHaveBeenNthCalledWith(
         1,
         podcast.id,
-        'drafting',
+        'generating_script',
       );
       expect(updateStatusSpy).toHaveBeenNthCalledWith(2, podcast.id, 'ready');
       if (result._tag === 'Failure') {

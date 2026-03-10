@@ -19,21 +19,18 @@ export function AdminUserSearchContainer() {
   } = useAdminUserSearch(deferredSearch);
 
   if (isPending) {
-    return (
-      <ListPageLoadingState title="Admin" containerClassName="page-container" />
-    );
+    return <ListPageLoadingState title="Users" />;
   }
 
   if (isError) {
     return (
       <ListPageErrorState
-        title="Admin"
+        title="Users"
         error={error}
         fallbackMessage="Failed to load user search"
         onRetry={() => {
           void refetch();
         }}
-        containerClassName="page-container"
       />
     );
   }

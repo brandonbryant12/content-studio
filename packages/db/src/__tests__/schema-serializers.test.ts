@@ -78,7 +78,9 @@ const makePodcast = (overrides?: Partial<Podcast>): Podcast => ({
   hostVoiceName: null,
   coHostVoice: null,
   coHostVoiceName: null,
+  setupInstructions: null,
   promptInstructions: null,
+  episodePlan: null,
   targetDurationMinutes: 5,
   tags: ['tech'],
   sourceIds: ['doc_0123456789abcdef' as SourceId],
@@ -257,9 +259,92 @@ describe('podcast serializers', () => {
       const result = serializePodcast(makePodcast());
       expect(result.description).toBeNull();
       expect(result.hostVoice).toBeNull();
+      expect(result.episodePlan).toBeNull();
       expect(result.segments).toBeNull();
       expect(result.audioUrl).toBeNull();
       expect(result.approvedAt).toBeNull();
+    });
+
+    it('serializes episode plans when present', () => {
+      const result = serializePodcast(
+        makePodcast({
+          episodePlan: {
+            angle: 'Focus on practical rollout lessons.',
+            openingHook: 'Most AI launches fail before listeners hear them.',
+            closingTakeaway: 'Start narrow, measure, then expand.',
+            sections: [
+              {
+                heading: 'Where teams stall',
+                summary: 'Common bottlenecks in shipping audio content.',
+                keyPoints: ['Approval loops', 'Source quality', 'Tone drift'],
+                sourceIds: ['doc_0123456789abcdef' as SourceId],
+                estimatedMinutes: 2,
+              },
+            ],
+          },
+        }),
+      );
+
+      expect(result.episodePlan).toEqual({
+        angle: 'Focus on practical rollout lessons.',
+        openingHook: 'Most AI launches fail before listeners hear them.',
+        closingTakeaway: 'Start narrow, measure, then expand.',
+        sections: [
+          {
+            heading: 'Where teams stall',
+            summary: 'Common bottlenecks in shipping audio content.',
+            keyPoints: ['Approval loops', 'Source quality', 'Tone drift'],
+            sourceIds: ['doc_0123456789abcdef'],
+            estimatedMinutes: 2,
+          },
+        ],
+      });
+    });
+
+    it('trims setup instructions before output serialization', () => {
+      const result = serializePodcast(
+        makePodcast({
+          setupInstructions: '  Focus on payment options.  ',
+        }),
+      );
+
+      expect(result.setupInstructions).toBe('Focus on payment options.');
+    });
+
+    it('normalizes invalid episode plan minutes before output serialization', () => {
+      const result = serializePodcast(
+        makePodcast({
+          episodePlan: {
+            angle: '  Focus on practical rollout lessons.  ',
+            openingHook:
+              '  Most AI launches fail before listeners hear them.  ',
+            closingTakeaway: '  Start narrow, measure, then expand.  ',
+            sections: [
+              {
+                heading: '  Where teams stall  ',
+                summary: '  Common bottlenecks in shipping audio content.  ',
+                keyPoints: ['Approval loops', ' ', 'Approval loops'],
+                sourceIds: ['doc_0123456789abcdef' as SourceId],
+                estimatedMinutes: 0,
+              },
+            ],
+          },
+        }),
+      );
+
+      expect(result.episodePlan).toEqual({
+        angle: 'Focus on practical rollout lessons.',
+        openingHook: 'Most AI launches fail before listeners hear them.',
+        closingTakeaway: 'Start narrow, measure, then expand.',
+        sections: [
+          {
+            heading: 'Where teams stall',
+            summary: 'Common bottlenecks in shipping audio content.',
+            keyPoints: ['Approval loops'],
+            sourceIds: ['doc_0123456789abcdef'],
+          },
+        ],
+      });
     });
 
     it('serializes approvedAt when present', () => {

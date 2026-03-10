@@ -1,5 +1,8 @@
 export { useOptimisticMutation } from './use-optimistic-mutation';
-export { useNavigationBlock } from './use-navigation-block';
+export {
+  useNavigationBlock,
+  type NavigationBlocker,
+} from './use-navigation-block';
 export { useKeyboardShortcut } from './use-keyboard-shortcut';
 export { useSessionGuard } from './use-session-guard';
 export { useSSE } from './use-sse';

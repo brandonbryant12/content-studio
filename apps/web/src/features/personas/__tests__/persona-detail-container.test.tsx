@@ -35,7 +35,9 @@ vi.mock('../components/persona-detail', () => ({
 }));
 
 vi.mock('@/shared/hooks', () => ({
-  useNavigationBlock: vi.fn(),
+  useNavigationBlock: vi
+    .fn()
+    .mockReturnValue({ isBlocked: false, proceed: vi.fn(), reset: vi.fn() }),
 }));
 
 function createMockPersona(overrides: Partial<Record<string, unknown>> = {}) {
@@ -107,6 +109,11 @@ describe('PersonaDetailContainer', () => {
   beforeEach(() => {
     vi.clearAllMocks();
 
+    vi.mocked(useNavigationBlock).mockReturnValue({
+      isBlocked: false,
+      proceed: vi.fn(),
+      reset: vi.fn(),
+    });
     vi.mocked(useUpdatePersona).mockReturnValue({
       mutate: updateMutate,
       isPending: false,

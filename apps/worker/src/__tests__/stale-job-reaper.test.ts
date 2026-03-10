@@ -102,7 +102,13 @@ describe('reapStaleJobs', () => {
 
     const layers = Layer.mergeAll(
       createMockQueue([staleJob]),
-      createMockSourceRepo({ updateStatus: updateStatusSpy }),
+      createMockSourceRepo({
+        findById: () =>
+          Effect.succeed({
+            status: 'processing',
+          } as never),
+        updateStatus: updateStatusSpy,
+      }),
       createMockPodcastRepo(),
       createMockVoiceoverRepo(),
       createMockInfographicRepo(),
@@ -124,6 +130,49 @@ describe('reapStaleJobs', () => {
         type: 'entity_change',
         entityType: 'source',
         entityId: 'doc_abc',
+      }),
+    );
+  });
+
+  it('does not overwrite a source that is already ready', async () => {
+    const updateStatusSpy = vi.fn(() => Effect.succeed({} as never));
+    const publishSpy = vi.fn();
+
+    const staleJob = createTestJob({
+      type: 'process-research',
+      payload: {
+        sourceId: 'doc_ready',
+        query: 'already completed research',
+        userId: 'user_1',
+      },
+    });
+
+    const layers = Layer.mergeAll(
+      createMockQueue([staleJob]),
+      createMockSourceRepo({
+        findById: () =>
+          Effect.succeed({
+            status: 'ready',
+          } as never),
+        updateStatus: updateStatusSpy,
+      }),
+      createMockPodcastRepo(),
+      createMockVoiceoverRepo(),
+      createMockInfographicRepo(),
+      MockDbLive,
+    );
+
+    await Effect.runPromise(
+      reapStaleJobs(publishSpy).pipe(Effect.provide(layers)),
+    );
+
+    expect(updateStatusSpy).not.toHaveBeenCalled();
+    expect(publishSpy).toHaveBeenCalledWith(
+      'user_1',
+      expect.objectContaining({
+        type: 'entity_change',
+        entityType: 'source',
+        entityId: 'doc_ready',
       }),
     );
   });
@@ -265,7 +314,13 @@ describe('reapStaleJobs', () => {
 
     const layers = Layer.mergeAll(
       createMockQueue(staleJobs),
-      createMockSourceRepo({ updateStatus: sourceUpdateSpy }),
+      createMockSourceRepo({
+        findById: () =>
+          Effect.succeed({
+            status: 'processing',
+          } as never),
+        updateStatus: sourceUpdateSpy,
+      }),
       createMockPodcastRepo({ updateStatus: podUpdateSpy }),
       createMockVoiceoverRepo(),
       createMockInfographicRepo(),
@@ -306,6 +361,10 @@ describe('reapStaleJobs', () => {
     const layers = Layer.mergeAll(
       createMockQueue(staleJobs),
       createMockSourceRepo({
+        findById: () =>
+          Effect.succeed({
+            status: 'processing',
+          } as never),
         updateStatus: () =>
           Effect.fail(new Error('DB connection lost') as never),
       }),

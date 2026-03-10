@@ -26,3 +26,8 @@ Those belong in:
 
 If a plan becomes the implemented standard, move the durable guidance back into
 the canonical docs set and update cross-links.
+
+## Current Plan Docs
+
+- [`Monthly AI Interaction Limits Plan`](./monthly-ai-interaction-limits.md)
+- [`Microsoft SSO Recommendation`](./microsoft-sso-recommendation.md)

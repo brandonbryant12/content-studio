@@ -177,7 +177,10 @@ export function WorkbenchLayout({
         onValueChange={setActiveTab}
         className="workbench-v3-tabs-root"
       >
-        <TabsList className="workbench-v3-tabs" aria-label="Podcast workbench">
+        <TabsList
+          className="workbench-v3-tabs flex justify-start"
+          aria-label="Podcast workbench"
+        >
           <TabsTrigger
             value="script"
             className={`workbench-v3-tab ${activeTab === 'script' ? 'active' : ''}`}

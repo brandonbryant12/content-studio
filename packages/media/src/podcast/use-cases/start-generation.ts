@@ -17,6 +17,7 @@ import { PodcastRepo } from '../repos/podcast-repo';
 export interface StartGenerationInput {
   podcastId: string;
   promptInstructions?: string;
+  ignoreEpisodePlan?: boolean;
 }
 
 export interface StartGenerationResult {
@@ -53,7 +54,10 @@ export const startGeneration = (input: StartGenerationInput) =>
 
     const job = yield* withTransactionalStateAndEnqueue(
       Effect.gen(function* () {
-        yield* podcastRepo.updateStatus(podcast.id, VersionStatus.DRAFTING);
+        yield* podcastRepo.updateStatus(
+          podcast.id,
+          VersionStatus.GENERATING_SCRIPT,
+        );
         yield* podcastRepo.clearApproval(podcast.id);
         return yield* enqueueJob({
           type: 'generate-podcast',
@@ -61,6 +65,7 @@ export const startGeneration = (input: StartGenerationInput) =>
             podcastId: podcast.id,
             userId: podcast.createdBy,
             promptInstructions: input.promptInstructions,
+            ignoreEpisodePlan: input.ignoreEpisodePlan,
           },
           userId: podcast.createdBy,
         });

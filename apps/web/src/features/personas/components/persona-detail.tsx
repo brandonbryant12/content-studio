@@ -6,6 +6,7 @@ import { useState } from 'react';
 import type { RouterOutput } from '@repo/api/client';
 import { PersonaForm, type PersonaFormValues } from './persona-form';
 import { PersonaGuidancePanel } from './persona-guidance-panel';
+import { PersonaSaveBar } from './persona-save-bar';
 import { PersonaVoiceSection } from './persona-voice-section';
 import { ConfirmationDialog } from '@/shared/components/confirmation-dialog/confirmation-dialog';
 import { getStorageUrl } from '@/shared/lib/storage-url';
@@ -165,6 +166,17 @@ export function PersonaDetail({
         }
         description="Assign a default voice to use whenever this persona is selected in a podcast. Without one, you can still pick a voice per episode."
         isGeneratingAvatar={isGeneratingAvatar}
+      />
+
+      <PersonaSaveBar
+        formValues={formValues}
+        isSaving={isSaving}
+        hasChanges={hasChanges}
+        onSave={onSave}
+        onDiscard={onDiscard}
+        saveLabel="Save Changes"
+        savingLabel="Saving..."
+        discardLabel="Discard"
       />
 
       {/* Delete confirmation */}

@@ -4,6 +4,7 @@ import { createElement, type ReactNode } from 'react';
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import {
   handleJobCompletion,
+  handleSourceJobCompletion,
   handleVoiceoverJobCompletion,
   handleEntityChange,
 } from '../sse-handlers';
@@ -16,6 +17,10 @@ vi.mock('../sse-handlers', () => ({
   handleSourceJobCompletion: vi.fn(),
   handleEntityChange: vi.fn(),
   handleActivityLogged: vi.fn(),
+}));
+
+vi.mock('@repo/api/client', () => ({
+  getEventMeta: (event: { __meta?: { id?: string } }) => event.__meta,
 }));
 
 function createMockIterator() {
@@ -191,6 +196,17 @@ describe('useSSE', () => {
         },
         handler: handleVoiceoverJobCompletion,
       },
+      {
+        name: 'source_job_completion',
+        event: {
+          type: 'source_job_completion',
+          jobId: 'job-123',
+          jobType: 'process-research',
+          status: 'completed',
+          sourceId: 'doc-456',
+        },
+        handler: handleSourceJobCompletion,
+      },
     ])('handles $name events', async ({ event, handler }) => {
       const { stream } = renderEnabledSSE();
 
@@ -226,6 +242,48 @@ describe('useSSE', () => {
 
       await waitFor(() => {
         expect(mockSubscribe).toHaveBeenCalledTimes(2);
+      });
+    });
+
+    it('passes the last seen event id when reconnecting', async () => {
+      const stream1 = createMockIterator();
+      const stream2 = createMockIterator();
+      mockSubscribe
+        .mockResolvedValueOnce(stream1.iterator)
+        .mockResolvedValueOnce(stream2.iterator);
+
+      renderHook(() => useSSE({ enabled: true }), {
+        wrapper: createWrapper(),
+      });
+
+      await act(async () => {
+        stream1.push({
+          type: 'connected',
+          userId: 'user-123',
+          __meta: { id: '0' },
+        });
+        stream1.push({
+          type: 'entity_change',
+          entityType: 'podcast',
+          changeType: 'update',
+          entityId: 'podcast-123',
+          userId: 'user-456',
+          timestamp: new Date().toISOString(),
+          __meta: { id: '42' },
+        });
+      });
+
+      await act(async () => {
+        stream1.end();
+        await new Promise((r) => setTimeout(r, 3000));
+      });
+
+      await waitFor(() => {
+        expect(mockSubscribe).toHaveBeenCalledTimes(2);
+      });
+
+      expect(mockSubscribe.mock.calls[1]?.[1]).toMatchObject({
+        lastEventId: '42',
       });
     });
 

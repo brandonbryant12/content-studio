@@ -268,6 +268,7 @@ const makeGoogleService = (config: GoogleConfig): LLMService => {
               system: options.system,
               messages: modelMessages,
               tools: options.tools,
+              toolChoice: options.toolChoice,
               maxOutputTokens: options.maxTokens,
               temperature: options.temperature ?? 0.7,
               maxRetries: 0,

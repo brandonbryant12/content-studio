@@ -3,6 +3,7 @@ import { Button } from '@repo/ui/components/button';
 import { Link } from '@tanstack/react-router';
 import { PersonaForm, type PersonaFormValues } from './persona-form';
 import { PersonaGuidancePanel } from './persona-guidance-panel';
+import { PersonaSaveBar } from './persona-save-bar';
 import { PersonaVoiceSection } from './persona-voice-section';
 
 interface PersonaCreateProps {
@@ -39,7 +40,7 @@ export function PersonaCreate({
         <div className="max-w-2xl">
           <p className="page-eyebrow">New Persona</p>
           <h1 className="page-title">
-            {formValues.name.trim() || 'Create Persona'}
+            {formValues.name.trim() || 'New Persona'}
           </h1>
           <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
             Start with a blank persona or let AI draft one for you, then review
@@ -71,7 +72,7 @@ export function PersonaCreate({
             onClick={onSave}
             disabled={isSaving || !formValues.name.trim()}
           >
-            {isSaving ? 'Creating…' : 'Create Persona'}
+            {isSaving ? 'Saving…' : 'Save Persona'}
           </Button>
         </div>
       </div>
@@ -113,6 +114,17 @@ export function PersonaCreate({
           onFormChange({ ...formValues, voiceId, voiceName })
         }
         description="Set an optional default voice now, or leave it blank and choose a voice later when a podcast uses this persona."
+      />
+
+      <PersonaSaveBar
+        formValues={formValues}
+        isSaving={isSaving}
+        hasChanges={hasChanges}
+        onSave={onSave}
+        onDiscard={onDiscard}
+        saveLabel="Save Persona"
+        savingLabel="Saving..."
+        discardLabel="Clear"
       />
     </div>
   );

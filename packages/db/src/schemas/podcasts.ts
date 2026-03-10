@@ -76,6 +76,21 @@ export interface ScriptSegment {
   endTimeMs?: number;
 }
 
+export interface PodcastEpisodePlanSection {
+  heading: string;
+  summary: string;
+  keyPoints: readonly string[];
+  sourceIds: readonly string[];
+  estimatedMinutes?: number;
+}
+
+export interface PodcastEpisodePlan {
+  angle: string;
+  openingHook: string;
+  closingTakeaway: string;
+  sections: readonly PodcastEpisodePlanSection[];
+}
+
 export const podcast = pgTable(
   'podcast',
   {
@@ -90,7 +105,9 @@ export const podcast = pgTable(
     hostVoiceName: text('hostVoiceName'),
     coHostVoice: text('coHostVoice'),
     coHostVoiceName: text('coHostVoiceName'),
+    setupInstructions: text('setupInstructions'),
     promptInstructions: text('promptInstructions'),
+    episodePlan: jsonb('episodePlan').$type<PodcastEpisodePlan>(),
     targetDurationMinutes: integer('targetDurationMinutes').default(5),
     tags: jsonb('tags').$type<string[]>().default([]),
     sourceIds: varchar('sourceIds', { length: 20 })
@@ -151,6 +168,9 @@ export const CreatePodcastSchema = Schema.Struct({
   description: Schema.optional(Schema.String),
   format: PodcastFormatSchema,
   sourceIds: Schema.optional(Schema.Array(SourceIdSchema)),
+  setupInstructions: Schema.optional(
+    Schema.String.pipe(Schema.maxLength(1000)),
+  ),
   promptInstructions: Schema.optional(Schema.String),
   targetDurationMinutes: Schema.optional(
     Schema.Number.pipe(
@@ -166,12 +186,43 @@ export const CreatePodcastSchema = Schema.Struct({
   coHostPersonaId: Schema.optional(Schema.NullOr(PersonaIdSchema)),
 });
 
+export const PodcastEpisodePlanSectionSchema = Schema.Struct({
+  heading: Schema.String.pipe(Schema.minLength(1), Schema.maxLength(200)),
+  summary: Schema.String.pipe(Schema.minLength(1), Schema.maxLength(1000)),
+  keyPoints: Schema.Array(
+    Schema.String.pipe(Schema.minLength(1), Schema.maxLength(240)),
+  ),
+  sourceIds: Schema.Array(
+    Schema.String.pipe(Schema.minLength(1), Schema.maxLength(20)),
+  ),
+  estimatedMinutes: Schema.optional(
+    Schema.Number.pipe(
+      Schema.greaterThanOrEqualTo(1),
+      Schema.lessThanOrEqualTo(60),
+    ),
+  ),
+});
+
+export const PodcastEpisodePlanSchema = Schema.Struct({
+  angle: Schema.String.pipe(Schema.minLength(1), Schema.maxLength(200)),
+  openingHook: Schema.String.pipe(Schema.minLength(1), Schema.maxLength(400)),
+  closingTakeaway: Schema.String.pipe(
+    Schema.minLength(1),
+    Schema.maxLength(400),
+  ),
+  sections: Schema.Array(PodcastEpisodePlanSectionSchema),
+});
+
 export const UpdatePodcastFields = {
   title: Schema.optional(
     Schema.String.pipe(Schema.minLength(1), Schema.maxLength(256)),
   ),
   description: Schema.optional(Schema.String),
+  setupInstructions: Schema.optional(
+    Schema.NullOr(Schema.String.pipe(Schema.maxLength(1000))),
+  ),
   promptInstructions: Schema.optional(Schema.String),
+  episodePlan: Schema.optional(Schema.NullOr(PodcastEpisodePlanSchema)),
   targetDurationMinutes: Schema.optional(
     Schema.Number.pipe(
       Schema.greaterThanOrEqualTo(1),
@@ -236,7 +287,9 @@ export const PodcastOutputSchema = Schema.Struct({
   hostVoiceName: Schema.NullOr(Schema.String),
   coHostVoice: Schema.NullOr(Schema.String),
   coHostVoiceName: Schema.NullOr(Schema.String),
+  setupInstructions: Schema.NullOr(Schema.String),
   promptInstructions: Schema.NullOr(Schema.String),
+  episodePlan: Schema.NullOr(PodcastEpisodePlanSchema),
   targetDurationMinutes: Schema.NullOr(Schema.Number),
   tags: Schema.Array(Schema.String),
   sourceIds: Schema.Array(SourceIdSchema),
@@ -271,6 +324,8 @@ const {
   generationContext: _generationContext,
   generationPrompt: _generationPrompt,
   summary: _summary,
+  episodePlan: _episodePlan,
+  setupInstructions: _setupInstructions,
   ...podcastListColumns
 } = getTableColumns(podcast);
 
@@ -281,7 +336,12 @@ export { podcastListColumns };
  */
 export type PodcastListItem = Omit<
   Podcast,
-  'segments' | 'generationContext' | 'generationPrompt' | 'summary'
+  | 'segments'
+  | 'generationContext'
+  | 'generationPrompt'
+  | 'summary'
+  | 'episodePlan'
+  | 'setupInstructions'
 >;
 
 export const PodcastListItemOutputSchema = Schema.Struct({
@@ -318,6 +378,84 @@ export type GenerationContextOutput = typeof GenerationContextOutputSchema.Type;
 export type PodcastOutput = typeof PodcastOutputSchema.Type;
 export type PodcastFullOutput = typeof PodcastFullOutputSchema.Type;
 export type PodcastListItemOutput = typeof PodcastListItemOutputSchema.Type;
+
+const trimToUndefined = (value: string | null | undefined) => {
+  const trimmed = value?.trim();
+  return trimmed && trimmed.length > 0 ? trimmed : undefined;
+};
+
+const trimToNull = (value: string | null | undefined) =>
+  trimToUndefined(value) ?? null;
+
+const normalizePodcastEpisodePlanSection = (
+  section: PodcastEpisodePlanSection,
+): PodcastEpisodePlanSection | null => {
+  const heading = trimToUndefined(section.heading);
+  const summary = trimToUndefined(section.summary);
+
+  if (!heading || !summary) {
+    return null;
+  }
+
+  const keyPoints = Array.from(
+    new Set(
+      section.keyPoints
+        .map((value) => trimToUndefined(value))
+        .filter((value): value is string => value !== undefined),
+    ),
+  );
+
+  const sourceIds = Array.from(
+    new Set(
+      section.sourceIds
+        .map((value) => trimToUndefined(value))
+        .filter((value): value is string => value !== undefined),
+    ),
+  );
+
+  const estimatedMinutes =
+    typeof section.estimatedMinutes === 'number' &&
+    Number.isFinite(section.estimatedMinutes) &&
+    section.estimatedMinutes > 0
+      ? Math.round(section.estimatedMinutes)
+      : undefined;
+
+  return {
+    heading,
+    summary,
+    keyPoints,
+    sourceIds,
+    estimatedMinutes,
+  };
+};
+
+const normalizePodcastEpisodePlan = (
+  plan: PodcastEpisodePlan | null | undefined,
+): PodcastEpisodePlan | null => {
+  if (!plan) {
+    return null;
+  }
+
+  const angle = trimToUndefined(plan.angle);
+  const openingHook = trimToUndefined(plan.openingHook);
+  const closingTakeaway = trimToUndefined(plan.closingTakeaway);
+  const sections = plan.sections
+    .map((section) => normalizePodcastEpisodePlanSection(section))
+    .filter(
+      (section): section is PodcastEpisodePlanSection => section !== null,
+    );
+
+  if (!angle || !openingHook || !closingTakeaway || sections.length === 0) {
+    return null;
+  }
+
+  return {
+    angle,
+    openingHook,
+    closingTakeaway,
+    sections,
+  };
+};
 
 const podcastListItemTransform = (
   p: PodcastListItem,
@@ -360,7 +498,9 @@ const podcastTransform = (podcast: Podcast): PodcastOutput => ({
   hostVoiceName: podcast.hostVoiceName,
   coHostVoice: podcast.coHostVoice,
   coHostVoiceName: podcast.coHostVoiceName,
+  setupInstructions: trimToNull(podcast.setupInstructions),
   promptInstructions: podcast.promptInstructions,
+  episodePlan: normalizePodcastEpisodePlan(podcast.episodePlan),
   targetDurationMinutes: podcast.targetDurationMinutes,
   tags: podcast.tags ?? [],
   sourceIds: podcast.sourceIds ?? [],

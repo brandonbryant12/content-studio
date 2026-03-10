@@ -18,6 +18,7 @@ interface SourceEntryMenuProps {
   onUpload: () => void;
   onUrl: () => void;
   onResearch: () => void;
+  showResearch?: boolean;
   variant?: ComponentProps<typeof Button>['variant'];
   size?: ComponentProps<typeof Button>['size'];
   className?: string;
@@ -28,6 +29,7 @@ export function SourceEntryMenu({
   onUpload,
   onUrl,
   onResearch,
+  showResearch = true,
   variant,
   size,
   className,
@@ -46,10 +48,12 @@ export function SourceEntryMenu({
         align="end"
         className="min-w-[var(--radix-dropdown-menu-trigger-width)]"
       >
-        <DropdownMenuItem onSelect={onResearch}>
-          <MagnifyingGlassIcon aria-hidden="true" />
-          Research
-        </DropdownMenuItem>
+        {showResearch ? (
+          <DropdownMenuItem onSelect={onResearch}>
+            <MagnifyingGlassIcon aria-hidden="true" />
+            Research
+          </DropdownMenuItem>
+        ) : null}
         <DropdownMenuItem onSelect={onUrl}>
           <GlobeIcon aria-hidden="true" />
           From URL

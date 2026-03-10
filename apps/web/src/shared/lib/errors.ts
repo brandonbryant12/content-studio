@@ -22,6 +22,7 @@ const STATIC_ERROR_MESSAGES = {
   SCRIPT_NOT_FOUND: 'Script not found. Try regenerating the podcast.',
   SERVICE_UNAVAILABLE:
     'AI service is temporarily unavailable. Please try again later.',
+  DEEP_RESEARCH_DISABLED: 'Deep research is currently disabled.',
   JOB_NOT_FOUND: 'Job not found. It may have expired.',
 } satisfies Record<string, string>;
 
@@ -99,6 +100,7 @@ const SAFE_GENERATION_ERROR_PATTERNS = [
   /^Processing failed(?:\.[\s\S]*)?$/i,
   /^Too many requests\.[\s\S]*$/i,
   /^AI service is temporarily unavailable\.[\s\S]*$/i,
+  /^Deep research is currently disabled\.[\s\S]*$/i,
   /^Source not found\.[\s\S]*$/i,
   /^Podcast not found\.[\s\S]*$/i,
   /^Script not found\.[\s\S]*$/i,

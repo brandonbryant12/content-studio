@@ -6,6 +6,7 @@ import {
   type VersionStatus,
   type ScriptSegment,
   type GenerationContext,
+  type PodcastEpisodePlan,
 } from '@repo/db/schema';
 
 export interface CreateTestPodcastOptions {
@@ -19,7 +20,9 @@ export interface CreateTestPodcastOptions {
   coHostVoiceName?: string | null;
   hostPersonaId?: Podcast['hostPersonaId'];
   coHostPersonaId?: Podcast['coHostPersonaId'];
+  setupInstructions?: string | null;
   promptInstructions?: string | null;
+  episodePlan?: PodcastEpisodePlan | null;
   targetDurationMinutes?: number | null;
   tags?: string[];
   sourceIds?: string[];
@@ -66,7 +69,9 @@ export function createTestPodcast(
     coHostVoiceName: options.coHostVoiceName ?? 'Kore',
     hostPersonaId: options.hostPersonaId ?? null,
     coHostPersonaId: options.coHostPersonaId ?? null,
+    setupInstructions: options.setupInstructions ?? null,
     promptInstructions: options.promptInstructions ?? null,
+    episodePlan: options.episodePlan ?? null,
     targetDurationMinutes: options.targetDurationMinutes ?? 5,
     tags: options.tags ?? [],
     sourceIds: (options.sourceIds ?? []) as Podcast['sourceIds'],

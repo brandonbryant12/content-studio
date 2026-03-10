@@ -20,6 +20,11 @@ export interface APIClientOptions {
   refreshAccessToken?: () => Promise<boolean>;
 }
 
+interface AuthenticatedFetchOptions {
+  getAccessToken?: () => string | null | undefined;
+  refreshAccessToken?: () => Promise<boolean>;
+}
+
 // Oddly, this is needed for better-auth to not complain
 export type { AppRouter } from '../server';
 
@@ -37,6 +42,37 @@ const getSignedBearerToken = (
   return token.includes('.') ? token : null;
 };
 
+export const createAuthenticatedFetch =
+  ({ getAccessToken, refreshAccessToken }: AuthenticatedFetchOptions) =>
+  async (request: Request, init?: RequestInit): Promise<Response> => {
+    const requestWithAuth = () => {
+      const token = getSignedBearerToken(getAccessToken?.() ?? null);
+      const outgoingRequest = new Request(request, init);
+      const headers = new Headers(outgoingRequest.headers);
+      if (token) {
+        headers.set('Authorization', `Bearer ${token}`);
+      } else {
+        headers.delete('Authorization');
+      }
+
+      return globalThis.fetch(outgoingRequest, {
+        headers,
+        credentials: 'omit',
+      });
+    };
+
+    let response = await requestWithAuth();
+    if (
+      response.status === 401 &&
+      refreshAccessToken &&
+      (await refreshAccessToken())
+    ) {
+      response = await requestWithAuth();
+    }
+
+    return response;
+  };
+
 export const createAPIClient = ({
   serverUrl,
   apiPath,
@@ -47,35 +83,7 @@ export const createAPIClient = ({
     new OpenAPILink(appContract, {
       url: urlJoin(serverUrl, apiPath),
       plugins: [new ResponseValidationPlugin(appContract)],
-      fetch: async (request, init) => {
-        const requestWithAuth = () => {
-          const token = getSignedBearerToken(getAccessToken?.() ?? null);
-          const outgoingRequest = new Request(request, init);
-          const headers = new Headers(outgoingRequest.headers);
-          if (token) {
-            headers.set('Authorization', `Bearer ${token}`);
-          } else {
-            headers.delete('Authorization');
-          }
-
-          return globalThis.fetch(outgoingRequest, {
-            headers,
-            credentials: 'omit',
-          });
-        };
-
-        let response = await requestWithAuth();
-        if (
-          response.status === 401 &&
-          getAccessToken?.() &&
-          refreshAccessToken &&
-          (await refreshAccessToken())
-        ) {
-          response = await requestWithAuth();
-        }
-
-        return response;
-      },
+      fetch: createAuthenticatedFetch({ getAccessToken, refreshAccessToken }),
     }),
   );
 

@@ -66,4 +66,5 @@ function isReady(status: VersionStatusType): boolean {
 1. Add `pgEnum` in schema file
 2. Add companion `const` object with `as const`
 3. Export the inferred type from the table entity
-4. Run `pnpm db:push` for DB migration
+4. Generate and commit a new numbered Drizzle migration
+5. Apply it locally with `pnpm db:push`

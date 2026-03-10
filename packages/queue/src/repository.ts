@@ -278,6 +278,25 @@ const makeQueueService = Effect.gen(function* () {
       Effect.tap(() => Effect.annotateCurrentSpan('queue.job.type', type)),
     );
 
+  const touchProcessingJob: NonNullable<QueueService['touchProcessingJob']> = (
+    jobId,
+  ) =>
+    runQuery(
+      'touchProcessingJob',
+      async (db) => {
+        const [row] = await db
+          .update(job)
+          .set({
+            updatedAt: new Date(),
+          })
+          .where(and(eq(job.id, jobId), eq(job.status, JobStatus.PROCESSING)))
+          .returning();
+
+        return row ? mapRowToJob(row) : null;
+      },
+      'Failed to heartbeat processing job',
+    ).pipe(Effect.tap(() => Effect.annotateCurrentSpan('queue.job.id', jobId)));
+
   const processNextJob: QueueService['processNextJob'] = (type, handler) =>
     claimNextJob(type).pipe(
       Effect.flatMap((claimed) =>
@@ -327,7 +346,7 @@ const makeQueueService = Effect.gen(function* () {
               "completedAt" = NOW(),
               "updatedAt" = NOW()
           WHERE ${job.status} = ${JobStatus.PROCESSING}
-            AND ${job.startedAt} < NOW() - INTERVAL '${sql.raw(String(intervalSeconds))} seconds'
+            AND ${job.updatedAt} < NOW() - INTERVAL '${sql.raw(String(intervalSeconds))} seconds'
           RETURNING *
         `);
 
@@ -370,6 +389,7 @@ const makeQueueService = Effect.gen(function* () {
     processJobById,
     findPendingJobForPodcast,
     findPendingJobForVoiceover,
+    touchProcessingJob,
     deleteJob,
     failStaleJobs,
   } satisfies QueueService;

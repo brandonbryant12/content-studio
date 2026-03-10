@@ -5,7 +5,8 @@ import { drizzle } from 'drizzle-orm/node-postgres';
 import pg from 'pg';
 
 import type { StartedPostgreSqlContainer } from '@testcontainers/postgresql';
-import type { PgDatabase } from 'drizzle-orm/pg-core';
+
+type PushSchemaDatabase = Parameters<typeof pushSchema>[1];
 
 let container: StartedPostgreSqlContainer | null = null;
 let startupPromise: Promise<StartedPostgreSqlContainer> | null = null;
@@ -96,8 +97,7 @@ const ensureSchema = async (connectionString: string): Promise<void> => {
         const db = drizzle(pool, { schema, casing: 'snake_case' });
         const { apply } = await pushSchema(
           schema as unknown as Record<string, unknown>,
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any -- pushSchema requires PgDatabase<any> per drizzle-kit/api types
-          db as unknown as PgDatabase<any>,
+          db as unknown as PushSchemaDatabase,
         );
         await apply();
       } finally {

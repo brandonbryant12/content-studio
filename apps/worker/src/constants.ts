@@ -11,8 +11,11 @@ export const QUEUE_DEFAULTS = {
   POLL_INTERVAL_MS: 60_000,
 } as const;
 
+/** Maximum number of Postgres connections in a worker process pool */
+export const WORKER_DB_POOL_MAX = 12;
+
 /** Maximum number of jobs processed concurrently */
-export const MAX_CONCURRENT_JOBS = 5;
+export const MAX_CONCURRENT_JOBS = 20;
 
 /** Per-type concurrency limits (clamped by MAX_CONCURRENT_JOBS) */
 export const DEFAULT_PER_TYPE_CONCURRENCY = {
@@ -25,8 +28,15 @@ export const DEFAULT_PER_TYPE_CONCURRENCY = {
   'process-research': 3,
 } as const satisfies Record<JobType, number>;
 
-/** Jobs stuck in `processing` longer than this are considered orphaned */
-export const STALE_JOB_MAX_AGE_MS = 60 * 60 * 1000; // 60 minutes
+/** Active jobs heartbeat this often while they remain in `processing`. */
+export const PROCESSING_JOB_HEARTBEAT_MS = 30 * 1000; // 30 seconds
+
+/**
+ * Jobs whose heartbeat goes quiet longer than this are considered orphaned.
+ * With heartbeats active, this can stay short without interrupting healthy
+ * long-running research polls.
+ */
+export const STALE_JOB_MAX_AGE_MS = 5 * 60 * 1000; // 5 minutes
 
 /** Run the stale-job reaper every N milliseconds */
 export const STALE_CHECK_INTERVAL_MS = 3 * 60 * 1000;

@@ -99,7 +99,7 @@ The intended dependency flow is:
 
 | Decision | Why it exists | Cost |
 |---|---|---|
-| Bearer-only browser auth | Supports split web/API domains without cookie coupling | Full page reload does not preserve browser auth state |
+| Bearer-first browser auth | Keeps `/api/*` on explicit bearer auth while allowing auth-route session rehydration after reload | Requires separate credentialed auth-route CORS policy and token rehydration path |
 | PostgreSQL-backed job queue | Keeps async state in the primary datastore and reduces moving parts | Lower throughput ceiling than a dedicated queue product |
 | Shared Effect runtime per process | Centralizes service wiring and lifecycle management | Background loops must respect Effect runtime rules |
 | Backend-only telemetry | Keeps browser surface simpler and avoids client telemetry creep | No client-side traces by default |

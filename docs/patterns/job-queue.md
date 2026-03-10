@@ -18,6 +18,7 @@ stateDiagram-v2
 3. **Workers claim with `FOR UPDATE SKIP LOCKED`** -- prevents double-processing <!-- enforced-by: architecture -->
 4. **Idempotent start flows**: check for active job before enqueue <!-- enforced-by: manual-review -->
 5. **Redis queue notifications are optimization-only** -- enqueue publish is best-effort; heartbeat polling is fallback <!-- enforced-by: manual-review -->
+6. **Long-running jobs must heartbeat while `processing`** so stale recovery can distinguish active work from dead workers <!-- enforced-by: architecture -->
 
 ## Architecture <!-- enforced-by: architecture -->
 
@@ -85,11 +86,21 @@ RETURNING *;
 
 This guarantees exactly-one-worker-per-job even with multiple worker instances.
 
+## Processing Heartbeats <!-- enforced-by: architecture -->
+
+Jobs that may remain in `processing` for minutes at a time must periodically
+touch their queue row (`updatedAt`) while work is still active. The stale-job
+reaper uses the latest heartbeat timestamp, not just the original claim time,
+to decide when a `processing` job has actually gone orphaned.
+
+This is especially important for deep research, where a worker can spend a long
+time polling an external provider without changing the job status.
+
 ## Concurrency Policy <!-- enforced-by: manual-review -->
 
 Worker concurrency is two-dimensional:
 
-1. global cap (`MAX_CONCURRENT_JOBS`, default `5`)
+1. global cap (`MAX_CONCURRENT_JOBS`, default `20`)
 2. per-type caps (`DEFAULT_PER_TYPE_CONCURRENCY`)
 
 Per-type caps are clamped by the global cap at runtime, so overrides cannot exceed total process capacity.
@@ -103,6 +114,8 @@ Per-type caps are clamped by the global cap at runtime, so overrides cannot exce
 | Unknown | No | Mark `failed`, log with stack |
 
 Failed jobs can be retried manually via user action (e.g., "Retry" button in UI).
+For deep research, stale-job recovery may also fail a dead `processing` job and
+re-enqueue it automatically when the source is still mid-operation.
 
 ## Job Ownership <!-- enforced-by: invariant-test -->
 

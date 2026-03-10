@@ -28,13 +28,17 @@ vi.mock('@/clients/apiClient', () => ({
   },
 }));
 
+vi.mock('@/env', () => ({
+  env: {
+    PUBLIC_SERVER_URL: 'http://localhost:3035',
+    PUBLIC_SERVER_API_PATH: '/api',
+    PUBLIC_BASE_PATH: '/',
+  },
+}));
+
 vi.mock('@/features/sources/hooks/use-source-list', () => ({
   useSources: mockUseSources,
   getSourceListQueryKey: () => ['sources', 'list'],
-}));
-
-vi.mock('../components/setup/steps/step-research', () => ({
-  StepResearch: () => <div data-testid="step-research" />,
 }));
 
 describe('StepSources', () => {
@@ -63,12 +67,7 @@ describe('StepSources', () => {
     const onSelectionChange = vi.fn();
 
     renderWithQuery(
-      <StepSources
-        selectedIds={[]}
-        onSelectionChange={onSelectionChange}
-        researchDocId={null}
-        onSourceCreated={vi.fn()}
-      />,
+      <StepSources selectedIds={[]} onSelectionChange={onSelectionChange} />,
     );
 
     expect(screen.getByText('Add Sources')).toBeInTheDocument();
@@ -96,5 +95,17 @@ describe('StepSources', () => {
     await waitFor(() =>
       expect(onSelectionChange).toHaveBeenCalledWith(['url-doc-1']),
     );
+  });
+
+  it('shows the three source tabs', () => {
+    renderWithQuery(
+      <StepSources selectedIds={[]} onSelectionChange={vi.fn()} />,
+    );
+
+    expect(
+      screen.getByRole('tab', { name: 'Select Existing' }),
+    ).toBeInTheDocument();
+    expect(screen.getByRole('tab', { name: 'Upload New' })).toBeInTheDocument();
+    expect(screen.getByRole('tab', { name: 'From URL' })).toBeInTheDocument();
   });
 });

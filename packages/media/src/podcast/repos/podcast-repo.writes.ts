@@ -50,6 +50,7 @@ export const podcastWriteMethods: Pick<
             title: data.title ?? 'Generating...',
             description: data.description,
             format: data.format,
+            setupInstructions: data.setupInstructions,
             promptInstructions: data.promptInstructions,
             targetDurationMinutes: data.targetDurationMinutes,
             hostVoice: data.hostVoice,

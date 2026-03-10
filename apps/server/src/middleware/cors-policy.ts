@@ -10,6 +10,11 @@ interface BearerCorsPolicy {
   credentials: false;
 }
 
+interface AuthCorsPolicy {
+  origin: string[];
+  credentials: true;
+}
+
 function normalizeOrigin(value: string): string {
   try {
     return new URL(value).origin;
@@ -17,6 +22,20 @@ function normalizeOrigin(value: string): string {
     return value;
   }
 }
+
+const getAllowedOrigins = (input: BearerCorsPolicyInput): string[] => {
+  const normalizedOrigins = new Set<string>([
+    normalizeOrigin(input.publicWebUrl),
+  ]);
+
+  for (const origin of input.corsOrigins?.split(',') ?? []) {
+    const trimmed = origin.trim();
+    if (trimmed.length === 0 || trimmed === '*') continue;
+    normalizedOrigins.add(normalizeOrigin(trimmed));
+  }
+
+  return [...normalizedOrigins];
+};
 
 export const createBearerCorsPolicy = (
   input: BearerCorsPolicyInput,
@@ -30,17 +49,15 @@ export const createBearerCorsPolicy = (
     };
   }
 
-  const normalizedOrigins = new Set<string>([
-    normalizeOrigin(input.publicWebUrl),
-  ]);
-  for (const origin of corsOrigins.split(',')) {
-    const trimmed = origin.trim();
-    if (trimmed.length === 0 || trimmed === '*') continue;
-    normalizedOrigins.add(normalizeOrigin(trimmed));
-  }
-
   return {
-    origin: [...normalizedOrigins],
+    origin: getAllowedOrigins(input),
     credentials: false,
   };
 };
+
+export const createAuthCorsPolicy = (
+  input: BearerCorsPolicyInput,
+): AuthCorsPolicy => ({
+  origin: getAllowedOrigins(input),
+  credentials: true,
+});

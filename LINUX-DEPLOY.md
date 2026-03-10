@@ -73,6 +73,8 @@ Important generated keys include:
 - `PUBLIC_URL_SCHEME`
 - `PUBLIC_WEB_URL`
 - `PUBLIC_SERVER_URL`
+- `CONTENT_STUDIO_POSTGRES_*` for internal PostgreSQL auth used by Compose
+- `CONTENT_STUDIO_S3_*` for internal MinIO auth used by Compose
 - `TRUST_PROXY`
 - `WEB_PORT`, `SERVER_PORT`, `POSTGRES_PORT`, `REDIS_PORT`, `MINIO_API_PORT`, `MINIO_UI_PORT`
 - `WEB_BIND_IP`, `SERVER_BIND_IP`

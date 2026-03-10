@@ -2,6 +2,7 @@ import { FileTextIcon } from '@radix-ui/react-icons';
 import { Spinner } from '@repo/ui/components/spinner';
 import { Link } from '@tanstack/react-router';
 import type { ComponentType, ReactNode } from 'react';
+import { isDeepResearchEnabled } from '@/env';
 import {
   type SourceListItem,
   SourceEntryMenu,
@@ -99,6 +100,7 @@ export function SourcesRecentSection({
           variant="ghost"
           size="sm"
           className="text-xs"
+          showResearch={isDeepResearchEnabled}
           onResearch={onResearch}
           onUrl={onUrl}
           onUpload={onUpload}
@@ -106,6 +108,7 @@ export function SourcesRecentSection({
       }
       emptyAction={
         <SourceEntryMenu
+          showResearch={isDeepResearchEnabled}
           onResearch={onResearch}
           onUrl={onUrl}
           onUpload={onUpload}

@@ -61,11 +61,11 @@ flowchart LR
 
 | Control | Where it is enforced | Current behavior |
 |---|---|---|
-| Authentication | `packages/auth/src/server/auth.ts`, `packages/api/src/server/orpc.ts`, `apps/server/src/routes/auth.ts` | Browser and API calls use bearer tokens; the only supported login modes are `dev-password` and `sso-only`; protected oRPC procedures reject missing sessions |
+| Authentication | `packages/auth/src/server/auth.ts`, `packages/api/src/server/orpc.ts`, `apps/server/src/routes/auth.ts` | `/api/*` uses bearer tokens, `/api/auth/*` can read the Better Auth session cookie to reissue that bearer token, the only supported login modes are `dev-password` and `sso-only`, and protected oRPC procedures reject missing sessions |
 | Authorization | `getCurrentUser`, `requireOwnership`, `requireRole`, ownership-aware repo methods | Existing-resource mutations authorize in the use case layer and conceal owner-only misses with `404` |
 | Role synchronization | Better Auth Microsoft callback plus Graph lookup | `sso-only` sign-in fails closed if group resolution or mapping fails |
-| Token storage | `apps/web/src/shared/lib/auth-token.ts`, `packages/auth/src/server/auth.ts` | Browser bearer token is in memory only; OAuth provider tokens stored in Better Auth `account` rows are encrypted at rest with the auth secret |
-| CORS and trusted origins | `apps/server/src/config.ts`, `apps/server/src/middleware/cors-policy.ts`, `apps/server/src/auth-trusted-origins.ts` | API and auth routes allow bearer-token requests without credentialed cookies; trusted auth origins are derived from `PUBLIC_WEB_URL` plus explicit allowlists |
+| Token storage | `apps/web/src/shared/lib/auth-token.ts`, `packages/auth/src/server/auth.ts` | Browser bearer token stays in memory only; reload recovery rehydrates it from the HttpOnly Better Auth session cookie; OAuth provider tokens stored in Better Auth `account` rows are encrypted at rest with the auth secret |
+| CORS and trusted origins | `apps/server/src/config.ts`, `apps/server/src/middleware/cors-policy.ts`, `apps/server/src/auth-trusted-origins.ts` | API routes remain bearer-token CORS, while auth routes use credentialed CORS with an explicit trusted-origin allowlist derived from `PUBLIC_WEB_URL` plus explicit allowlists |
 | Secure headers | `apps/server/src/index.ts` | `secureHeaders()` is enabled for all requests |
 | Request limits | `apps/server/src/routes/api-body-limit.ts` | API payloads are capped at `16 MiB` |
 | Rate limiting | `apps/server/src/middleware/rate-limit.ts` | Auth and API routes apply rate limiting, using Redis when available and an in-memory fallback if the store fails |
@@ -113,9 +113,9 @@ Storage response rewriting is intentionally narrow:
 
 ## Security Posture Notes
 
-1. Bearer-only auth is intentional because web and API are expected to run on different origins.
-2. Cookie-based ambient auth is intentionally avoided in the SPA/API path.
-3. `CORS_ORIGINS=*` is allowed by default for bearer-token browser calls; tighten it if compliance or deployment policy requires an explicit allowlist.
+1. Bearer-token API auth is intentional because web and API are expected to run on different origins.
+2. Cookie-based ambient auth is still avoided on `/api/*`; cookies are limited to `/api/auth/*` session rehydration.
+3. `CORS_ORIGINS=*` remains allowed for bearer-token API calls; auth routes use an explicit trusted-origin allowlist because they are credentialed.
 4. `AUDIO_PLAYBACK_PROXY_ENABLED` and `STORAGE_ACCESS_PROXY_ENABLED` are independent controls.
 5. If `STORAGE_ACCESS_PROXY_ENABLED=false`, `/storage/*` serves bytes for any normalized storage key without a token; keep it enabled outside local development unless direct object reads are an explicit choice.
 6. Path-only request logging prevents signed `token=` query parameters from being written to default request logs.

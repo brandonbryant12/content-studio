@@ -12,6 +12,7 @@ import {
   createMockSourceRepo,
   MockDbLive,
 } from '../../../test-utils/mock-repos';
+import { DeepResearchFeatureLive } from '../../services/deep-research-feature';
 import { createFromResearch } from '../create-from-research';
 
 interface MockState {
@@ -105,6 +106,7 @@ describe('createFromResearch', () => {
 
     const layers = Layer.mergeAll(
       MockDbLive,
+      DeepResearchFeatureLive(true),
       repo,
       createMockQueue({ onEnqueue: enqueueSpy }),
     );
@@ -149,7 +151,12 @@ describe('createFromResearch', () => {
         }),
     });
 
-    const layers = Layer.mergeAll(MockDbLive, repo, createMockQueue());
+    const layers = Layer.mergeAll(
+      MockDbLive,
+      DeepResearchFeatureLive(true),
+      repo,
+      createMockQueue(),
+    );
 
     await Effect.runPromise(
       withTestUser(user)(
@@ -184,7 +191,12 @@ describe('createFromResearch', () => {
         }),
     });
 
-    const layers = Layer.mergeAll(MockDbLive, repo, createMockQueue());
+    const layers = Layer.mergeAll(
+      MockDbLive,
+      DeepResearchFeatureLive(true),
+      repo,
+      createMockQueue(),
+    );
 
     await Effect.runPromise(
       withTestUser(user)(
@@ -236,6 +248,7 @@ describe('createFromResearch', () => {
 
     const layers = Layer.mergeAll(
       MockDbLive,
+      DeepResearchFeatureLive(true),
       repo,
       createMockQueue({ shouldFail: true }),
     );
@@ -253,5 +266,46 @@ describe('createFromResearch', () => {
     const [, status, errorMessage] = updateStatusSpy.mock.calls[0]!;
     expect(status).toBe('failed');
     expect(String(errorMessage)).toContain('Queue down');
+  });
+
+  it('fails when deep research is disabled', async () => {
+    const user = createTestUser();
+    const insertSpy = vi.fn();
+
+    const layers = Layer.mergeAll(
+      MockDbLive,
+      DeepResearchFeatureLive(false),
+      createMockSourceRepo({
+        insert: (data) =>
+          Effect.sync(() => {
+            insertSpy(data);
+            return createTestSource({
+              title: data.title,
+              source: data.source,
+              status: data.status,
+              createdBy: data.createdBy,
+              contentKey: data.contentKey,
+              mimeType: data.mimeType,
+              researchConfig: data.researchConfig,
+            });
+          }),
+      }),
+      createMockQueue(),
+    );
+
+    const result = await Effect.runPromiseExit(
+      withTestUser(user)(
+        createFromResearch({ query: 'disabled flag test' }).pipe(
+          Effect.provide(layers),
+        ),
+      ),
+    );
+
+    expect(result._tag).toBe('Failure');
+    expect(insertSpy).not.toHaveBeenCalled();
+    if (result._tag === 'Failure' && result.cause._tag === 'Fail') {
+      const error = result.cause.error as { _tag?: string };
+      expect(error._tag).toBe('DeepResearchDisabled');
+    }
   });
 });

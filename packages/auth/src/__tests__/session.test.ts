@@ -6,6 +6,7 @@ import { Policy, type PolicyService } from '../policy/service';
 import { Role } from '../policy/types';
 import {
   getSession,
+  getSessionAccessToken,
   getSessionWithRole,
   requireSession,
 } from '../server/session';
@@ -85,6 +86,44 @@ describe('getSession', () => {
     const [args] = getSessionMock.mock.calls[0] as [{ headers: Headers }];
     expect(args.headers.get('authorization')).toBe('Bearer signed.jwt.token');
     expect(args.headers.get('cookie')).toBeNull();
+  });
+});
+
+describe('getSessionAccessToken', () => {
+  it('returns the signed session token when a cookie-backed session is valid', async () => {
+    const getSessionMock = vi.fn().mockResolvedValue({
+      user: { id: 'user-1', email: 'test@example.com', name: 'Test User' },
+    });
+    const auth = {
+      api: {
+        getSession: getSessionMock,
+      },
+    } as unknown as AuthInstance;
+    const headers = new Headers();
+    headers.set('cookie', 'better-auth.session_token=signed.jwt.token');
+
+    const result = await Effect.runPromise(
+      getSessionAccessToken(auth, headers),
+    );
+
+    expect(result).toBe('signed.jwt.token');
+    expect(getSessionMock).toHaveBeenCalledTimes(1);
+    const [args] = getSessionMock.mock.calls[0] as [{ headers: Headers }];
+    expect(args.headers.get('cookie')).toBe(
+      'better-auth.session_token=signed.jwt.token',
+    );
+  });
+
+  it('returns null when no valid session exists for the cookie', async () => {
+    const auth = createMockAuth(null);
+    const headers = new Headers();
+    headers.set('cookie', 'better-auth.session_token=signed.jwt.token');
+
+    const result = await Effect.runPromise(
+      getSessionAccessToken(auth, headers),
+    );
+
+    expect(result).toBeNull();
   });
 });
 

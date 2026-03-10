@@ -267,7 +267,10 @@ describe('SSE Handlers', () => {
       {
         name: 'podcast update',
         event: createEntityChangeEvent('podcast', 'update', 'podcast-123'),
-        expectedQueryKeys: [getPodcastQueryKey('podcast-123')],
+        expectedQueryKeys: [
+          getPodcastQueryKey('podcast-123'),
+          getPodcastListQueryKey(),
+        ],
       },
       {
         name: 'podcast insert',
@@ -288,7 +291,10 @@ describe('SSE Handlers', () => {
       {
         name: 'source update',
         event: createEntityChangeEvent('source', 'update', 'doc-123'),
-        expectedQueryKeys: [getSourceQueryKey('doc-123')],
+        expectedQueryKeys: [
+          getSourceQueryKey('doc-123'),
+          getSourceListQueryKey(),
+        ],
       },
       {
         name: 'source insert',
@@ -315,6 +321,7 @@ describe('SSE Handlers', () => {
         ),
         expectedQueryKeys: [
           getInfographicQueryKey('infographic-123'),
+          getInfographicListQueryKey(),
           getInfographicVersionsQueryKey('infographic-123'),
         ],
       },

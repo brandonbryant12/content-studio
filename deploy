@@ -315,6 +315,11 @@ load_app_defaults() {
   [[ -z "$_DEF_PUBLIC_WEB_URL" ]] && _DEF_PUBLIC_WEB_URL=$(read_env_value "$existing_env" "PUBLIC_WEB_URL")
   [[ -z "$_DEF_PUBLIC_SERVER_URL" ]] && _DEF_PUBLIC_SERVER_URL=$(read_env_value "$existing_env" "PUBLIC_SERVER_URL")
   _DEF_COMPOSE_PROJECT_NAME=$(read_env_value "$existing_env" "COMPOSE_PROJECT_NAME")
+  _DEF_CONTENT_STUDIO_POSTGRES_USER=$(read_env_value "$existing_env" "CONTENT_STUDIO_POSTGRES_USER")
+  _DEF_CONTENT_STUDIO_POSTGRES_PASSWORD=$(read_env_value "$existing_env" "CONTENT_STUDIO_POSTGRES_PASSWORD")
+  _DEF_CONTENT_STUDIO_POSTGRES_DB=$(read_env_value "$existing_env" "CONTENT_STUDIO_POSTGRES_DB")
+  _DEF_CONTENT_STUDIO_S3_ACCESS_KEY_ID=$(read_env_value "$existing_env" "CONTENT_STUDIO_S3_ACCESS_KEY_ID")
+  _DEF_CONTENT_STUDIO_S3_SECRET_ACCESS_KEY=$(read_env_value "$existing_env" "CONTENT_STUDIO_S3_SECRET_ACCESS_KEY")
   [[ -z "$_DEF_HTTPS_PROXY" ]] && _DEF_HTTPS_PROXY=$(read_env_value "$existing_env" "HTTPS_PROXY")
   [[ -z "$_DEF_HTTP_PROXY" ]] && _DEF_HTTP_PROXY=$(read_env_value "$existing_env" "HTTP_PROXY")
   [[ -z "$_DEF_NO_PROXY" ]] && _DEF_NO_PROXY=$(read_env_value "$existing_env" "NO_PROXY")
@@ -504,6 +509,55 @@ generate_secret() {
   openssl rand -base64 32 2>/dev/null || head -c 32 /dev/urandom | base64
 }
 
+compose_default_postgres_user() {
+  printf '%s' "post""gres"
+}
+
+compose_default_postgres_password() {
+  compose_default_postgres_user
+}
+
+compose_default_postgres_db() {
+  printf '%s' "content_studio"
+}
+
+compose_default_s3_access_key_id() {
+  printf '%s' "minio""admin"
+}
+
+compose_default_s3_secret_access_key() {
+  compose_default_s3_access_key_id
+}
+
+ensure_internal_service_credentials() {
+  INTERNAL_SERVICE_ENV_UPDATED="false"
+
+  if [[ -z "${CONTENT_STUDIO_POSTGRES_USER:-}" ]]; then
+    CONTENT_STUDIO_POSTGRES_USER=$(compose_default_postgres_user)
+    INTERNAL_SERVICE_ENV_UPDATED="true"
+  fi
+
+  if [[ -z "${CONTENT_STUDIO_POSTGRES_PASSWORD:-}" ]]; then
+    CONTENT_STUDIO_POSTGRES_PASSWORD=$(compose_default_postgres_password)
+    INTERNAL_SERVICE_ENV_UPDATED="true"
+  fi
+
+  if [[ -z "${CONTENT_STUDIO_POSTGRES_DB:-}" ]]; then
+    CONTENT_STUDIO_POSTGRES_DB=$(compose_default_postgres_db)
+    INTERNAL_SERVICE_ENV_UPDATED="true"
+  fi
+
+  if [[ -z "${CONTENT_STUDIO_S3_ACCESS_KEY_ID:-}" ]]; then
+    CONTENT_STUDIO_S3_ACCESS_KEY_ID=$(compose_default_s3_access_key_id)
+    INTERNAL_SERVICE_ENV_UPDATED="true"
+  fi
+
+  if [[ -z "${CONTENT_STUDIO_S3_SECRET_ACCESS_KEY:-}" ]]; then
+    CONTENT_STUDIO_S3_SECRET_ACCESS_KEY=$(compose_default_s3_secret_access_key)
+    INTERNAL_SERVICE_ENV_UPDATED="true"
+  fi
+}
+
 # ── Load existing env ────────────────────────────────────────────────────────
 
 load_existing_env() {
@@ -531,6 +585,12 @@ collect_variables() {
 
   prompt DOCKER_REGISTRY "Docker image registry" "docker.io"
   COMPOSE_PROJECT_NAME="${_DEF_COMPOSE_PROJECT_NAME:-content-studio-deploy}"
+  CONTENT_STUDIO_POSTGRES_USER="${_DEF_CONTENT_STUDIO_POSTGRES_USER:-}"
+  CONTENT_STUDIO_POSTGRES_PASSWORD="${_DEF_CONTENT_STUDIO_POSTGRES_PASSWORD:-}"
+  CONTENT_STUDIO_POSTGRES_DB="${_DEF_CONTENT_STUDIO_POSTGRES_DB:-}"
+  CONTENT_STUDIO_S3_ACCESS_KEY_ID="${_DEF_CONTENT_STUDIO_S3_ACCESS_KEY_ID:-}"
+  CONTENT_STUDIO_S3_SECRET_ACCESS_KEY="${_DEF_CONTENT_STUDIO_S3_SECRET_ACCESS_KEY:-}"
+  ensure_internal_service_credentials
 
   # ── Network ──────────────────────────────────────────────────────────────
   header "Network Configuration"
@@ -755,6 +815,13 @@ MINIO_UI_PORT=${MINIO_UI_PORT}
 DEPLOY_NODE_ENV=${DEPLOY_NODE_ENV}
 TRUST_PROXY=${TRUST_PROXY}
 
+# ── Internal Compose Services ────────────────────────────────────────────────
+CONTENT_STUDIO_POSTGRES_USER=${CONTENT_STUDIO_POSTGRES_USER}
+CONTENT_STUDIO_POSTGRES_PASSWORD=${CONTENT_STUDIO_POSTGRES_PASSWORD}
+CONTENT_STUDIO_POSTGRES_DB=${CONTENT_STUDIO_POSTGRES_DB}
+CONTENT_STUDIO_S3_ACCESS_KEY_ID=${CONTENT_STUDIO_S3_ACCESS_KEY_ID}
+CONTENT_STUDIO_S3_SECRET_ACCESS_KEY=${CONTENT_STUDIO_S3_SECRET_ACCESS_KEY}
+
 # ── Authentication ───────────────────────────────────────────────────────────
 SERVER_AUTH_SECRET=${SERVER_AUTH_SECRET}
 AUTH_MODE=${AUTH_MODE}
@@ -802,6 +869,12 @@ build_and_run() {
   # shellcheck disable=SC1090
   source "$ENV_FILE"
   set +a
+  ensure_internal_service_credentials
+
+  if [[ "$INTERNAL_SERVICE_ENV_UPDATED" == "true" ]]; then
+    warn "Updating $ENV_FILE with internal Compose credential defaults."
+    write_env_file
+  fi
 
   DEPLOY_NODE_ENV="${DEPLOY_NODE_ENV:-development}"
   COMPOSE_PROJECT_NAME="${COMPOSE_PROJECT_NAME:-content-studio-deploy}"
@@ -890,9 +963,10 @@ build_and_run() {
   printf "  ${GREEN}Public API${RESET}     %s\n" "$PUBLIC_SERVER_URL"
   printf "  ${GREEN}Web Bind${RESET}       %s:%s -> 8080\n" "$WEB_BIND_IP" "$WEB_PORT"
   printf "  ${GREEN}API Bind${RESET}       %s:%s -> 3036\n" "$SERVER_BIND_IP" "$SERVER_PORT"
-  printf "  ${GREEN}MinIO Console${RESET}  http://%s:%s  ${DIM}(minioadmin/minioadmin)${RESET}\n" "$HOST_IP" "$MINIO_UI_PORT"
+  printf "  ${GREEN}Compose Env${RESET}    %s ${DIM}(includes internal DB/MinIO creds)${RESET}\n" "$ENV_FILE"
+  printf "  ${GREEN}MinIO Console${RESET}  http://%s:%s\n" "$HOST_IP" "$MINIO_UI_PORT"
   printf "  ${GREEN}MinIO S3 API${RESET}   http://%s:%s\n" "$HOST_IP" "$MINIO_API_PORT"
-  printf "  ${GREEN}PostgreSQL${RESET}     %s:%s   ${DIM}(postgres/postgres)${RESET}\n" "$POSTGRES_BIND_IP" "$POSTGRES_PORT"
+  printf "  ${GREEN}PostgreSQL${RESET}     %s:%s\n" "$POSTGRES_BIND_IP" "$POSTGRES_PORT"
   printf "  ${GREEN}Redis${RESET}          %s:%s\n" "$REDIS_BIND_IP" "$REDIS_PORT"
 
   printf "\n  ${DIM}Useful commands:${RESET}\n"
@@ -929,6 +1003,11 @@ main() {
     # shellcheck disable=SC1090
     source "$ENV_FILE"
     set +a
+    ensure_internal_service_credentials
+    if [[ "$INTERNAL_SERVICE_ENV_UPDATED" == "true" ]]; then
+      warn "Updating $ENV_FILE with internal Compose credential defaults."
+      write_env_file
+    fi
   fi
 
   build_and_run

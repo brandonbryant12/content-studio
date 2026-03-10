@@ -19,6 +19,7 @@ import { SourceStatus, getStatusConfig } from '../lib/status';
 import { SourceEntryMenu } from './source-entry-menu';
 import { SourceIcon } from './source-icon';
 import { UploadSourceDialog } from './upload-source-dialog';
+import { isDeepResearchEnabled } from '@/env';
 import { BulkActionBar } from '@/shared/components/bulk-action-bar';
 import { CollectionGuidancePanel } from '@/shared/components/collection-guidance-panel';
 import { formatDate, formatFileSize } from '@/shared/lib/formatters';
@@ -74,7 +75,9 @@ function EmptyState({
       <p className="empty-state-description">
         {hasSearch
           ? 'Try adjusting your search query.'
-          : 'Add your first source from a file, URL, or research brief so future content has something reliable to draw from.'}
+          : isDeepResearchEnabled
+            ? 'Add your first source from a file, URL, or research brief so future content has something reliable to draw from.'
+            : 'Add your first source from a file or URL so future content has something reliable to draw from.'}
       </p>
       {action ? <div className="mt-4">{action}</div> : null}
     </div>
@@ -215,6 +218,14 @@ export function SourceList({
   onBulkDelete,
 }: SourceListProps) {
   const [isPending, startTransition] = useTransition();
+  const importOptions = isDeepResearchEnabled
+    ? SOURCE_IMPORT_OPTIONS
+    : SOURCE_IMPORT_OPTIONS.filter(
+        (option) => option.title !== 'Research a topic',
+      );
+  const sourceListSupport = isDeepResearchEnabled
+    ? SOURCE_LIST_SUPPORT
+    : 'Each source stores extracted text from a file or public web page so you can reuse the same facts more than once.';
 
   const filteredSources = useMemo(
     () =>
@@ -257,11 +268,12 @@ export function SourceList({
         <div>
           <h1 className="page-title">Sources</h1>
           <p className="mt-2 max-w-3xl text-sm leading-relaxed text-muted-foreground">
-            {SOURCE_DEFINITION} {SOURCE_LIST_SUPPORT}
+            {SOURCE_DEFINITION} {sourceListSupport}
           </p>
         </div>
         <div className="flex items-center gap-2">
           <SourceEntryMenu
+            showResearch={isDeepResearchEnabled}
             onResearch={() => onResearchDialogOpen(true)}
             onUrl={() => onUrlDialogOpen(true)}
             onUpload={() => onUploadOpen(true)}
@@ -277,8 +289,10 @@ export function SourceList({
         iconClassName="mt-0.5 rounded-full bg-emerald-500/10 p-2 text-emerald-600 dark:text-emerald-300"
         collapsible={!isEmpty}
       >
-        <div className="grid gap-3 md:grid-cols-3">
-          {SOURCE_IMPORT_OPTIONS.map((option) => (
+        <div
+          className={`grid gap-3 ${importOptions.length === 3 ? 'md:grid-cols-3' : 'md:grid-cols-2'}`}
+        >
+          {importOptions.map((option) => (
             <div
               key={option.title}
               className="rounded-xl border border-emerald-200/50 bg-background/80 p-4 dark:border-emerald-500/10 dark:bg-background/40"
@@ -313,6 +327,7 @@ export function SourceList({
           hasSearch={false}
           action={
             <SourceEntryMenu
+              showResearch={isDeepResearchEnabled}
               onResearch={() => onResearchDialogOpen(true)}
               onUrl={() => onUrlDialogOpen(true)}
               onUpload={() => onUploadOpen(true)}

@@ -43,7 +43,7 @@ flowchart LR
 
 | Layer | Mechanism |
 |---|---|
-| HTTP | `better-auth` validates session from bearer token (`Authorization`) via bearer plugin (bearer-only transport; cookie fallback disabled) |
+| HTTP | `better-auth` validates bearer tokens on `/api/*` and allows credentialed session reads on `/api/auth/*` only to reissue bearer tokens after reloads |
 | Login mode | `AUTH_MODE` selects providers: `dev-password`, `sso-only` |
 | SSO role sync | On Microsoft callback, `databaseHooks.session.create.before` calls Graph `transitiveMemberOf`; auth fails closed if sync fails or no configured groups match, otherwise role is mapped to `admin`/`user` |
 | oRPC | `protectedProcedure` middleware extracts `user` from session, rejects with `UNAUTHORIZED` if null |
@@ -119,7 +119,7 @@ sequenceDiagram
 
 ### Session Refresh Policy
 
-Current behavior is intentionally bearer-only and uses Better Auth defaults (we do not override session timing in app config today).
+Current behavior is bearer-first and uses Better Auth defaults (we do not override session timing in app config today).
 
 | Policy Area | Current Setting | Notes |
 |---|---|---|
@@ -128,39 +128,39 @@ Current behavior is intentionally bearer-only and uses Better Auth defaults (we 
 | Browser background refresh | Focus-based refetch enabled | Better Auth client default: `refetchOnWindowFocus=true` |
 | Browser polling | Disabled | Better Auth client default: `refetchInterval=0` |
 | Offline refetch | Disabled | Better Auth client default: `refetchWhenOffline=false` |
-| 401 recovery for API calls | Single refresh + single retry | `packages/api` client calls web `refreshAccessToken()` and retries once |
-| Token transport | `Authorization: Bearer <token>` only | No cookie fallback on client or server session lookup |
-| Token storage | In-memory only | Full page reload clears token and may require sign-in again |
+| 401 recovery for API calls | Single session rehydrate + single retry | `packages/api` client calls web `refreshAccessToken()` and retries once, even after reload cleared memory |
+| Token transport | `Authorization: Bearer <token>` on `/api/*` | `/api/auth/*` may use credentialed Better Auth session reads only to reissue the bearer token |
+| Token storage | In-memory bearer with auth-route rehydration | Full page reload clears memory, then the app rehydrates from the Better Auth session cookie |
 
 Operational implications:
 
 1. Active users usually stay authenticated via focus-triggered session reads/refresh.
-2. If a request gets `401`, the app attempts one session refresh and retries once.
-3. No persistent browser auth state is kept across full reloads by design (security-first bearer model).
+2. If a request gets `401`, the app attempts one bearer rehydrate from the auth route and retries once.
+3. Full page reload still clears in-memory state, but the SPA can restore its bearer token from the server session cookie without forcing sign-in.
 
 If we need a different enterprise policy (for example shorter idle timeout, explicit absolute timeout, or polling refresh), define explicit `session` options in server auth config and expose client `sessionOptions` via the auth client wrapper.
 
-### Auth Transport Decision (Bearer-Only)
+### Auth Transport Decision (Bearer-First)
 
-This codebase standardizes on bearer-only user auth transport.
+This codebase standardizes on bearer tokens for `/api/*` and limits cookie use to `/api/auth/*` session rehydration.
 
 Why this is the default:
 
 1. Web and API are expected to run on different domains in EKS.
-2. Bearer-only requests avoid credentialed CORS requirements and cookie domain coupling.
-3. It removes ambient-cookie auth behavior (reduced CSRF-style risk surface).
+2. Bearer tokens remain the only auth transport for application API calls.
+3. Restricting cookies to auth endpoints preserves reload continuity without making general API requests ambient-cookie authenticated.
 
 Tradeoffs to keep in mind:
 
-1. We intentionally do not persist auth tokens across full page reloads.
-2. API clients must handle explicit `401` recovery (refresh once, retry once).
-3. If product requirements later demand seamless reload persistence, we will need a documented storage policy change.
+1. We still do not persist bearer tokens in browser storage.
+2. Auth endpoints now require credentialed CORS with an explicit trusted-origin allowlist.
+3. API clients must handle explicit `401` recovery (rehydrate once, retry once).
 
 Enterprise baseline:
 
 1. Bearer token transport is common for split-domain SPA + API architectures.
-2. HttpOnly cookie sessions are common for same-origin server-rendered applications.
-3. For this architecture, bearer-only is the operational default unless an ADR explicitly changes it.
+2. Using an HttpOnly session cookie only to reissue a bearer token is a reasonable hybrid for SPA reload continuity.
+3. For this architecture, bearer transport remains the operational default for `/api/*`.
 
 ### Service-to-Service Auth Status
 

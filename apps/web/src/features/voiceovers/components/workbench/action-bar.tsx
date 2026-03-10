@@ -17,7 +17,6 @@ interface ActionBarProps {
   hasChanges: boolean;
   hasText: boolean;
   isSaving: boolean;
-  onSave: () => void;
   onGenerate: () => void;
   disabled?: boolean;
 }
@@ -29,7 +28,6 @@ export function ActionBar({
   hasChanges,
   hasText,
   isSaving,
-  onSave,
   onGenerate,
   disabled,
 }: ActionBarProps) {
@@ -44,7 +42,9 @@ export function ActionBar({
   );
 
   const failureMessage =
-    !isGenerating && isFailed ? getGenerationFailureMessage(errorMessage) : null;
+    !isGenerating && isFailed
+      ? getGenerationFailureMessage(errorMessage)
+      : null;
 
   const failurePanel = failureMessage ? (
     <div
@@ -74,7 +74,7 @@ export function ActionBar({
     );
   }
 
-  // Has changes: always expose explicit save action. Generate is separate.
+  // Unsaved changes collapse into a single primary action.
   if (hasChanges) {
     return (
       <>
@@ -88,18 +88,6 @@ export function ActionBar({
               </span>
             </div>
             <div className="global-action-bar-actions">
-              <span className="hidden text-xs text-muted-foreground sm:inline">
-                Cmd/Ctrl+S
-              </span>
-              <Button
-                size="sm"
-                variant="outline"
-                onClick={onSave}
-                disabled={isSaving || disabled}
-                className="global-action-bar-btn-secondary"
-              >
-                {isSaving ? savingContent : 'Save Draft'}
-              </Button>
               {hasText && (
                 <Button
                   size="sm"
@@ -145,6 +133,7 @@ export function ActionBar({
           </>
         )
       : null;
+  const shouldShowGenerateAction = generateAction && (isFailed || hasText);
 
   return (
     <>
@@ -157,7 +146,7 @@ export function ActionBar({
             <span className="global-action-bar-status-text">{statusLabel}</span>
           </div>
           <div className="global-action-bar-actions">
-            {generateAction && (isFailed || hasText) && (
+            {shouldShowGenerateAction && (
               <Button
                 size="sm"
                 onClick={onGenerate}

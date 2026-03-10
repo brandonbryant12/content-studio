@@ -1,7 +1,9 @@
 import { Effect } from 'effect';
 import type { UpdatePodcast } from '@repo/db/schema';
 import { defineAuthedUseCase } from '../../shared';
+import { sanitizePodcastEpisodePlan } from '../episode-plan';
 import { PodcastRepo } from '../repos/podcast-repo';
+import { sanitizePodcastSetupInstructions } from '../setup-instructions';
 
 // =============================================================================
 // Types
@@ -25,8 +27,31 @@ export const updatePodcast = defineAuthedUseCase<UpdatePodcastInput>()({
   run: ({ input, user }) =>
     Effect.gen(function* () {
       const podcastRepo = yield* PodcastRepo;
-      yield* podcastRepo.findByIdForUser(input.podcastId, user.id);
+      const existing = yield* podcastRepo.findByIdForUser(
+        input.podcastId,
+        user.id,
+      );
 
-      return yield* podcastRepo.update(input.podcastId, input.data);
+      const sanitizedEpisodePlan = sanitizePodcastEpisodePlan(
+        input.data.episodePlan,
+        {
+          allowedSourceIds: existing.sourceIds,
+        },
+      );
+
+      const setupInstructions =
+        input.data.setupInstructions === undefined
+          ? undefined
+          : sanitizePodcastSetupInstructions(input.data.setupInstructions);
+
+      const data = {
+        ...input.data,
+        ...(input.data.episodePlan === undefined
+          ? {}
+          : { episodePlan: sanitizedEpisodePlan }),
+        ...(setupInstructions === undefined ? {} : { setupInstructions }),
+      };
+
+      return yield* podcastRepo.update(input.podcastId, data);
     }),
 });

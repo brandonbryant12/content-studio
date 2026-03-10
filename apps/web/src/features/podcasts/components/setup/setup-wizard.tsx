@@ -1,58 +1,324 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from '@tanstack/react-router';
-import { useState, useEffect, useCallback } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { toast } from 'sonner';
 import type { RouterOutput } from '@repo/api/client';
 import type { PodcastFullOutput } from '@repo/api/contracts';
 import { useCreatePodcast } from '../../hooks/use-create-podcast';
 import { useOptimisticGeneration } from '../../hooks/use-optimistic-generation';
 import { getPodcastQueryKey } from '../../hooks/use-podcast';
+import {
+  cloneEpisodePlan,
+  isEpisodePlanReady,
+  sanitizeEpisodePlanDraft,
+  type EpisodePlan,
+} from '../../lib/episode-plan';
 import { SetupFooter } from './setup-footer';
-import { StepIndicator } from './step-indicator';
+import { StepIndicator, type SetupStepDefinition } from './step-indicator';
 import { StepAudio } from './steps/step-audio';
-import { StepInstructions } from './steps/step-instructions';
+import { StepPlan } from './steps/step-plan';
+import { StepQuickStart } from './steps/step-quick-start';
 import { StepSources } from './steps/step-sources';
 import { apiClient } from '@/clients/apiClient';
+import {
+  getSourceListQueryKey,
+  useSources,
+} from '@/features/sources/hooks/use-source-list';
 import { getErrorMessage } from '@/shared/lib/errors';
 
-const TOTAL_STEPS = 3;
+const STEP_SOURCES = 1;
+const STEP_AUDIO = 2;
+const STEP_QUICK_START = 3;
+const STEP_PLANNER = 4;
+const SETUP_STEPS: readonly SetupStepDefinition[] = [
+  { label: 'Sources' },
+  { label: 'Audio' },
+  { label: 'Instructions', optional: true },
+  { label: 'Episode Planner', optional: true },
+];
 
 interface SetupWizardProps {
   podcast?: PodcastFullOutput;
+  initialSourceIds?: string[];
 }
 
-export function SetupWizard({ podcast }: SetupWizardProps) {
-  const navigate = useNavigate();
-  const queryClient = useQueryClient();
-  const [currentStep, setCurrentStep] = useState(() => {
-    if (!podcast || podcast.sources.length === 0) {
-      return 1;
-    }
+type PodcastDetail = RouterOutput['podcasts']['get'];
+type SourceList = RouterOutput['sources']['list'];
+type SelectedSourceSummary = {
+  id: string;
+  title: string;
+  status: string;
+};
 
-    return podcast.hostVoice === null ? 2 : 3;
-  });
+type AsyncMutation = {
+  mutate: (variables: any) => void;
+  mutateAsync: (variables: any) => Promise<any>;
+  isPending: boolean;
+};
 
-  // Prefetch documents on mount so they're ready for step 2
-  useEffect(() => {
-    queryClient.prefetchQuery(
-      apiClient.sources.list.queryOptions({ input: {} }),
-    );
-  }, [queryClient]);
+type SetupSecondaryAction = {
+  label: string;
+  loadingLabel?: string;
+  onClick: () => void;
+  disabled?: boolean;
+  isLoading?: boolean;
+};
 
-  const format = podcast?.format ?? 'conversation';
+function getInitialStep(podcast?: PodcastFullOutput) {
+  if (!podcast || podcast.sources.length === 0) {
+    return STEP_SOURCES;
+  }
 
-  // Step 2 state
-  const [selectedDocIds, setSelectedDocIds] = useState<string[]>(
-    () => podcast?.sources.map((d) => d.id) ?? [],
+  if (podcast.hostVoice === null) {
+    return STEP_AUDIO;
+  }
+
+  return podcast.episodePlan === null ? STEP_QUICK_START : STEP_PLANNER;
+}
+
+function getInitialSelectedDocIds(
+  podcast: PodcastFullOutput | undefined,
+  initialSourceIds: string[] | undefined,
+) {
+  return podcast?.sources.map((source) => source.id) ?? initialSourceIds ?? [];
+}
+
+function sanitizeSetupInstructionsInput(value: string) {
+  const trimmed = value.trim();
+  return trimmed.length > 0 ? trimmed : null;
+}
+
+function buildSelectedSources(
+  podcastSources: PodcastDetail['sources'] | undefined,
+  allSources: SourceList,
+  selectedDocIds: string[],
+) {
+  const sourceMap = new Map<string, SelectedSourceSummary>();
+
+  (podcastSources ?? []).forEach((source) =>
+    sourceMap.set(source.id, {
+      id: source.id,
+      title: source.title,
+      status: source.status,
+    }),
   );
-  const [researchDocId, setResearchDocId] = useState<string | null>(null);
+  allSources.forEach((source) =>
+    sourceMap.set(source.id, {
+      id: source.id,
+      title: source.title,
+      status: source.status,
+    }),
+  );
 
-  const handleSourceCreated = useCallback((docId: string, _title: string) => {
-    setResearchDocId(docId);
-    setSelectedDocIds((prev) => [...prev, docId]);
-  }, []);
+  return selectedDocIds
+    .map((sourceId) => sourceMap.get(sourceId))
+    .filter((source): source is SelectedSourceSummary => source !== undefined);
+}
 
-  // Step 3 state
+function canProceedFromStep({
+  currentStep,
+  duration,
+  episodePlan,
+  hostVoice,
+  selectedDocIds,
+}: {
+  currentStep: number;
+  duration: number;
+  episodePlan: EpisodePlan | null;
+  hostVoice: string;
+  selectedDocIds: string[];
+}) {
+  switch (currentStep) {
+    case STEP_SOURCES:
+      return selectedDocIds.length > 0;
+    case STEP_AUDIO:
+      return duration > 0 && hostVoice.length > 0;
+    case STEP_QUICK_START:
+      return true;
+    case STEP_PLANNER:
+      return episodePlan !== null && isEpisodePlanReady(episodePlan);
+    default:
+      return false;
+  }
+}
+
+function getContinueLabel(currentStep: number) {
+  if (currentStep === STEP_QUICK_START) {
+    return 'Episode Planner';
+  }
+
+  if (currentStep === STEP_PLANNER) {
+    return 'Approve Plan & Generate';
+  }
+
+  return undefined;
+}
+
+function getLoadingLabel(currentStep: number) {
+  return currentStep === STEP_PLANNER ? 'Starting draft...' : undefined;
+}
+
+function getSecondaryAction({
+  currentStep,
+  podcast,
+  episodePlan,
+  canGeneratePlan,
+  isLoading,
+  isGeneratingPlan,
+  isGeneratingDraft,
+  onGenerateNow,
+  onGeneratePlan,
+}: {
+  currentStep: number;
+  podcast?: PodcastFullOutput;
+  episodePlan: EpisodePlan | null;
+  canGeneratePlan: boolean;
+  isLoading: boolean;
+  isGeneratingPlan: boolean;
+  isGeneratingDraft: boolean;
+  onGenerateNow: () => void;
+  onGeneratePlan: () => void;
+}): SetupSecondaryAction | undefined {
+  if (!podcast) {
+    return undefined;
+  }
+
+  if (currentStep === STEP_QUICK_START) {
+    return {
+      label: 'Generate Now',
+      loadingLabel: 'Starting draft...',
+      onClick: onGenerateNow,
+      disabled: isLoading,
+      isLoading: isGeneratingDraft,
+    };
+  }
+
+  if (currentStep === STEP_PLANNER) {
+    return {
+      label: episodePlan === null ? 'Generate Plan' : 'Regenerate Plan',
+      loadingLabel: 'Generating plan...',
+      onClick: onGeneratePlan,
+      disabled: !canGeneratePlan || isLoading,
+      isLoading: isGeneratingPlan,
+    };
+  }
+
+  return undefined;
+}
+
+function SetupWizardStepContent({
+  currentStep,
+  format,
+  selectedDocIds,
+  duration,
+  hostVoice,
+  coHostVoice,
+  hostPersonaId,
+  coHostPersonaId,
+  hostPersonaVoiceId,
+  coHostPersonaVoiceId,
+  setupInstructions,
+  episodePlan,
+  selectedSources,
+  canGeneratePlan,
+  isGeneratingPlan,
+  pendingSourceCount,
+  onSelectionChange,
+  onDurationChange,
+  onHostVoiceChange,
+  onCoHostVoiceChange,
+  onHostPersonaChange,
+  onCoHostPersonaChange,
+  onInstructionsChange,
+  onPlanChange,
+}: {
+  currentStep: number;
+  format: PodcastFullOutput['format'] | 'conversation';
+  selectedDocIds: string[];
+  duration: number;
+  hostVoice: string;
+  coHostVoice: string;
+  hostPersonaId: string | null;
+  coHostPersonaId: string | null;
+  hostPersonaVoiceId: string | null;
+  coHostPersonaVoiceId: string | null;
+  setupInstructions: string;
+  episodePlan: EpisodePlan | null;
+  selectedSources: SelectedSourceSummary[];
+  canGeneratePlan: boolean;
+  isGeneratingPlan: boolean;
+  pendingSourceCount: number;
+  onSelectionChange: (ids: string[]) => void;
+  onDurationChange: (value: number) => void;
+  onHostVoiceChange: (value: string) => void;
+  onCoHostVoiceChange: (value: string) => void;
+  onHostPersonaChange: (
+    personaId: string | null,
+    voiceId: string | null,
+  ) => void;
+  onCoHostPersonaChange: (
+    personaId: string | null,
+    voiceId: string | null,
+  ) => void;
+  onInstructionsChange: (value: string) => void;
+  onPlanChange: (plan: EpisodePlan) => void;
+}) {
+  if (currentStep === STEP_SOURCES) {
+    return (
+      <StepSources
+        selectedIds={selectedDocIds}
+        onSelectionChange={onSelectionChange}
+      />
+    );
+  }
+
+  if (currentStep === STEP_AUDIO) {
+    return (
+      <StepAudio
+        format={format}
+        duration={duration}
+        hostVoice={hostVoice}
+        coHostVoice={coHostVoice}
+        hostPersonaId={hostPersonaId}
+        coHostPersonaId={coHostPersonaId}
+        hostPersonaVoiceId={hostPersonaVoiceId}
+        coHostPersonaVoiceId={coHostPersonaVoiceId}
+        onDurationChange={onDurationChange}
+        onHostVoiceChange={onHostVoiceChange}
+        onCoHostVoiceChange={onCoHostVoiceChange}
+        onHostPersonaChange={onHostPersonaChange}
+        onCoHostPersonaChange={onCoHostPersonaChange}
+      />
+    );
+  }
+
+  if (currentStep === STEP_QUICK_START) {
+    return (
+      <StepQuickStart
+        instructions={setupInstructions}
+        onInstructionsChange={onInstructionsChange}
+      />
+    );
+  }
+
+  return (
+    <StepPlan
+      plan={episodePlan}
+      setupInstructions={setupInstructions}
+      selectedSources={selectedSources}
+      canGeneratePlan={canGeneratePlan}
+      isGeneratingPlan={isGeneratingPlan}
+      pendingSourceCount={pendingSourceCount}
+      onPlanChange={onPlanChange}
+    />
+  );
+}
+
+function useSetupWizardState({ podcast, initialSourceIds }: SetupWizardProps) {
+  const [currentStep, setCurrentStep] = useState(() => getInitialStep(podcast));
+  const [selectedDocIds, setSelectedDocIds] = useState<string[]>(() =>
+    getInitialSelectedDocIds(podcast, initialSourceIds),
+  );
   const [duration, setDuration] = useState(podcast?.targetDurationMinutes ?? 5);
   const [hostVoice, setHostVoice] = useState(podcast?.hostVoice ?? 'Aoede');
   const [coHostVoice, setCoHostVoice] = useState(
@@ -70,49 +336,409 @@ export function SetupWizard({ podcast }: SetupWizardProps) {
   const [coHostPersonaVoiceId, setCoHostPersonaVoiceId] = useState<
     string | null
   >(null);
-
-  // Step 3 state (instructions)
-  const [instructions, setInstructions] = useState(
-    podcast?.promptInstructions ?? '',
+  const [setupInstructions, setSetupInstructions] = useState(
+    podcast?.setupInstructions ?? '',
+  );
+  const [episodePlan, setEpisodePlan] = useState<EpisodePlan | null>(() =>
+    cloneEpisodePlan(podcast?.episodePlan),
   );
 
-  const handleHostPersonaChange = (
-    personaId: string | null,
-    voiceId: string | null,
-  ) => {
-    setHostPersonaId(personaId);
-    setHostPersonaVoiceId(voiceId);
-    if (voiceId) setHostVoice(voiceId);
-  };
+  const handleEpisodePlanChange = useCallback((nextPlan: EpisodePlan) => {
+    setEpisodePlan(nextPlan);
+  }, []);
 
-  const handleCoHostPersonaChange = (
-    personaId: string | null,
-    voiceId: string | null,
-  ) => {
-    setCoHostPersonaId(personaId);
-    setCoHostPersonaVoiceId(voiceId);
-    if (voiceId) setCoHostVoice(voiceId);
-  };
+  const handleSetupInstructionsChange = useCallback((value: string) => {
+    setSetupInstructions(value);
+  }, []);
 
-  // Update mutation for saving progress
+  const handleHostPersonaChange = useCallback(
+    (personaId: string | null, voiceId: string | null) => {
+      setHostPersonaId(personaId);
+      setHostPersonaVoiceId(voiceId);
+      if (voiceId) {
+        setHostVoice(voiceId);
+      }
+    },
+    [],
+  );
+
+  const handleCoHostPersonaChange = useCallback(
+    (personaId: string | null, voiceId: string | null) => {
+      setCoHostPersonaId(personaId);
+      setCoHostPersonaVoiceId(voiceId);
+      if (voiceId) {
+        setCoHostVoice(voiceId);
+      }
+    },
+    [],
+  );
+
+  return {
+    currentStep,
+    setCurrentStep,
+    selectedDocIds,
+    setSelectedDocIds,
+    duration,
+    setDuration,
+    hostVoice,
+    setHostVoice,
+    coHostVoice,
+    setCoHostVoice,
+    hostPersonaId,
+    coHostPersonaId,
+    hostPersonaVoiceId,
+    coHostPersonaVoiceId,
+    setupInstructions,
+    setSetupInstructions,
+    episodePlan,
+    setEpisodePlan,
+    handleEpisodePlanChange,
+    handleSetupInstructionsChange,
+    handleHostPersonaChange,
+    handleCoHostPersonaChange,
+  };
+}
+
+function useSetupWizardActions({
+  navigate,
+  podcast,
+  format,
+  currentStep,
+  setCurrentStep,
+  selectedDocIds,
+  duration,
+  hostVoice,
+  coHostVoice,
+  hostPersonaId,
+  coHostPersonaId,
+  setupInstructions,
+  setSetupInstructions,
+  episodePlan,
+  setEpisodePlan,
+  canGeneratePlan,
+  isLoading,
+  createMutation,
+  updateMutation,
+  generatePlanMutation,
+  generateMutation,
+}: {
+  navigate: ReturnType<typeof useNavigate>;
+  podcast?: PodcastFullOutput;
+  format: PodcastFullOutput['format'] | 'conversation';
+  currentStep: number;
+  setCurrentStep: (step: number | ((prev: number) => number)) => void;
+  selectedDocIds: string[];
+  duration: number;
+  hostVoice: string;
+  coHostVoice: string;
+  hostPersonaId: string | null;
+  coHostPersonaId: string | null;
+  setupInstructions: string;
+  setSetupInstructions: (value: string) => void;
+  episodePlan: EpisodePlan | null;
+  setEpisodePlan: (plan: EpisodePlan | null) => void;
+  canGeneratePlan: boolean;
+  isLoading: boolean;
+  createMutation: ReturnType<typeof useCreatePodcast>;
+  updateMutation: AsyncMutation;
+  generatePlanMutation: AsyncMutation;
+  generateMutation: AsyncMutation;
+}) {
+  const saveSourceStep = useCallback(async () => {
+    if (!podcast) {
+      await createMutation.mutateAsync({
+        title: 'Untitled Podcast',
+        format,
+        sourceIds: selectedDocIds,
+      });
+      return true;
+    }
+
+    await updateMutation.mutateAsync({
+      id: podcast.id,
+      sourceIds: selectedDocIds,
+    });
+    return true;
+  }, [createMutation, format, podcast, selectedDocIds, updateMutation]);
+
+  const saveAudioStep = useCallback(async () => {
+    if (!podcast) {
+      return false;
+    }
+
+    await updateMutation.mutateAsync({
+      id: podcast.id,
+      targetDurationMinutes: duration,
+      hostVoice,
+      coHostVoice: format === 'conversation' ? coHostVoice : undefined,
+      hostPersonaId: hostPersonaId || undefined,
+      coHostPersonaId:
+        format === 'conversation' ? coHostPersonaId || undefined : undefined,
+    });
+    return true;
+  }, [
+    coHostPersonaId,
+    coHostVoice,
+    duration,
+    format,
+    hostPersonaId,
+    hostVoice,
+    podcast,
+    updateMutation,
+  ]);
+
+  const saveQuickStartStep = useCallback(async () => {
+    if (!podcast) {
+      return false;
+    }
+
+    const updatedPodcast = await updateMutation.mutateAsync({
+      id: podcast.id,
+      setupInstructions: sanitizeSetupInstructionsInput(setupInstructions),
+    });
+
+    setSetupInstructions(updatedPodcast.setupInstructions ?? '');
+    return updatedPodcast.setupInstructions ?? null;
+  }, [podcast, setSetupInstructions, setupInstructions, updateMutation]);
+
+  const savePlannerStep = useCallback(async () => {
+    if (!podcast) {
+      return false;
+    }
+
+    const sanitizedPlan = sanitizeEpisodePlanDraft(episodePlan, selectedDocIds);
+    if (!sanitizedPlan) {
+      return false;
+    }
+
+    const updatedPodcast = await updateMutation.mutateAsync({
+      id: podcast.id,
+      episodePlan: sanitizedPlan,
+    });
+
+    setEpisodePlan(cloneEpisodePlan(updatedPodcast.episodePlan));
+    return true;
+  }, [episodePlan, podcast, selectedDocIds, setEpisodePlan, updateMutation]);
+
+  const handleGeneratePlan = useCallback(() => {
+    if (!podcast || !canGeneratePlan || isLoading) {
+      return;
+    }
+
+    generatePlanMutation.mutate({ id: podcast.id });
+  }, [canGeneratePlan, generatePlanMutation, isLoading, podcast]);
+
+  const handleContinue = useCallback(async () => {
+    if (
+      !canProceedFromStep({
+        currentStep,
+        duration,
+        episodePlan,
+        hostVoice,
+        selectedDocIds,
+      })
+    ) {
+      return;
+    }
+
+    try {
+      switch (currentStep) {
+        case STEP_SOURCES: {
+          const success = await saveSourceStep();
+          if (!podcast && success) {
+            return;
+          }
+          if (success) {
+            setCurrentStep(STEP_AUDIO);
+          }
+          return;
+        }
+        case STEP_AUDIO: {
+          const success = await saveAudioStep();
+          if (success) {
+            setCurrentStep(STEP_QUICK_START);
+          }
+          return;
+        }
+        case STEP_QUICK_START: {
+          if (!podcast) {
+            return;
+          }
+          const savedInstructions = await saveQuickStartStep();
+          if (savedInstructions !== false) {
+            setCurrentStep(STEP_PLANNER);
+          }
+          return;
+        }
+        case STEP_PLANNER: {
+          if (!podcast) {
+            return;
+          }
+          const success = await savePlannerStep();
+          if (success) {
+            await generateMutation.mutateAsync({ id: podcast.id });
+          }
+          return;
+        }
+        default:
+          return;
+      }
+    } catch {
+      return;
+    }
+  }, [
+    currentStep,
+    duration,
+    episodePlan,
+    generateMutation,
+    hostVoice,
+    podcast,
+    saveAudioStep,
+    savePlannerStep,
+    saveQuickStartStep,
+    saveSourceStep,
+    selectedDocIds,
+    setCurrentStep,
+  ]);
+
+  const handleGenerateNow = useCallback(async () => {
+    if (currentStep !== STEP_QUICK_START || !podcast) {
+      return;
+    }
+
+    try {
+      const savedInstructions = await saveQuickStartStep();
+      if (savedInstructions === false) {
+        return;
+      }
+
+      await generateMutation.mutateAsync({
+        id: podcast.id,
+        promptInstructions: savedInstructions ?? undefined,
+        ignoreEpisodePlan: true,
+      });
+    } catch {
+      return;
+    }
+  }, [currentStep, generateMutation, podcast, saveQuickStartStep]);
+
+  const handleBack = useCallback(() => {
+    if (!podcast && currentStep === STEP_SOURCES) {
+      void navigate({ to: '/podcasts' });
+      return;
+    }
+
+    if (currentStep > STEP_SOURCES) {
+      setCurrentStep((prev) => prev - 1);
+    }
+  }, [currentStep, navigate, podcast, setCurrentStep]);
+
+  return {
+    handleBack,
+    handleContinue,
+    handleGenerateNow,
+    handleGeneratePlan,
+  };
+}
+
+export function SetupWizard({ podcast, initialSourceIds }: SetupWizardProps) {
+  const wizardKey =
+    podcast?.id ?? `new:${initialSourceIds?.join(',') ?? 'no-sources'}`;
+
+  return (
+    <SetupWizardContent
+      key={wizardKey}
+      podcast={podcast}
+      initialSourceIds={initialSourceIds}
+    />
+  );
+}
+
+function SetupWizardContent({ podcast, initialSourceIds }: SetupWizardProps) {
+  const navigate = useNavigate();
+  const queryClient = useQueryClient();
+  const {
+    currentStep,
+    setCurrentStep,
+    selectedDocIds,
+    setSelectedDocIds,
+    duration,
+    setDuration,
+    hostVoice,
+    setHostVoice,
+    coHostVoice,
+    setCoHostVoice,
+    hostPersonaId,
+    coHostPersonaId,
+    hostPersonaVoiceId,
+    coHostPersonaVoiceId,
+    setupInstructions,
+    setSetupInstructions,
+    episodePlan,
+    setEpisodePlan,
+    handleEpisodePlanChange,
+    handleSetupInstructionsChange,
+    handleHostPersonaChange,
+    handleCoHostPersonaChange,
+  } = useSetupWizardState({ podcast, initialSourceIds });
+  const autoPlanRequestKeyRef = useRef<string | null>(null);
+  const format = podcast?.format ?? 'conversation';
+
+  useEffect(() => {
+    queryClient.prefetchQuery(
+      apiClient.sources.list.queryOptions({ input: {} }),
+    );
+  }, [queryClient]);
+
   const createMutation = useCreatePodcast();
   const queryKey = getPodcastQueryKey(podcast?.id ?? 'pending-podcast');
+
+  const mergePodcastIntoCache = useCallback(
+    (updatedPodcast: RouterOutput['podcasts']['update']) => {
+      queryClient.setQueryData(
+        queryKey,
+        (current: PodcastDetail | undefined) => {
+          if (!current) {
+            return current;
+          }
+
+          const cachedSources =
+            queryClient.getQueryData<SourceList>(getSourceListQueryKey()) ?? [];
+          const sourceMap = new Map<string, PodcastDetail['sources'][number]>();
+
+          current.sources.forEach((source) => sourceMap.set(source.id, source));
+          cachedSources.forEach((source) =>
+            sourceMap.set(source.id, {
+              ...source,
+              extractedText: null,
+            }),
+          );
+
+          const nextSources =
+            updatedPodcast.sourceIds.length === 0
+              ? []
+              : updatedPodcast.sourceIds
+                  .map((sourceId) => sourceMap.get(sourceId))
+                  .filter(
+                    (source): source is PodcastDetail['sources'][number] =>
+                      source !== undefined,
+                  );
+
+          return {
+            ...current,
+            ...updatedPodcast,
+            sources: nextSources,
+          };
+        },
+      );
+    },
+    [queryClient, queryKey],
+  );
+
   const updateMutation = useMutation(
     apiClient.podcasts.update.mutationOptions({
       onSuccess: (updatedPodcast) => {
-        // Update the cache so workbench gets fresh data after wizard completes
-        queryClient.setQueryData(
-          queryKey,
-          (current: RouterOutput['podcasts']['get'] | undefined) => {
-            if (!current) return current;
-            return {
-              ...current,
-              ...updatedPodcast,
-              // Preserve sources since update only returns podcast fields
-              sources: current.sources,
-            };
-          },
-        );
+        mergePodcastIntoCache(updatedPodcast);
       },
       onError: (error) => {
         toast.error(getErrorMessage(error, 'Failed to save'));
@@ -120,156 +746,178 @@ export function SetupWizard({ podcast }: SetupWizardProps) {
     }),
   );
 
-  // Generate mutation for final step - uses optimistic update for immediate status feedback
-  const generateMutation = useOptimisticGeneration(podcast?.id ?? 'pending');
+  const generatePlanMutation = useMutation(
+    apiClient.podcasts.generatePlan.mutationOptions({
+      onSuccess: (updatedPodcast) => {
+        mergePodcastIntoCache(updatedPodcast);
+        setEpisodePlan(cloneEpisodePlan(updatedPodcast.episodePlan));
+        toast.success('Episode plan ready');
+      },
+      onError: (error) => {
+        toast.error(getErrorMessage(error, 'Failed to generate plan'));
+      },
+    }),
+  );
 
+  const generateMutation = useOptimisticGeneration(podcast?.id ?? 'pending');
   const isLoading =
     createMutation.isPending ||
     updateMutation.isPending ||
     generateMutation.isPending;
 
-  // Validation for each step
-  const canProceedFromStep = (step: number): boolean => {
-    switch (step) {
-      case 1:
-        return selectedDocIds.length > 0;
-      case 2:
-        return duration > 0 && hostVoice.length > 0;
-      case 3:
-        return true; // Instructions are optional
-      default:
-        return false;
-    }
-  };
+  const { data: allSources = [] } = useSources({
+    enabled: currentStep >= STEP_QUICK_START,
+  });
 
-  // Save current step data
-  const saveStepData = async (step: number): Promise<boolean> => {
-    try {
-      switch (step) {
-        case 1:
-          if (!podcast) {
-            await createMutation.mutateAsync({
-              title: 'Untitled Podcast',
-              format,
-              sourceIds: selectedDocIds,
-            });
-            return true;
-          }
+  const selectedSources = useMemo(
+    () => buildSelectedSources(podcast?.sources, allSources, selectedDocIds),
+    [allSources, podcast?.sources, selectedDocIds],
+  );
 
-          await updateMutation.mutateAsync({
-            id: podcast.id,
-            sourceIds: selectedDocIds,
-          });
-          break;
-        case 2:
-          if (!podcast) return false;
-          await updateMutation.mutateAsync({
-            id: podcast.id,
-            targetDurationMinutes: duration,
-            hostVoice,
-            coHostVoice: format === 'conversation' ? coHostVoice : undefined,
-            hostPersonaId: hostPersonaId || undefined,
-            coHostPersonaId:
-              format === 'conversation'
-                ? coHostPersonaId || undefined
-                : undefined,
-          });
-          break;
-        case 3:
-          if (!podcast) return false;
-          // Save instructions and trigger generation
-          await updateMutation.mutateAsync({
-            id: podcast.id,
-            promptInstructions: instructions.trim() || undefined,
-          });
-          // Trigger generation - optimistic update will set status to 'generating_script'
-          // which exits setup mode via isSetupMode() check
-          await generateMutation.mutateAsync({ id: podcast.id });
-          break;
-      }
-      return true;
-    } catch {
-      return false;
-    }
-  };
+  const unresolvedSourceCount = Math.max(
+    0,
+    selectedDocIds.length - selectedSources.length,
+  );
+  const pendingSourceCount =
+    unresolvedSourceCount +
+    selectedSources.filter((source) => source.status !== 'ready').length;
+  const canGeneratePlan =
+    selectedDocIds.length > 0 &&
+    pendingSourceCount === 0 &&
+    !generatePlanMutation.isPending;
 
-  const handleContinue = async () => {
-    if (!canProceedFromStep(currentStep)) return;
+  const autoPlanRequestKey = useMemo(
+    () =>
+      podcast
+        ? `${podcast.id}:${selectedDocIds.join(',')}:${setupInstructions.trim()}`
+        : '',
+    [podcast, selectedDocIds, setupInstructions],
+  );
 
-    const success = await saveStepData(currentStep);
-    if (!podcast && currentStep === 1 && success) {
+  useEffect(() => {
+    if (currentStep !== STEP_PLANNER) {
+      autoPlanRequestKeyRef.current = null;
       return;
     }
 
-    if (success && currentStep < TOTAL_STEPS) {
-      setCurrentStep((prev) => prev + 1);
-    }
-    // If final step, generation was triggered and the component will unmount
-    // as the podcast status changes
-  };
-
-  const handleBack = () => {
-    if (!podcast && currentStep === 1) {
-      void navigate({ to: '/podcasts' });
+    if (
+      !podcast ||
+      !canGeneratePlan ||
+      episodePlan !== null ||
+      isLoading ||
+      generatePlanMutation.isPending
+    ) {
       return;
     }
 
-    if (currentStep > 1) {
-      setCurrentStep((prev) => prev - 1);
+    if (autoPlanRequestKeyRef.current === autoPlanRequestKey) {
+      return;
     }
-  };
+
+    autoPlanRequestKeyRef.current = autoPlanRequestKey;
+    generatePlanMutation.mutate({ id: podcast.id });
+  }, [
+    autoPlanRequestKey,
+    canGeneratePlan,
+    currentStep,
+    episodePlan,
+    generatePlanMutation,
+    isLoading,
+    podcast,
+  ]);
+
+  const actions = useSetupWizardActions({
+    navigate,
+    podcast,
+    format,
+    currentStep,
+    setCurrentStep,
+    selectedDocIds,
+    duration,
+    hostVoice,
+    coHostVoice,
+    hostPersonaId,
+    coHostPersonaId,
+    setupInstructions,
+    setSetupInstructions,
+    episodePlan,
+    setEpisodePlan,
+    canGeneratePlan,
+    isLoading,
+    createMutation,
+    updateMutation,
+    generatePlanMutation,
+    generateMutation,
+  });
+
+  const continueDisabled =
+    !canProceedFromStep({
+      currentStep,
+      duration,
+      episodePlan,
+      hostVoice,
+      selectedDocIds,
+    }) ||
+    (currentStep === STEP_PLANNER && generatePlanMutation.isPending);
+
+  const secondaryAction = getSecondaryAction({
+    currentStep,
+    podcast,
+    episodePlan,
+    canGeneratePlan,
+    isLoading,
+    isGeneratingPlan: generatePlanMutation.isPending,
+    isGeneratingDraft: generateMutation.isPending,
+    onGenerateNow: () => {
+      void actions.handleGenerateNow();
+    },
+    onGeneratePlan: actions.handleGeneratePlan,
+  });
 
   return (
     <div className="setup-wizard">
       <div className="setup-wizard-card">
-        <StepIndicator currentStep={currentStep} totalSteps={TOTAL_STEPS} />
+        <StepIndicator currentStep={currentStep} steps={SETUP_STEPS} />
 
-        {currentStep === 1 && (
-          <StepSources
-            selectedIds={selectedDocIds}
-            onSelectionChange={setSelectedDocIds}
-            researchDocId={researchDocId}
-            onSourceCreated={handleSourceCreated}
-          />
-        )}
-
-        {currentStep === 2 && (
-          <StepAudio
-            format={format}
-            duration={duration}
-            hostVoice={hostVoice}
-            coHostVoice={coHostVoice}
-            hostPersonaId={hostPersonaId}
-            coHostPersonaId={coHostPersonaId}
-            hostPersonaVoiceId={hostPersonaVoiceId}
-            coHostPersonaVoiceId={coHostPersonaVoiceId}
-            onDurationChange={setDuration}
-            onHostVoiceChange={setHostVoice}
-            onCoHostVoiceChange={setCoHostVoice}
-            onHostPersonaChange={handleHostPersonaChange}
-            onCoHostPersonaChange={handleCoHostPersonaChange}
-          />
-        )}
-
-        {currentStep === 3 && (
-          <StepInstructions
-            instructions={instructions}
-            onInstructionsChange={setInstructions}
-          />
-        )}
+        <SetupWizardStepContent
+          currentStep={currentStep}
+          format={format}
+          selectedDocIds={selectedDocIds}
+          duration={duration}
+          hostVoice={hostVoice}
+          coHostVoice={coHostVoice}
+          hostPersonaId={hostPersonaId}
+          coHostPersonaId={coHostPersonaId}
+          hostPersonaVoiceId={hostPersonaVoiceId}
+          coHostPersonaVoiceId={coHostPersonaVoiceId}
+          setupInstructions={setupInstructions}
+          episodePlan={episodePlan}
+          selectedSources={selectedSources}
+          canGeneratePlan={canGeneratePlan}
+          isGeneratingPlan={generatePlanMutation.isPending}
+          pendingSourceCount={pendingSourceCount}
+          onSelectionChange={setSelectedDocIds}
+          onDurationChange={setDuration}
+          onHostVoiceChange={setHostVoice}
+          onCoHostVoiceChange={setCoHostVoice}
+          onHostPersonaChange={handleHostPersonaChange}
+          onCoHostPersonaChange={handleCoHostPersonaChange}
+          onInstructionsChange={handleSetupInstructionsChange}
+          onPlanChange={handleEpisodePlanChange}
+        />
 
         <SetupFooter
           currentStep={currentStep}
-          onBack={handleBack}
-          onContinue={handleContinue}
-          continueDisabled={!canProceedFromStep(currentStep)}
+          onBack={actions.handleBack}
+          onContinue={() => {
+            void actions.handleContinue();
+          }}
+          continueDisabled={continueDisabled}
+          continueLabel={getContinueLabel(currentStep)}
+          loadingLabel={getLoadingLabel(currentStep)}
           isLoading={isLoading}
-          isFinalStep={currentStep === TOTAL_STEPS}
-          subtitle={
-            currentStep === TOTAL_STEPS && researchDocId
-              ? 'Research will complete in the background'
-              : undefined
-          }
+          isFinalStep={currentStep === STEP_PLANNER}
+          secondaryAction={secondaryAction}
         />
       </div>
     </div>

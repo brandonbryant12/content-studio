@@ -2,10 +2,12 @@
 
 import {
   ArrowLeftIcon,
+  ChevronDownIcon,
   DownloadIcon,
   InfoCircledIcon,
   MagnifyingGlassIcon,
   Pencil1Icon,
+  PlusIcon,
   TrashIcon,
 } from '@radix-ui/react-icons';
 import { SourceStatus } from '@repo/api/contracts';
@@ -58,6 +60,7 @@ interface SourceDetailProps {
   canCreateFromSource?: boolean;
   isCreatingVoiceover?: boolean;
   isCreatingInfographic?: boolean;
+  onCreatePodcast?: () => void;
   onCreateVoiceover?: () => void;
   onCreateInfographic?: () => void;
   onExportMarkdown?: () => void;
@@ -82,6 +85,7 @@ export function SourceDetail({
   canCreateFromSource = false,
   isCreatingVoiceover = false,
   isCreatingInfographic = false,
+  onCreatePodcast,
   onCreateVoiceover,
   onCreateInfographic,
   onExportMarkdown,
@@ -136,39 +140,42 @@ export function SourceDetail({
 
             <div className="workbench-meta">
               <div className="workbench-actions">
-                {onCreateVoiceover && (
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={onCreateVoiceover}
-                    disabled={!canCreateFromSource || isCreatingVoiceover}
-                  >
-                    {isCreatingVoiceover ? (
-                      <>
-                        <Spinner className="w-4 h-4 mr-2" />
-                        Creating...
-                      </>
-                    ) : (
-                      'Create Voiceover'
-                    )}
+                {isCreatingVoiceover || isCreatingInfographic ? (
+                  <Button variant="outline" size="sm" disabled>
+                    <Spinner className="w-4 h-4 mr-2" />
+                    Creating...
                   </Button>
-                )}
-                {onCreateInfographic && (
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={onCreateInfographic}
-                    disabled={!canCreateFromSource || isCreatingInfographic}
-                  >
-                    {isCreatingInfographic ? (
-                      <>
-                        <Spinner className="w-4 h-4 mr-2" />
-                        Creating...
-                      </>
-                    ) : (
-                      'Create Infographic'
-                    )}
-                  </Button>
+                ) : (
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        disabled={!canCreateFromSource}
+                      >
+                        <PlusIcon className="w-4 h-4 mr-1.5" />
+                        Create
+                        <ChevronDownIcon className="w-4 h-4 ml-1" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      {onCreatePodcast && (
+                        <DropdownMenuItem onClick={onCreatePodcast}>
+                          Podcast
+                        </DropdownMenuItem>
+                      )}
+                      {onCreateVoiceover && (
+                        <DropdownMenuItem onClick={onCreateVoiceover}>
+                          Voiceover
+                        </DropdownMenuItem>
+                      )}
+                      {onCreateInfographic && (
+                        <DropdownMenuItem onClick={onCreateInfographic}>
+                          Infographic
+                        </DropdownMenuItem>
+                      )}
+                    </DropdownMenuContent>
+                  </DropdownMenu>
                 )}
                 <Button
                   variant="ghost"

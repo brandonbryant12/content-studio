@@ -68,6 +68,7 @@ const createMockPodcastRepo = (
             format: data.format,
             hostVoice: data.hostVoice,
             coHostVoice: data.coHostVoice,
+            setupInstructions: data.setupInstructions,
             promptInstructions: data.promptInstructions,
             targetDurationMinutes: data.targetDurationMinutes,
             createdBy: data.createdBy,
@@ -159,6 +160,7 @@ describe('createPodcast', () => {
             description: 'Custom Description',
             hostVoice: 'Puck',
             coHostVoice: 'Aoede',
+            setupInstructions: 'Focus on billing clarity',
             promptInstructions: 'Be casual',
             targetDurationMinutes: 15,
           }).pipe(Effect.provide(layers)),
@@ -172,9 +174,37 @@ describe('createPodcast', () => {
           description: 'Custom Description',
           hostVoice: 'Puck',
           coHostVoice: 'Aoede',
+          setupInstructions: 'Focus on billing clarity',
           promptInstructions: 'Be casual',
           targetDurationMinutes: 15,
           createdBy: user.id,
+        }),
+        [],
+      );
+    });
+
+    it('trims blank setup instructions before insert', async () => {
+      const user = createTestUser();
+      const insertSpy = vi.fn();
+
+      const mockPodcastRepo = createMockPodcastRepo(
+        { sources: [] },
+        { onInsert: insertSpy },
+      );
+      const layers = Layer.mergeAll(MockDbLive, mockPodcastRepo);
+
+      await Effect.runPromise(
+        withTestUser(user)(
+          createPodcast({
+            format: 'conversation',
+            setupInstructions: '   ',
+          }).pipe(Effect.provide(layers)),
+        ),
+      );
+
+      expect(insertSpy).toHaveBeenCalledWith(
+        expect.objectContaining({
+          setupInstructions: undefined,
         }),
         [],
       );

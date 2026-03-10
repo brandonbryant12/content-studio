@@ -1,5 +1,6 @@
 import {
   ArrowLeftIcon,
+  ArrowRightIcon,
   AvatarIcon,
   FileTextIcon,
   ImageIcon,
@@ -15,6 +16,7 @@ import {
   TabsTrigger,
 } from '@repo/ui/components/tabs';
 import { Link } from '@tanstack/react-router';
+import { useState } from 'react';
 import type {
   AIUsagePeriod,
   AdminUserDetail,
@@ -185,43 +187,43 @@ const getDetailSectionTabs = ({
   {
     value: 'sources',
     label: 'Sources',
-    description: 'Recent uploads and source links',
+    description: 'Uploaded documents and links',
     count: entityCounts.sources,
   },
   {
     value: 'podcasts',
     label: 'Podcasts',
-    description: 'Latest generated or edited shows',
+    description: 'Generated and edited shows',
     count: entityCounts.podcasts,
   },
   {
     value: 'voiceovers',
     label: 'Voiceovers',
-    description: 'Narration tracks and status',
+    description: 'Narration tracks',
     count: entityCounts.voiceovers,
   },
   {
     value: 'personas',
     label: 'Personas',
-    description: 'Hosts, voices, and roles',
+    description: 'Hosts and voices',
     count: entityCounts.personas,
   },
   {
     value: 'infographics',
     label: 'Infographics',
-    description: 'Generated visuals and formats',
+    description: 'Generated visuals',
     count: entityCounts.infographics,
   },
   {
     value: 'entity-explorer',
-    label: 'Entity explorer',
-    description: 'Search and page through everything',
+    label: 'All Content',
+    description: 'Search and browse everything',
     count: totalEntityCount,
   },
   {
     value: 'ai-usage',
-    label: 'AI usage',
-    description: 'Provider activity and spend',
+    label: 'AI Usage',
+    description: 'Requests, models, and cost',
     count: aiUsageSummary.totalEvents,
   },
 ];
@@ -334,26 +336,56 @@ function UsageBreakdownList<Row extends UsageBreakdownRow>({
   );
 }
 
+interface EntityItemLink {
+  readonly to: string;
+  readonly params: Record<string, string>;
+}
+
 function EntityItemCard({
   title,
   subtitle,
   updatedAt,
+  link,
 }: {
   title: string;
   subtitle: ReactNode;
   updatedAt: string;
+  link?: EntityItemLink;
 }) {
+  const content = (
+    <div className="flex items-start justify-between gap-3">
+      <div className="min-w-0">
+        <p className="truncate font-medium text-foreground">{title}</p>
+        <p className="mt-1 text-sm text-muted-foreground">{subtitle}</p>
+      </div>
+      <div className="flex shrink-0 items-center gap-2">
+        <p className="text-xs text-muted-foreground">{formatDate(updatedAt)}</p>
+        {link ? (
+          <ArrowRightIcon
+            className="h-3.5 w-3.5 text-muted-foreground transition-transform group-hover:translate-x-0.5"
+            aria-hidden="true"
+          />
+        ) : null}
+      </div>
+    </div>
+  );
+
+  if (link) {
+    return (
+      <Link
+        to={link.to}
+        params={link.params}
+        className="group block rounded-2xl border border-border/50 bg-background/80 p-4 transition-colors hover:border-primary/30 hover:bg-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+        aria-label={`View ${title}`}
+      >
+        {content}
+      </Link>
+    );
+  }
+
   return (
     <div className="rounded-2xl border border-border/50 bg-background/80 p-4">
-      <div className="flex items-start justify-between gap-3">
-        <div className="min-w-0">
-          <p className="truncate font-medium text-foreground">{title}</p>
-          <p className="mt-1 text-sm text-muted-foreground">{subtitle}</p>
-        </div>
-        <p className="shrink-0 text-xs text-muted-foreground">
-          {formatDate(updatedAt)}
-        </p>
-      </div>
+      {content}
     </div>
   );
 }
@@ -399,26 +431,25 @@ function AdminUserSummaryHeader({
                 {user.email}
               </p>
               <div className="mt-4 flex flex-wrap gap-x-6 gap-y-2 text-sm text-muted-foreground">
-                <span>User ID {user.id}</span>
                 <span>Joined {formatDate(user.createdAt)}</span>
-                <span>Updated {formatDate(user.updatedAt)}</span>
+                <span>Last active {formatDate(user.updatedAt)}</span>
               </div>
             </div>
           </div>
 
           <div className="grid min-w-full gap-3 sm:grid-cols-3 lg:min-w-[420px]">
             <StatCard
-              label="Entities"
+              label="Content"
               value={totalEntityCount}
-              description="Total tracked content items"
+              description="Across all content types"
             />
             <StatCard
-              label="AI Events"
+              label="AI Requests"
               value={aiUsageSummary.totalEvents}
-              description={`Within the last ${usagePeriod}`}
+              description={`Last ${usagePeriod === 'all' ? 'all time' : usagePeriod}`}
             />
             <StatCard
-              label="Estimated Cost"
+              label="Usage Cost"
               value={formatEstimatedCost({
                 estimatedCostUsdMicros:
                   aiUsageSummary.totalEstimatedCostUsdMicros,
@@ -434,51 +465,37 @@ function AdminUserSummaryHeader({
   );
 }
 
-function AdminUserSectionTabs({
+function AdminUserSectionSelect({
   tabs,
+  value,
+  onValueChange,
 }: {
   tabs: ReadonlyArray<DetailSectionDefinition>;
+  value: string;
+  onValueChange: (value: string) => void;
 }) {
   return (
-    <section className="rounded-3xl border border-border/60 bg-card/80 p-4 shadow-sm sm:p-5">
-      <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
-        <div>
-          <p className="page-eyebrow">Sections</p>
-          <h2 className="text-2xl font-semibold tracking-tight text-foreground">
-            Jump between user detail areas
-          </h2>
-          <p className="mt-2 text-sm text-muted-foreground">
-            Open one section at a time instead of scanning a long admin page.
-          </p>
-        </div>
-        <p className="text-sm text-muted-foreground">{tabs.length} sections</p>
-      </div>
-
-      <TabsList
-        aria-label="Admin user detail sections"
-        className="mt-5 flex h-auto w-full flex-wrap justify-start gap-2 rounded-3xl bg-muted/30 p-2"
+    <div className="flex items-center gap-3">
+      <label
+        htmlFor="admin-section-select"
+        className="text-sm font-medium text-muted-foreground"
+      >
+        Viewing
+      </label>
+      <select
+        id="admin-section-select"
+        value={value}
+        onChange={(e) => onValueChange(e.target.value)}
+        className="h-10 cursor-pointer appearance-none rounded-xl border border-border/60 bg-card/80 px-4 pr-8 text-sm font-semibold text-foreground shadow-sm transition-colors hover:bg-card focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
+        aria-label="Select section"
       >
         {tabs.map((tab) => (
-          <TabsTrigger
-            key={tab.value}
-            value={tab.value}
-            className="h-auto min-w-[160px] flex-1 justify-between gap-3 rounded-2xl border border-transparent px-4 py-3 text-left data-[state=active]:border-border/60 data-[state=active]:bg-background"
-          >
-            <span className="min-w-0">
-              <span className="block text-sm font-semibold text-foreground">
-                {tab.label}
-              </span>
-              <span className="mt-1 block truncate text-xs text-muted-foreground">
-                {tab.description}
-              </span>
-            </span>
-            <span className="rounded-full border border-border/60 bg-background/70 px-2.5 py-1 text-xs font-medium text-foreground">
-              {tab.count}
-            </span>
-          </TabsTrigger>
+          <option key={tab.value} value={tab.value}>
+            {tab.label} ({tab.count})
+          </option>
         ))}
-      </TabsList>
-    </section>
+      </select>
+    </div>
   );
 }
 
@@ -491,6 +508,7 @@ function RecentEntitySection<Item extends RecentEntityRecord>({
   items,
   renderTitle,
   renderSubtitle,
+  getItemLink,
 }: {
   title: string;
   count: number;
@@ -500,6 +518,7 @@ function RecentEntitySection<Item extends RecentEntityRecord>({
   items: readonly Item[];
   renderTitle: (item: Item) => string;
   renderSubtitle: (item: Item) => ReactNode;
+  getItemLink?: (item: Item) => EntityItemLink;
 }) {
   return (
     <EntitySection title={title} count={count} icon={icon} accent={accent}>
@@ -513,6 +532,7 @@ function RecentEntitySection<Item extends RecentEntityRecord>({
               title={renderTitle(item)}
               subtitle={renderSubtitle(item)}
               updatedAt={item.updatedAt}
+              link={getItemLink?.(item)}
             />
           ))}
         </div>
@@ -540,6 +560,10 @@ function AdminUserRecentEntityTabs({
           items={recentEntities.sources}
           renderTitle={(source) => source.title}
           renderSubtitle={(source) => `${source.source} · ${source.status}`}
+          getItemLink={(source) => ({
+            to: '/sources/$sourceId',
+            params: { sourceId: String(source.id) },
+          })}
         />
       </TabsContent>
 
@@ -553,6 +577,10 @@ function AdminUserRecentEntityTabs({
           items={recentEntities.podcasts}
           renderTitle={(podcast) => podcast.title}
           renderSubtitle={(podcast) => `${podcast.format} · ${podcast.status}`}
+          getItemLink={(podcast) => ({
+            to: '/podcasts/$podcastId',
+            params: { podcastId: String(podcast.id) },
+          })}
         />
       </TabsContent>
 
@@ -568,6 +596,10 @@ function AdminUserRecentEntityTabs({
           renderSubtitle={(voiceover) =>
             `${voiceover.voice} · ${voiceover.status}`
           }
+          getItemLink={(voiceover) => ({
+            to: '/voiceovers/$voiceoverId',
+            params: { voiceoverId: String(voiceover.id) },
+          })}
         />
       </TabsContent>
 
@@ -586,6 +618,10 @@ function AdminUserRecentEntityTabs({
               {persona.voiceName ?? 'No assigned voice'}
             </>
           )}
+          getItemLink={(persona) => ({
+            to: '/personas/$personaId',
+            params: { personaId: String(persona.id) },
+          })}
         />
       </TabsContent>
 
@@ -601,6 +637,10 @@ function AdminUserRecentEntityTabs({
           renderSubtitle={(infographic) =>
             `${infographic.format} · ${infographic.status}`
           }
+          getItemLink={(infographic) => ({
+            to: '/infographics/$infographicId',
+            params: { infographicId: String(infographic.id) },
+          })}
         />
       </TabsContent>
     </>
@@ -734,13 +774,12 @@ function AdminUserAIUsageSection({
     <section className="rounded-3xl border border-border/60 bg-card/80 p-5 shadow-sm">
       <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
         <div>
-          <p className="page-eyebrow">AI usage</p>
+          <p className="page-eyebrow">AI Usage</p>
           <h2 className="text-2xl font-semibold tracking-tight text-foreground">
-            Provider activity
+            AI Activity
           </h2>
           <p className="mt-2 text-sm text-muted-foreground">
-            Recorded provider calls for this user, scoped by the selected time
-            range.
+            AI provider activity for this user.
           </p>
         </div>
 
@@ -803,6 +842,9 @@ export function AdminUserDetailPage({
     aiUsageSummary,
   });
 
+  const [activeSection, setActiveSection] =
+    useState<DetailSectionTab>('sources');
+
   return (
     <div className="page-container">
       <AdminUserSummaryHeader
@@ -812,8 +854,16 @@ export function AdminUserDetailPage({
         aiUsageSummary={aiUsageSummary}
       />
 
-      <Tabs defaultValue="sources" className="space-y-6">
-        <AdminUserSectionTabs tabs={detailSectionTabs} />
+      <Tabs
+        value={activeSection}
+        onValueChange={(v) => setActiveSection(v as DetailSectionTab)}
+        className="space-y-6"
+      >
+        <AdminUserSectionSelect
+          tabs={detailSectionTabs}
+          value={activeSection}
+          onValueChange={(v) => setActiveSection(v as DetailSectionTab)}
+        />
         <AdminUserRecentEntityTabs
           entityCounts={entityCounts}
           recentEntities={recentEntities}

@@ -1,0 +1,1 @@
+ALTER TABLE "podcast" ADD COLUMN "episodePlan" jsonb;

@@ -18,6 +18,7 @@ export {
   listPodcasts,
   saveChanges,
   generateScript,
+  generatePodcastPlan,
   generateAudio,
   startGeneration,
   saveAndQueueAudio,
@@ -38,6 +39,7 @@ export {
   type SaveChangesResult,
   type GenerateScriptInput,
   type GenerateScriptResult,
+  type GeneratePodcastPlanInput,
   type GenerateAudioInput,
   type GenerateAudioResult,
   type StartGenerationInput,
@@ -49,10 +51,16 @@ export {
   type ApprovePodcastInput,
   type RevokeApprovalInput,
   type GenerateCoverImageInput,
+  PodcastPlanSourcesNotReadyError,
 } from './use-cases';
 
 // Prompts
-export { buildSystemPrompt, buildUserPrompt } from './prompts';
+export {
+  buildSystemPrompt,
+  buildUserPrompt,
+  buildPlanSystemPrompt,
+  buildPlanUserPrompt,
+} from './prompts';
 
 // DB types
 export type {
@@ -63,4 +71,6 @@ export type {
   Source,
   VersionStatus,
   ScriptSegment,
+  PodcastEpisodePlan,
+  PodcastEpisodePlanSection,
 } from '@repo/db/schema';

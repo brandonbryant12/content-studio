@@ -27,6 +27,15 @@ vi.mock('@/clients/apiClient', () => ({
   },
 }));
 
+vi.mock('@/env', () => ({
+  env: {
+    PUBLIC_SERVER_URL: 'http://localhost:3035',
+    PUBLIC_SERVER_API_PATH: '/api',
+    PUBLIC_BASE_PATH: '/',
+  },
+  isDeepResearchEnabled: true,
+}));
+
 vi.mock('@/features/sources/hooks', () => ({
   getSourceListQueryKey: () => ['sources', 'list'],
   useResearchChat: mockUseResearchChat,

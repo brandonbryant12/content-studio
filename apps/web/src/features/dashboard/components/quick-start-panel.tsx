@@ -9,6 +9,7 @@ import {
 } from '@radix-ui/react-icons';
 import { Button } from '@repo/ui/components/button';
 import type { ReactNode } from 'react';
+import { isDeepResearchEnabled } from '@/env';
 
 interface ContentCounts {
   sources: number;
@@ -93,6 +94,38 @@ function AddSourcesCard({
 }: {
   documentDialogs: DocumentDialogs;
 }) {
+  const actions = [
+    {
+      icon: <UploadIcon className="w-4 h-4 text-sky-600 dark:text-sky-400" />,
+      iconBg: 'bg-sky-500/10',
+      title: 'Upload a file',
+      description: 'PDF, DOCX, TXT, or Markdown',
+      onClick: () => documentDialogs.onUploadOpenChange(true),
+    },
+    {
+      icon: (
+        <Link2Icon className="w-4 h-4 text-violet-600 dark:text-violet-400" />
+      ),
+      iconBg: 'bg-violet-500/10',
+      title: 'Import from URL',
+      description: 'Paste any web page link',
+      onClick: () => documentDialogs.onUrlDialogOpenChange(true),
+    },
+    ...(isDeepResearchEnabled
+      ? [
+          {
+            icon: (
+              <MagnifyingGlassIcon className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+            ),
+            iconBg: 'bg-emerald-500/10',
+            title: 'AI deep research',
+            description: 'Let AI explore a topic',
+            onClick: () => documentDialogs.onResearchDialogOpenChange(true),
+          },
+        ]
+      : []),
+  ];
+
   return (
     <div className="rounded-2xl border border-border bg-card p-6 sm:p-8">
       <div className="mb-5 max-w-lg">
@@ -101,37 +134,17 @@ function AddSourcesCard({
         </h2>
         <p className="text-sm text-muted-foreground leading-relaxed">
           Sources ground every piece of content AI creates. Upload a document,
-          import a URL, or let AI research a topic for you.
+          {isDeepResearchEnabled
+            ? ' import a URL, or let AI research a topic for you.'
+            : ' or import a URL.'}
         </p>
       </div>
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-        <ActionCard
-          icon={
-            <UploadIcon className="w-4 h-4 text-sky-600 dark:text-sky-400" />
-          }
-          iconBg="bg-sky-500/10"
-          title="Upload a file"
-          description="PDF, DOCX, TXT, or Markdown"
-          onClick={() => documentDialogs.onUploadOpenChange(true)}
-        />
-        <ActionCard
-          icon={
-            <Link2Icon className="w-4 h-4 text-violet-600 dark:text-violet-400" />
-          }
-          iconBg="bg-violet-500/10"
-          title="Import from URL"
-          description="Paste any web page link"
-          onClick={() => documentDialogs.onUrlDialogOpenChange(true)}
-        />
-        <ActionCard
-          icon={
-            <MagnifyingGlassIcon className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
-          }
-          iconBg="bg-emerald-500/10"
-          title="AI deep research"
-          description="Let AI explore a topic"
-          onClick={() => documentDialogs.onResearchDialogOpenChange(true)}
-        />
+      <div
+        className={`grid grid-cols-1 gap-3 ${actions.length === 3 ? 'sm:grid-cols-3' : 'sm:grid-cols-2'}`}
+      >
+        {actions.map((action) => (
+          <ActionCard key={action.title} {...action} />
+        ))}
       </div>
     </div>
   );

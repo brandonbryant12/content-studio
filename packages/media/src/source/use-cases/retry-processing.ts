@@ -11,6 +11,7 @@ import {
   withUseCaseSpan,
 } from '../../shared';
 import { SourceRepo } from '../repos';
+import { ensureDeepResearchEnabled } from '../services/deep-research-feature';
 
 export interface RetryProcessingInput {
   id: string;
@@ -70,6 +71,10 @@ export const retryProcessing = (input: RetryProcessingInput) =>
               failureLabel: 'research',
             }
           : null;
+
+    if (retryJob?.type === JobType.PROCESS_RESEARCH) {
+      yield* ensureDeepResearchEnabled;
+    }
 
     // Re-enqueue when source type has a dedicated retry job.
     if (retryJob) {

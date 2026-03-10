@@ -16,6 +16,9 @@ export const envSchema = Schema.Struct({
   USE_MOCK_AI: Schema.optionalWith(BooleanStringSchema, {
     default: () => true,
   }),
+  DISABLE_DEEP_RESEARCH: Schema.optionalWith(BooleanStringSchema, {
+    default: () => false,
+  }),
 
   S3_BUCKET: Schema.optional(Schema.String),
   S3_REGION: Schema.optional(Schema.String),

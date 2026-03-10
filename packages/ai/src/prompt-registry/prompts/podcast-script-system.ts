@@ -16,13 +16,35 @@ export interface SegmentPromptContext {
   readonly messagingTone?: string | null;
 }
 
+export interface EpisodePlanPromptContextSection {
+  readonly heading: string;
+  readonly summary: string;
+  readonly keyPoints: readonly string[];
+  readonly sourceIds?: readonly string[];
+  readonly estimatedMinutes?: number;
+}
+
+export interface EpisodePlanPromptContext {
+  readonly angle: string;
+  readonly openingHook: string;
+  readonly closingTakeaway: string;
+  readonly sections: readonly EpisodePlanPromptContextSection[];
+}
+
 export interface PodcastScriptSystemPromptInput {
   readonly format: PodcastFormat;
+  readonly targetDurationMinutes?: number | null;
   readonly customInstructions?: string;
   readonly hostPersona?: PersonaPromptContext | null;
   readonly coHostPersona?: PersonaPromptContext | null;
   readonly targetSegment?: SegmentPromptContext | null;
+  readonly episodePlan?: EpisodePlanPromptContext | null;
 }
+
+const WORDS_PER_MINUTE = {
+  voice_over: { min: 125, max: 150 },
+  conversation: { min: 130, max: 160 },
+} as const;
 
 function buildPersonaSection(
   persona: PersonaPromptContext,
@@ -65,10 +87,60 @@ function buildSegmentSection(segment: SegmentPromptContext): string {
   return lines.join('\n');
 }
 
+function buildEpisodePlanSection(plan: EpisodePlanPromptContext): string {
+  const lines: string[] = [];
+
+  lines.push(`Angle: ${plan.angle}`);
+  lines.push(`Opening hook: ${plan.openingHook}`);
+
+  plan.sections.forEach((section, index) => {
+    lines.push(`\n## Section ${index + 1}: ${section.heading}`);
+    lines.push(`Summary: ${section.summary}`);
+
+    if (section.keyPoints.length > 0) {
+      lines.push('Key points:');
+      section.keyPoints.forEach((point) => {
+        lines.push(`- ${point}`);
+      });
+    }
+
+    if (section.sourceIds && section.sourceIds.length > 0) {
+      lines.push(`Source focus: ${section.sourceIds.join(', ')}`);
+    }
+
+    if (typeof section.estimatedMinutes === 'number') {
+      lines.push(`Estimated minutes: ${section.estimatedMinutes}`);
+    }
+  });
+
+  lines.push(`\nClosing takeaway: ${plan.closingTakeaway}`);
+
+  return lines.join('\n');
+}
+
+function buildWordBudgetGuidance(
+  format: PodcastFormat,
+  targetDurationMinutes?: number | null,
+): string | null {
+  if (typeof targetDurationMinutes !== 'number') {
+    return null;
+  }
+
+  const budget =
+    format === 'conversation'
+      ? WORDS_PER_MINUTE.conversation
+      : WORDS_PER_MINUTE.voice_over;
+
+  const minWords = budget.min * targetDurationMinutes;
+  const maxWords = budget.max * targetDurationMinutes;
+
+  return `Aim for roughly ${minWords}-${maxWords} spoken words overall after excluding TTS annotations. That range is a pacing guide, not a reason to pad with filler.`;
+}
+
 export const podcastScriptSystemPrompt =
   definePrompt<PodcastScriptSystemPromptInput>({
     id: 'podcast.script.system',
-    version: 1,
+    version: 5,
     owner: PROMPT_OWNER,
     domain: 'podcast',
     role: 'system',
@@ -76,16 +148,27 @@ export const podcastScriptSystemPrompt =
     riskTier: 'high',
     status: 'active',
     summary:
-      'Defines podcast script generation policy, speaker behavior, and TTS annotation rules.',
+      'Defines podcast script generation policy, runtime targeting, speaker behavior, and TTS annotation rules.',
     compliance: buildCompliance({
       userContent: 'required',
       retention: 'resource-bound',
       notes:
-        'Includes persona/segment context and optional user instructions that may contain personal data.',
+        'Includes persona context, approved episode plans, and optional user instructions that may contain personal data.',
     }),
     render: (context) => {
-      const { format, hostPersona, coHostPersona, targetSegment } = context;
+      const {
+        format,
+        targetDurationMinutes,
+        hostPersona,
+        coHostPersona,
+        targetSegment,
+        episodePlan,
+      } = context;
       const instructions = context.customInstructions;
+      const wordBudgetGuidance = buildWordBudgetGuidance(
+        format,
+        targetDurationMinutes,
+      );
 
       const hostName = hostPersona?.name ?? 'host';
       const coHostName = coHostPersona?.name ?? 'cohost';
@@ -119,6 +202,22 @@ Break complex topics into digestible segments with natural transitions.`;
 
       const parts: string[] = [basePrompt];
 
+      if (typeof targetDurationMinutes === 'number') {
+        parts.push(
+          `\n\nTarget runtime: about ${targetDurationMinutes} minutes. Pace the script so the full episode lands close to that duration, with section depth and transitions sized to fit.`,
+        );
+      }
+
+      if (wordBudgetGuidance) {
+        parts.push(`\n${wordBudgetGuidance}`);
+      }
+
+      parts.push(`\n\n# Output Requirements
+- Deliver a full episode draft, not a short recap or outline.
+- Use enough segments, line length, and transitions to satisfy the runtime target naturally.
+- If the source material is dense research or a long article, unpack it with explanation, examples, and comparisons instead of compressing it into headlines.
+- Keep each approved section distinct in the final script rather than collapsing multiple sections into one quick exchange.`);
+
       if (characterSections.length > 0) {
         parts.push('\n\n# Character & Audience Context\n');
         parts.push(characterSections.join('\n\n'));
@@ -129,6 +228,17 @@ Break complex topics into digestible segments with natural transitions.`;
               'Use their speaking styles and occasional phrases that match their example quotes.',
           );
         }
+      }
+
+      if (episodePlan) {
+        parts.push('\n\n# Approved Episode Plan\n');
+        parts.push(buildEpisodePlanSection(episodePlan));
+        parts.push(
+          '\n\nTreat this plan as the required episode structure, but not as a source of factual authority. Source materials remain the ground truth. If the plan or extra instructions conflict with the sources, follow the sources and adapt the structure accordingly.',
+        );
+        parts.push(
+          '\nExpand each approved section to match its estimatedMinutes. A 2-minute section should usually contain multiple developed exchanges or a fully developed narrated subsection, not a single quick pass.',
+        );
       }
 
       if (instructions) {

@@ -1,64 +1,51 @@
-import {
-  SourceStatus,
-  VersionStatus,
-  VoiceoverStatus,
-  InfographicStatus,
-} from '@repo/db/schema';
-import {
-  SourceRepo,
-  PodcastRepo,
-  VoiceoverRepo,
-  InfographicRepo,
-} from '@repo/media';
 import { Queue, formatError, type Job } from '@repo/queue';
 import { Effect } from 'effect';
 import { STALE_JOB_MAX_AGE_MS } from './constants';
+import { syncFailedEntityStateForJob } from './entity-failure';
 import { emitEntityChange, type PublishEvent } from './events';
 
 const TIMEOUT_MESSAGE = 'Job timed out: worker did not complete in time';
 
+const getStringField = (
+  payload: unknown,
+  key: 'userId' | 'sourceId' | 'podcastId' | 'voiceoverId' | 'infographicId',
+): string | undefined => {
+  if (!payload || typeof payload !== 'object') {
+    return undefined;
+  }
+
+  const value = (payload as Record<string, unknown>)[key];
+  return typeof value === 'string' ? value : undefined;
+};
+
 const updateEntityForJob = (job: Job, publishEvent: PublishEvent) =>
   Effect.gen(function* () {
-    const payload = job.payload as Record<string, string>;
-    const userId = payload.userId;
+    const userId = getStringField(job.payload, 'userId');
     if (!userId) return;
 
-    if (payload.sourceId) {
-      const repo = yield* SourceRepo;
-      yield* repo.updateStatus(
-        payload.sourceId,
-        SourceStatus.FAILED,
-        TIMEOUT_MESSAGE,
-      );
-      emitEntityChange(publishEvent, userId, 'source', payload.sourceId);
-    } else if (payload.podcastId) {
-      const repo = yield* PodcastRepo;
-      yield* repo.updateStatus(
-        payload.podcastId,
-        VersionStatus.FAILED,
-        TIMEOUT_MESSAGE,
-      );
-      emitEntityChange(publishEvent, userId, 'podcast', payload.podcastId);
-    } else if (payload.voiceoverId) {
-      const repo = yield* VoiceoverRepo;
-      yield* repo.updateStatus(
-        payload.voiceoverId,
-        VoiceoverStatus.FAILED,
-        TIMEOUT_MESSAGE,
-      );
-      emitEntityChange(publishEvent, userId, 'voiceover', payload.voiceoverId);
-    } else if (payload.infographicId) {
-      const repo = yield* InfographicRepo;
-      yield* repo.update(payload.infographicId, {
-        status: InfographicStatus.FAILED,
-        errorMessage: TIMEOUT_MESSAGE,
-      });
-      emitEntityChange(
-        publishEvent,
-        userId,
-        'infographic',
-        payload.infographicId,
-      );
+    yield* syncFailedEntityStateForJob(job, TIMEOUT_MESSAGE);
+
+    const sourceId = getStringField(job.payload, 'sourceId');
+    if (sourceId) {
+      emitEntityChange(publishEvent, userId, 'source', sourceId);
+      return;
+    }
+
+    const podcastId = getStringField(job.payload, 'podcastId');
+    if (podcastId) {
+      emitEntityChange(publishEvent, userId, 'podcast', podcastId);
+      return;
+    }
+
+    const voiceoverId = getStringField(job.payload, 'voiceoverId');
+    if (voiceoverId) {
+      emitEntityChange(publishEvent, userId, 'voiceover', voiceoverId);
+      return;
+    }
+
+    const infographicId = getStringField(job.payload, 'infographicId');
+    if (infographicId) {
+      emitEntityChange(publishEvent, userId, 'infographic', infographicId);
     }
   }).pipe(Effect.catchAll(() => Effect.void));
 
@@ -70,7 +57,7 @@ export const reapStaleJobs = (
     const queue = yield* Queue;
     const staleJobs = yield* queue.failStaleJobs(maxAgeMs);
 
-    if (staleJobs.length === 0) return;
+    if (staleJobs.length === 0) return [];
 
     for (const staleJob of staleJobs) {
       yield* updateEntityForJob(staleJob, publishEvent);
@@ -79,9 +66,12 @@ export const reapStaleJobs = (
     const summary = staleJobs.map((j) => `${j.id} (${j.type})`).join(', ');
 
     yield* Effect.logInfo(`Reaped ${staleJobs.length} stale jobs: ${summary}`);
+    return staleJobs;
   }).pipe(
     Effect.catchAll((error) =>
-      Effect.logError(`Stale job reaper error: ${formatError(error)}`),
+      Effect.logError(`Stale job reaper error: ${formatError(error)}`).pipe(
+        Effect.as([]),
+      ),
     ),
     Effect.annotateLogs('worker', 'StaleJobReaper'),
   );

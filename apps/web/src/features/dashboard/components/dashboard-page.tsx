@@ -11,6 +11,7 @@ import { Link } from '@tanstack/react-router';
 import { QuickStartPanel } from './quick-start-panel';
 import { SourcesRecentSection, RecentSection } from './recent-section';
 import { APP_NAME } from '@/constants';
+import { isDeepResearchEnabled } from '@/env';
 import {
   CreateInfographicDialog,
   type CreateInfographicPayload,
@@ -167,10 +168,12 @@ export function DashboardPage({
         onSubmit={documentDialogs.onCreateFromUrl}
         isSubmitting={documentDialogs.isCreateFromUrlPending}
       />
-      <ResearchChatContainer
-        open={documentDialogs.researchDialogOpen}
-        onOpenChange={documentDialogs.onResearchDialogOpenChange}
-      />
+      {isDeepResearchEnabled ? (
+        <ResearchChatContainer
+          open={documentDialogs.researchDialogOpen}
+          onOpenChange={documentDialogs.onResearchDialogOpenChange}
+        />
+      ) : null}
     </div>
   );
 }
@@ -183,7 +186,9 @@ const WORKFLOW_STEPS = [
   {
     number: '1',
     label: 'Upload sources',
-    detail: 'PDFs, URLs, or AI research',
+    detail: isDeepResearchEnabled
+      ? 'PDFs, URLs, or AI research'
+      : 'PDFs and URLs',
     color: 'bg-sky-500 text-primary-foreground',
     textColor: 'text-sky-600 dark:text-sky-400',
   },

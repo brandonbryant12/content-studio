@@ -8,6 +8,7 @@ import {
   getTestConnectionString,
   stopPostgresContainer,
 } from '../../packages/testing/src/testcontainers/postgres';
+import { buildComposeRuntimeEnv } from '../compose-runtime-env.ts';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -213,7 +214,10 @@ const waitForHttp = async (
   throw new Error(`${label} did not respond successfully at ${url}`);
 };
 
-const waitForMinioInit = async (timeoutMs: number): Promise<void> => {
+const waitForMinioInit = async (
+  timeoutMs: number,
+  env: NodeJS.ProcessEnv,
+): Promise<void> => {
   const deadline = Date.now() + timeoutMs;
 
   while (Date.now() < deadline) {
@@ -223,7 +227,7 @@ const waitForMinioInit = async (timeoutMs: number): Promise<void> => {
         ['compose', 'logs', '--no-log-prefix', 'minio-init'],
         {
           cwd: repoRoot,
-          env: process.env,
+          env,
           stdio: ['ignore', 'pipe', 'pipe'],
         },
       );
@@ -257,12 +261,14 @@ const waitForMinioInit = async (timeoutMs: number): Promise<void> => {
   throw new Error('MinIO bucket initialization did not complete in time');
 };
 
-const ensureComposeServices = async (): Promise<void> => {
+const ensureComposeServices = async (
+  composeEnv: NodeJS.ProcessEnv,
+): Promise<void> => {
   const exitCode = await runCommand(
     'docker',
     ['compose', 'up', '-d', 'redis', 'minio', 'minio-init'],
     repoRoot,
-    process.env,
+    composeEnv,
   );
 
   if (exitCode !== 0) {
@@ -275,7 +281,7 @@ const ensureComposeServices = async (): Promise<void> => {
     'MinIO',
     READY_TIMEOUT_MS,
   );
-  await waitForMinioInit(READY_TIMEOUT_MS);
+  await waitForMinioInit(READY_TIMEOUT_MS, composeEnv);
 };
 
 const buildE2EEnv = (connectionString: string): NodeJS.ProcessEnv => ({
@@ -300,13 +306,14 @@ const buildE2EEnv = (connectionString: string): NodeJS.ProcessEnv => ({
 
 const main = async (): Promise<void> => {
   const connectionString = await getTestConnectionString();
+  const composeEnv = buildComposeRuntimeEnv(process.env);
   const env = buildE2EEnv(connectionString);
   const extraArgs = process.argv.slice(2);
   const processes: ManagedProcess[] = [];
 
   try {
     console.log('Starting Redis and MinIO for E2E...');
-    await ensureComposeServices();
+    await ensureComposeServices(composeEnv);
 
     console.log('Starting test server...');
     const server = startManagedProcess(

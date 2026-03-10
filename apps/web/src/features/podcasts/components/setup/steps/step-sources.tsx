@@ -4,7 +4,6 @@ import {
   GlobeIcon,
   Cross2Icon,
   CheckIcon,
-  CheckCircledIcon,
   MagnifyingGlassIcon,
 } from '@radix-ui/react-icons';
 import { SourceStatus } from '@repo/api/contracts';
@@ -23,7 +22,6 @@ import {
   SUPPORTED_TYPES,
   SUPPORTED_EXTENSIONS,
 } from '../../../lib/upload-constants';
-import { StepResearch } from './step-research';
 import { apiClient } from '@/clients/apiClient';
 import { useSources, getSourceListQueryKey } from '@/features/sources/hooks';
 import { getErrorMessage } from '@/shared/lib/errors';
@@ -45,7 +43,6 @@ type SourceItem = {
 
 const SOURCE_BADGE_BY_TYPE = {
   url: 'URL',
-  research: 'RES',
   manual: 'TXT',
 } as const;
 
@@ -53,7 +50,6 @@ const STEP_DOCUMENT_TABS = [
   { key: 'existing', label: 'Select Existing' },
   { key: 'upload', label: 'Upload New' },
   { key: 'url', label: 'From URL' },
-  { key: 'research', label: 'Research New' },
 ] as const;
 
 type StepDocumentsTab = (typeof STEP_DOCUMENT_TABS)[number]['key'];
@@ -387,15 +383,11 @@ function UrlPanel({
 interface StepDocumentsProps {
   selectedIds: string[];
   onSelectionChange: (ids: string[]) => void;
-  researchDocId: string | null;
-  onSourceCreated: (id: string, title: string) => void;
 }
 
 export function StepSources({
   selectedIds,
   onSelectionChange,
-  researchDocId,
-  onSourceCreated,
 }: StepDocumentsProps) {
   const queryClient = useQueryClient();
   const [activeTab, setActiveTab] = useState<StepDocumentsTab>('existing');
@@ -559,7 +551,7 @@ export function StepSources({
   return (
     <div className="setup-content">
       <div className="setup-step-header">
-        <p className="setup-step-eyebrow">Step 1 of 3</p>
+        <p className="setup-step-eyebrow">Step 1 of 4</p>
         <h2 className="setup-step-title">Add Sources</h2>
         <p className="setup-step-description">
           {SOURCE_WIZARD_STEP_DESCRIPTION}
@@ -602,9 +594,6 @@ export function StepSources({
               className="setup-source-tab"
             >
               {tab.label}
-              {tab.key === 'research' && researchDocId && (
-                <CheckCircledIcon className="w-3.5 h-3.5 ml-1.5 text-emerald-600 dark:text-emerald-400 inline-block" />
-              )}
             </TabsTrigger>
           ))}
         </TabsList>
@@ -649,13 +638,6 @@ export function StepSources({
             onTitleChange={setUrlTitle}
             onSubmit={handleCreateFromUrl}
             isSubmitting={fromUrlMutation.isPending}
-          />
-        </TabsContent>
-
-        <TabsContent value="research">
-          <StepResearch
-            onSourceCreated={onSourceCreated}
-            createdSourceId={researchDocId}
           />
         </TabsContent>
       </Tabs>

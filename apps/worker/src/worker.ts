@@ -17,6 +17,7 @@ import {
   DEFAULT_PER_TYPE_CONCURRENCY,
   MAX_CONCURRENT_JOBS,
   QUEUE_DEFAULTS,
+  WORKER_DB_POOL_MAX,
 } from './constants';
 import { env } from './env';
 import { createUnifiedWorker } from './unified-worker';
@@ -49,7 +50,7 @@ async function startWorker(): Promise<void> {
 
   const db = createDb({
     databaseUrl: env.SERVER_POSTGRES_URL,
-    max: 5,
+    max: WORKER_DB_POOL_MAX,
     idleTimeoutMillis: 60_000,
     connectionTimeoutMillis: 10_000,
   });
@@ -78,6 +79,7 @@ async function startWorker(): Promise<void> {
     storageConfig,
     useMockAI: env.USE_MOCK_AI,
     geminiApiKey: env.GEMINI_API_KEY,
+    deepResearchEnabled: !env.DISABLE_DEEP_RESEARCH,
     telemetryConfig: {
       enabled: env.TELEMETRY_ENABLED,
       serviceName: env.OTEL_SERVICE_NAME ?? 'content-studio-worker',

@@ -3,6 +3,7 @@ import { useResearchChat } from '../hooks/use-research-chat';
 import { useStartResearch } from '../hooks/use-start-research';
 import { useSynthesizeResearch } from '../hooks/use-synthesize-research';
 import { ResearchChatDialog } from './research-chat-dialog';
+import { isDeepResearchEnabled } from '@/env';
 
 interface ResearchChatContainerProps {
   open: boolean;
@@ -10,6 +11,19 @@ interface ResearchChatContainerProps {
 }
 
 export function ResearchChatContainer({
+  open,
+  onOpenChange,
+}: ResearchChatContainerProps) {
+  if (!isDeepResearchEnabled) {
+    return null;
+  }
+
+  return (
+    <EnabledResearchChatContainer open={open} onOpenChange={onOpenChange} />
+  );
+}
+
+function EnabledResearchChatContainer({
   open,
   onOpenChange,
 }: ResearchChatContainerProps) {

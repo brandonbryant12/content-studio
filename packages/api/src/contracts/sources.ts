@@ -64,6 +64,17 @@ const urlErrors = {
   },
 } as const;
 
+const featureErrors = {
+  DEEP_RESEARCH_DISABLED: {
+    status: 403,
+    data: std(
+      Schema.Struct({
+        feature: Schema.Literal('deep_research'),
+      }),
+    ),
+  },
+} as const;
+
 const MAX_UPLOAD_SOURCE_BYTES = 10 * 1024 * 1024;
 // Base64 expands payload size by ~4/3. Keep a small buffer for transport overhead.
 export const MAX_UPLOAD_SOURCE_BASE64_CHARS =
@@ -212,7 +223,7 @@ const sourceContract = oc
         description:
           'Start a deep research operation that produces a knowledge base source',
       })
-      .errors({ ...sourceErrors, ...urlErrors })
+      .errors({ ...sourceErrors, ...urlErrors, ...featureErrors })
       .input(
         std(
           Schema.Struct({
@@ -234,7 +245,7 @@ const sourceContract = oc
         summary: 'Retry processing',
         description: 'Retry processing a failed source',
       })
-      .errors({ ...sourceErrors, ...urlErrors })
+      .errors({ ...sourceErrors, ...urlErrors, ...featureErrors })
       .input(std(Schema.Struct({ id: SourceIdSchema })))
       .output(std(SourceOutputSchema)),
   });

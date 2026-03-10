@@ -10,6 +10,7 @@ import {
   withUseCaseSpan,
 } from '../../shared';
 import { SourceRepo } from '../repos';
+import { ensureDeepResearchEnabled } from '../services/deep-research-feature';
 
 export interface CreateFromResearchInput {
   query: string;
@@ -19,6 +20,8 @@ export interface CreateFromResearchInput {
 
 export const createFromResearch = (input: CreateFromResearchInput) =>
   Effect.gen(function* () {
+    yield* ensureDeepResearchEnabled;
+
     const user = yield* getCurrentUser;
     const sourceRepo = yield* SourceRepo;
 

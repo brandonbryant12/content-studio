@@ -1,0 +1,1 @@
+ALTER TABLE "podcast" ADD COLUMN "setupInstructions" text;

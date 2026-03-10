@@ -1,11 +1,13 @@
 import { Role } from '@repo/auth/policy';
-import { JobProcessingError } from '@repo/queue';
+import { type JobId, type JobStatus } from '@repo/db/schema';
+import { type Job, JobProcessingError, type QueueService } from '@repo/queue';
 import { Schedule, Effect } from 'effect';
 import { describe, it, expect } from 'vitest';
 import {
   makeJobUser,
   wrapJobError,
   createRetrySchedule,
+  keepJobHeartbeatAlive,
   resolvePerTypeConcurrency,
 } from '../base-worker';
 
@@ -113,5 +115,62 @@ describe('resolvePerTypeConcurrency', () => {
     });
     expect(limits['generate-podcast']).toBe(1);
     expect(limits['process-url']).toBe(3);
+  });
+});
+
+describe('keepJobHeartbeatAlive', () => {
+  const createMockQueue = (
+    touchProcessingJob?: QueueService['touchProcessingJob'],
+  ): QueueService => ({
+    enqueue: () => Effect.die('not implemented'),
+    getJob: () => Effect.die('not implemented'),
+    getJobsByUser: () => Effect.die('not implemented'),
+    updateJobStatus: () => Effect.die('not implemented'),
+    processNextJob: () => Effect.die('not implemented'),
+    processJobById: () => Effect.die('not implemented'),
+    findPendingJobForPodcast: () => Effect.die('not implemented'),
+    findPendingJobForVoiceover: () => Effect.die('not implemented'),
+    claimNextJob: () => Effect.die('not implemented'),
+    deleteJob: () => Effect.die('not implemented'),
+    failStaleJobs: () => Effect.die('not implemented'),
+    touchProcessingJob,
+  });
+
+  const createTouchedJob = (): Job => ({
+    id: 'job_heartbeat' as JobId,
+    type: 'process-research',
+    status: 'processing' as JobStatus,
+    payload: {},
+    result: null,
+    error: null,
+    createdBy: 'user_1',
+    createdAt: new Date(),
+    updatedAt: new Date(),
+    startedAt: new Date(),
+    completedAt: null,
+  });
+
+  it('touches processing jobs until the queue reports they are no longer active', async () => {
+    let touchCount = 0;
+    const queue = createMockQueue(() =>
+      Effect.sync(() => {
+        touchCount += 1;
+        return touchCount < 3 ? createTouchedJob() : null;
+      }),
+    );
+
+    await Effect.runPromise(
+      keepJobHeartbeatAlive(queue, 'job_heartbeat' as JobId, 5),
+    );
+
+    expect(touchCount).toBe(3);
+  });
+
+  it('is a no-op when the queue does not support heartbeats', async () => {
+    await expect(
+      Effect.runPromise(
+        keepJobHeartbeatAlive(createMockQueue(), 'job_heartbeat' as JobId, 5),
+      ),
+    ).resolves.toBeUndefined();
   });
 });

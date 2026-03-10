@@ -1,3 +1,4 @@
+import { DeepResearchFeatureLive } from '@repo/media';
 import {
   createMockSourceRepo,
   createMockPodcastRepo,
@@ -18,6 +19,7 @@ import { recoverOrphanedResearch } from '../research-recovery';
 
 const createMockQueue = (options?: {
   onEnqueue?: (type: string, payload: unknown, userId: string) => void;
+  jobsByUser?: QueueService['getJobsByUser'];
 }): Layer.Layer<Queue> => {
   const service: QueueService = {
     enqueue: (type, payload, userId) =>
@@ -38,7 +40,7 @@ const createMockQueue = (options?: {
         };
       }),
     getJob: () => Effect.die('not implemented'),
-    getJobsByUser: () => Effect.die('not implemented'),
+    getJobsByUser: options?.jobsByUser ?? (() => Effect.succeed([])),
     updateJobStatus: () => Effect.die('not implemented'),
     processNextJob: () => Effect.die('not implemented'),
     processJobById: () => Effect.die('not implemented'),
@@ -55,6 +57,7 @@ const baseRepoLayers = Layer.mergeAll(
   createMockPodcastRepo(),
   createMockVoiceoverRepo(),
   createMockInfographicRepo(),
+  DeepResearchFeatureLive(true),
   MockDbLive,
 );
 
@@ -85,6 +88,69 @@ describe('recoverOrphanedResearch', () => {
 
     expect(enqueueSpy).not.toHaveBeenCalled();
     expect(publishSpy).not.toHaveBeenCalled();
+  });
+
+  it('reuses an existing active research job instead of enqueueing a duplicate', async () => {
+    const publishSpy = vi.fn();
+    const enqueueSpy = vi.fn();
+    const updateStatusSpy = vi.fn(() => Effect.succeed({} as never));
+
+    const orphan = createTestSource({
+      source: 'research',
+      status: 'failed',
+      createdBy: 'user_1',
+      researchConfig: {
+        query: 'quantum computing',
+        operationId: 'op-111',
+        researchStatus: 'in_progress',
+      },
+    });
+
+    const layers = Layer.mergeAll(
+      createMockSourceRepo({
+        findOrphanedResearch: () => Effect.succeed([orphan]),
+        updateStatus: updateStatusSpy,
+      }),
+      createMockQueue({
+        onEnqueue: enqueueSpy,
+        jobsByUser: () =>
+          Effect.succeed([
+            {
+              id: 'job_existing' as JobId,
+              type: 'process-research',
+              status: 'processing' as JobStatus,
+              payload: {
+                sourceId: orphan.id,
+                query: orphan.researchConfig!.query,
+                userId: orphan.createdBy,
+              },
+              result: null,
+              error: null,
+              createdBy: orphan.createdBy,
+              createdAt: new Date(),
+              updatedAt: new Date(),
+              startedAt: new Date(),
+              completedAt: null,
+            },
+          ]),
+      }),
+      baseRepoLayers,
+    );
+
+    await Effect.runPromise(
+      recoverOrphanedResearch(publishSpy).pipe(Effect.provide(layers)),
+    );
+
+    expect(updateStatusSpy).toHaveBeenCalledWith(orphan.id, 'processing');
+    expect(enqueueSpy).not.toHaveBeenCalled();
+    expect(publishSpy).toHaveBeenCalledWith(
+      orphan.createdBy,
+      expect.objectContaining({
+        type: 'entity_change',
+        entityType: 'source',
+        entityId: orphan.id,
+      }),
+    );
   });
 
   it('resets source status and enqueues job for each orphan', async () => {
@@ -181,5 +247,43 @@ describe('recoverOrphanedResearch', () => {
     await Effect.runPromise(
       recoverOrphanedResearch(publishSpy).pipe(Effect.provide(layers)),
     );
+  });
+
+  it('skips recovery when deep research is disabled', async () => {
+    const publishSpy = vi.fn();
+    const enqueueSpy = vi.fn();
+    const updateStatusSpy = vi.fn(() => Effect.succeed({} as never));
+
+    const orphan = createTestSource({
+      source: 'research',
+      status: 'processing',
+      createdBy: 'user_1',
+      researchConfig: {
+        query: 'quantum computing',
+        operationId: 'op-111',
+        researchStatus: 'in_progress',
+      },
+    });
+
+    const layers = Layer.mergeAll(
+      createMockSourceRepo({
+        findOrphanedResearch: () => Effect.succeed([orphan]),
+        updateStatus: updateStatusSpy,
+      }),
+      createMockQueue({ onEnqueue: enqueueSpy }),
+      createMockPodcastRepo(),
+      createMockVoiceoverRepo(),
+      createMockInfographicRepo(),
+      DeepResearchFeatureLive(false),
+      MockDbLive,
+    );
+
+    await Effect.runPromise(
+      recoverOrphanedResearch(publishSpy).pipe(Effect.provide(layers)),
+    );
+
+    expect(updateStatusSpy).not.toHaveBeenCalled();
+    expect(enqueueSpy).not.toHaveBeenCalled();
+    expect(publishSpy).not.toHaveBeenCalled();
   });
 });

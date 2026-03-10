@@ -78,7 +78,9 @@ vi.mock('@/shared/components/confirmation-dialog/confirmation-dialog', () => ({
 
 vi.mock('@/shared/hooks', () => ({
   useKeyboardShortcut: vi.fn(),
-  useNavigationBlock: vi.fn(),
+  useNavigationBlock: vi
+    .fn()
+    .mockReturnValue({ isBlocked: false, proceed: vi.fn(), reset: vi.fn() }),
   useSessionGuard: vi.fn(),
 }));
 
@@ -178,6 +180,11 @@ describe('PodcastDetailContainer', () => {
   beforeEach(() => {
     vi.clearAllMocks();
 
+    vi.mocked(useNavigationBlock).mockReturnValue({
+      isBlocked: false,
+      proceed: vi.fn(),
+      reset: vi.fn(),
+    });
     vi.mocked(useSessionGuard).mockReturnValue({
       user: { id: 'user-1' },
     } as never);

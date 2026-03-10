@@ -10,6 +10,7 @@ interface TranscriptWriteToolInput {
 
 type WritingAssistantMessage = UIMessage;
 const TRANSCRIPT_WRITE_TOOL = 'updateVoiceoverText' as const;
+const WRITE_CONFIRMATION_PREFIX = 'assistant-confirmation' as const;
 
 type TranscriptWriteToolPart = WritingAssistantMessage['parts'][number] & {
   readonly type: `tool-${typeof TRANSCRIPT_WRITE_TOOL}`;
@@ -63,6 +64,19 @@ function extractPendingTranscriptWrites(
   return writes;
 }
 
+function createTranscriptWriteConfirmationMessage(toolCallId: string) {
+  return {
+    id: `${WRITE_CONFIRMATION_PREFIX}-${toolCallId}`,
+    role: 'assistant',
+    parts: [
+      {
+        type: 'text',
+        text: 'I updated the script in the editor. Review the new draft and tell me what to adjust next.',
+      },
+    ],
+  } as WritingAssistantMessage;
+}
+
 const transport = {
   sendMessages: async (options: {
     messages: WritingAssistantMessage[];
@@ -96,6 +110,7 @@ export function useWritingAssistantChat(
     const applyPendingWrites = async () => {
       const pendingWrites = extractPendingTranscriptWrites(messages);
       let latestAppliedTranscript: string | null = null;
+      const appliedWriteToolCallIds: string[] = [];
 
       for (const write of pendingWrites) {
         if (handledToolCallIdsRef.current.has(write.toolCallId)) {
@@ -118,6 +133,7 @@ export function useWritingAssistantChat(
             },
           });
           latestAppliedTranscript = write.transcript;
+          appliedWriteToolCallIds.push(write.toolCallId);
         } catch {
           handledToolCallIdsRef.current.delete(write.toolCallId);
         }
@@ -131,10 +147,27 @@ export function useWritingAssistantChat(
         return;
       }
 
+      const followUpPromise = sendMessage(undefined, {
+        body: { transcript: latestAppliedTranscript },
+      });
+
+      setMessages((currentMessages) => {
+        const existingMessageIds = new Set(
+          currentMessages.map((message) => message.id),
+        );
+        const confirmationMessages = appliedWriteToolCallIds
+          .map(createTranscriptWriteConfirmationMessage)
+          .filter((message) => !existingMessageIds.has(message.id));
+
+        if (confirmationMessages.length === 0) {
+          return currentMessages;
+        }
+
+        return [...currentMessages, ...confirmationMessages];
+      });
+
       try {
-        await sendMessage(undefined, {
-          body: { transcript: latestAppliedTranscript },
-        });
+        await followUpPromise;
       } catch {
         // Keep the applied editor state even if follow-up chat continuation fails.
       }
@@ -145,7 +178,14 @@ export function useWritingAssistantChat(
     return () => {
       isCancelled = true;
     };
-  }, [addToolResult, messages, onApplyTranscriptEdit, sendMessage, transcript]);
+  }, [
+    addToolResult,
+    messages,
+    onApplyTranscriptEdit,
+    sendMessage,
+    setMessages,
+    transcript,
+  ]);
 
   const isStreaming = status === 'submitted' || status === 'streaming';
 

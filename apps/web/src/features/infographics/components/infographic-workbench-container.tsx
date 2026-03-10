@@ -35,6 +35,7 @@ import { VersionSettingsPanel } from './version-settings-panel';
 import { apiClient } from '@/clients/apiClient';
 import { ApproveButton } from '@/shared/components/approval/approve-button';
 import { ConfirmationDialog } from '@/shared/components/confirmation-dialog/confirmation-dialog';
+import { UnsavedChangesDialog } from '@/shared/components/unsaved-changes-dialog';
 import {
   useSessionGuard,
   useKeyboardShortcut,
@@ -512,7 +513,7 @@ export function InfographicWorkbenchContainer({
     enabled: hasPrompt && !actions.isGenerating,
   });
 
-  useNavigationBlock({
+  const navBlocker = useNavigationBlock({
     shouldBlock: hasUnsavedChanges && !actions.isGenerating,
   });
 
@@ -599,6 +600,7 @@ export function InfographicWorkbenchContainer({
         isLoading={actions.isDeleting}
         onConfirm={handleDeleteConfirm}
       />
+      <UnsavedChangesDialog blocker={navBlocker} />
     </>
   );
 }

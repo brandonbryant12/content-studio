@@ -30,11 +30,13 @@ import {
 import {
   DEFAULT_PER_TYPE_CONCURRENCY,
   STALE_CHECK_INTERVAL_MS,
+  STALE_JOB_MAX_AGE_MS,
 } from './constants';
+import { syncFailedEntityStateForJob } from './entity-failure';
 import { emitEntityChange, type PublishEvent } from './events';
 import {
+  createGeneratePodcastHandler,
   handleGenerateAudio,
-  handleGeneratePodcast,
   handleGenerateScript,
 } from './handlers/handlers';
 import { handleGenerateInfographic } from './handlers/infographic-handlers';
@@ -69,6 +71,91 @@ const JOB_TYPES: JobType[] = [
 
 const noop = (): void => undefined;
 
+export const reapAndRecoverResearch = (
+  publishEvent: PublishEvent,
+  maxAgeMs: number = STALE_JOB_MAX_AGE_MS,
+) =>
+  reapStaleJobs(publishEvent, maxAgeMs).pipe(
+    Effect.flatMap((staleJobs) =>
+      staleJobs.some((job) => job.type === 'process-research')
+        ? recoverOrphanedResearch(publishEvent)
+        : Effect.void,
+    ),
+  );
+
+export const publishJobCompletionEvent = (
+  publishEvent: PublishEvent,
+  job: Job<WorkerPayload>,
+): void => {
+  const { userId } = job.payload;
+  const status = job.status === JobStatus.COMPLETED ? 'completed' : 'failed';
+  const error = job.error ?? undefined;
+
+  if ('sourceId' in job.payload) {
+    const { sourceId } = job.payload as
+      | ProcessUrlPayload
+      | ProcessResearchPayload;
+    const event: SourceJobCompletionEvent = {
+      type: 'source_job_completion',
+      jobId: job.id,
+      jobType: job.type as 'process-url' | 'process-research',
+      status,
+      sourceId,
+      error,
+    };
+    publishEvent(userId, event);
+    emitEntityChange(publishEvent, userId, 'source', sourceId);
+    return;
+  }
+
+  if ('infographicId' in job.payload) {
+    const { infographicId } = job.payload as GenerateInfographicPayload;
+    const event: InfographicJobCompletionEvent = {
+      type: 'infographic_job_completion',
+      jobId: job.id,
+      jobType: 'generate-infographic',
+      status,
+      infographicId,
+      error,
+    };
+    publishEvent(userId, event);
+    emitEntityChange(publishEvent, userId, 'infographic', infographicId);
+    return;
+  }
+
+  if ('voiceoverId' in job.payload) {
+    const { voiceoverId } = job.payload as GenerateVoiceoverPayload;
+    const event: VoiceoverJobCompletionEvent = {
+      type: 'voiceover_job_completion',
+      jobId: job.id,
+      jobType: 'generate-voiceover',
+      status,
+      voiceoverId,
+      error,
+    };
+    publishEvent(userId, event);
+    emitEntityChange(publishEvent, userId, 'voiceover', voiceoverId);
+    return;
+  }
+
+  if ('podcastId' in job.payload) {
+    const { podcastId } = job.payload as GeneratePodcastPayload;
+    const event: JobCompletionEvent = {
+      type: 'job_completion',
+      jobId: job.id,
+      jobType: job.type as
+        | 'generate-podcast'
+        | 'generate-script'
+        | 'generate-audio',
+      status,
+      podcastId,
+      error,
+    };
+    publishEvent(userId, event);
+    emitEntityChange(publishEvent, userId, 'podcast', podcastId);
+  }
+};
+
 /**
  * Log an error/defect with stack trace, then re-fail as a JobProcessingError.
  */
@@ -85,6 +172,7 @@ const logAndReFail = (job: Job, label: string, error: unknown) =>
 
 export function createUnifiedWorker(config: UnifiedWorkerConfig): Worker {
   const publishEvent = config.publishEvent ?? noop;
+  const handleGeneratePodcast = createGeneratePodcastHandler(publishEvent);
   let lastStaleSweepAt = 0;
 
   const processJob = (job: Job<WorkerPayload>) =>
@@ -156,70 +244,22 @@ export function createUnifiedWorker(config: UnifiedWorkerConfig): Worker {
       Effect.annotateLogs('worker', 'UnifiedWorker'),
     );
 
-  const onJobComplete = (job: Job<WorkerPayload>): void => {
-    const { userId } = job.payload;
-    const status = job.status === JobStatus.COMPLETED ? 'completed' : 'failed';
-    const error = job.error ?? undefined;
-
-    if ('sourceId' in job.payload) {
-      const { sourceId } = job.payload as
-        | ProcessUrlPayload
-        | ProcessResearchPayload;
-      const event: SourceJobCompletionEvent = {
-        type: 'source_job_completion',
-        jobId: job.id,
-        jobType: job.type as 'process-url' | 'process-research',
-        status,
-        sourceId,
-        error,
-      };
-      publishEvent(userId, event);
-      emitEntityChange(publishEvent, userId, 'source', sourceId);
-    } else if ('infographicId' in job.payload) {
-      const { infographicId } = job.payload as GenerateInfographicPayload;
-      const event: InfographicJobCompletionEvent = {
-        type: 'infographic_job_completion',
-        jobId: job.id,
-        jobType: 'generate-infographic',
-        status,
-        infographicId,
-        error,
-      };
-      publishEvent(userId, event);
-      emitEntityChange(publishEvent, userId, 'infographic', infographicId);
-    } else if ('voiceoverId' in job.payload) {
-      const { voiceoverId } = job.payload as GenerateVoiceoverPayload;
-      const event: VoiceoverJobCompletionEvent = {
-        type: 'voiceover_job_completion',
-        jobId: job.id,
-        jobType: 'generate-voiceover',
-        status,
-        voiceoverId,
-        error,
-      };
-      publishEvent(userId, event);
-      emitEntityChange(publishEvent, userId, 'voiceover', voiceoverId);
-    } else if ('podcastId' in job.payload) {
-      const { podcastId } = job.payload as GeneratePodcastPayload;
-      const event: JobCompletionEvent = {
-        type: 'job_completion',
-        jobId: job.id,
-        jobType: job.type as
-          | 'generate-podcast'
-          | 'generate-script'
-          | 'generate-audio',
-        status,
-        podcastId,
-        error,
-      };
-      publishEvent(userId, event);
-      emitEntityChange(publishEvent, userId, 'podcast', podcastId);
-    }
-  };
+  const onJobComplete = (job: Job<WorkerPayload>): void =>
+    publishJobCompletionEvent(publishEvent, job);
 
   const onStart = () =>
     reapStaleJobs(publishEvent).pipe(
       Effect.flatMap(() => recoverOrphanedResearch(publishEvent)),
+    );
+
+  const onJobFailure = (job: Job<WorkerPayload>, errorMessage: string) =>
+    syncFailedEntityStateForJob(job, errorMessage).pipe(
+      Effect.catchAll((error) =>
+        Effect.logError(
+          `Failed to sync entity failure state for ${job.type} job ${job.id}: ${formatError(error)}`,
+        ),
+      ),
+      Effect.annotateLogs('worker', 'UnifiedWorker'),
     );
 
   const onPollCycle = (_pollCount: number) =>
@@ -230,7 +270,7 @@ export function createUnifiedWorker(config: UnifiedWorkerConfig): Worker {
       }
 
       lastStaleSweepAt = now;
-      yield* reapStaleJobs(publishEvent);
+      yield* reapAndRecoverResearch(publishEvent);
     });
 
   return createWorker({
@@ -244,6 +284,7 @@ export function createUnifiedWorker(config: UnifiedWorkerConfig): Worker {
       },
     },
     processJob,
+    onJobFailure,
     onJobComplete,
     onPollCycle,
     onStart,

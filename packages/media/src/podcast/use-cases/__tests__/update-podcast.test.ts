@@ -96,8 +96,16 @@ const createMockPodcastRepo = (
           hostVoiceName: data.hostVoiceName ?? existing.hostVoiceName,
           coHostVoice: data.coHostVoice ?? existing.coHostVoice,
           coHostVoiceName: data.coHostVoiceName ?? existing.coHostVoiceName,
+          setupInstructions:
+            data.setupInstructions === undefined
+              ? existing.setupInstructions
+              : data.setupInstructions,
           promptInstructions:
             data.promptInstructions ?? existing.promptInstructions,
+          episodePlan:
+            data.episodePlan === undefined
+              ? existing.episodePlan
+              : data.episodePlan,
           targetDurationMinutes:
             data.targetDurationMinutes ?? existing.targetDurationMinutes,
           tags: data.tags ? [...data.tags] : existing.tags,
@@ -232,6 +240,29 @@ describe('updatePodcast', () => {
   });
 
   describe('generation settings', () => {
+    it('updates and trims setup instructions', async () => {
+      const user = createTestUser();
+      const podcast = createTestPodcast({
+        setupInstructions: null,
+        createdBy: user.id,
+      });
+      const podcasts = new Map<string, Podcast>([[podcast.id, podcast]]);
+
+      const mockRepo = createMockPodcastRepo({ podcasts, sources: [] });
+      const layers = Layer.mergeAll(MockDbLive, mockRepo);
+
+      const result = await Effect.runPromise(
+        withTestUser(user)(
+          updatePodcast({
+            podcastId: podcast.id,
+            data: { setupInstructions: '  Focus on payment options.  ' },
+          }).pipe(Effect.provide(layers)),
+        ),
+      );
+
+      expect(result.setupInstructions).toBe('Focus on payment options.');
+    });
+
     it('updates prompt instructions', async () => {
       const user = createTestUser();
       const podcast = createTestPodcast({
@@ -276,6 +307,69 @@ describe('updatePodcast', () => {
       );
 
       expect(result.targetDurationMinutes).toBe(15);
+    });
+
+    it('sanitizes episode plans before persistence', async () => {
+      const user = createTestUser();
+      const doc = createTestSource({ createdBy: user.id });
+      const podcast = createTestPodcast({
+        sourceIds: [doc.id],
+        createdBy: user.id,
+      });
+      const podcasts = new Map<string, Podcast>([[podcast.id, podcast]]);
+
+      const mockRepo = createMockPodcastRepo({
+        podcasts,
+        sources: [doc],
+      });
+      const layers = Layer.mergeAll(MockDbLive, mockRepo);
+
+      const result = await Effect.runPromise(
+        withTestUser(user)(
+          updatePodcast({
+            podcastId: podcast.id,
+            data: {
+              episodePlan: {
+                angle: '  Focus on the rollout lessons.  ',
+                openingHook: '  Most launches fail before users hear them.  ',
+                closingTakeaway: '  Start smaller and tighten feedback.  ',
+                sections: [
+                  {
+                    heading: '  Where teams stall  ',
+                    summary:
+                      '  The operational bottlenecks that slow launch.  ',
+                    keyPoints: ['  approvals  ', ' ', 'approvals', 'source QA'],
+                    sourceIds: [doc.id, 'doc_unknown'],
+                    estimatedMinutes: 1.3,
+                  },
+                  {
+                    heading: '   ',
+                    summary: 'This section should be dropped',
+                    keyPoints: ['ignored'],
+                    sourceIds: [doc.id],
+                    estimatedMinutes: 2,
+                  },
+                ],
+              },
+            },
+          }).pipe(Effect.provide(layers)),
+        ),
+      );
+
+      expect(result.episodePlan).toEqual({
+        angle: 'Focus on the rollout lessons.',
+        openingHook: 'Most launches fail before users hear them.',
+        closingTakeaway: 'Start smaller and tighten feedback.',
+        sections: [
+          {
+            heading: 'Where teams stall',
+            summary: 'The operational bottlenecks that slow launch.',
+            keyPoints: ['approvals', 'source QA'],
+            sourceIds: [doc.id],
+            estimatedMinutes: 1,
+          },
+        ],
+      });
     });
   });
 

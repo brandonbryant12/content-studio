@@ -1,6 +1,6 @@
 import { Context } from 'effect';
 import type { LLMError, LLMRateLimitError } from '../errors';
-import type { ToolSet, UIMessage, UIMessageChunk } from 'ai';
+import type { ToolChoice, ToolSet, UIMessage, UIMessageChunk } from 'ai';
 import type { Schema, Effect } from 'effect';
 
 /**
@@ -23,6 +23,7 @@ export interface StreamTextOptions<TOOLS extends ToolSet = ToolSet> {
   readonly maxTokens?: number;
   readonly temperature?: number;
   readonly tools?: TOOLS;
+  readonly toolChoice?: ToolChoice<TOOLS>;
 }
 
 /**

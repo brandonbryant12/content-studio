@@ -6,6 +6,7 @@ import { AddFromUrlDialog } from './add-from-url-dialog';
 import { ResearchChatContainer } from './research-chat-container';
 import { SourceList } from './source-list';
 import { apiClient } from '@/clients/apiClient';
+import { isDeepResearchEnabled } from '@/env';
 import { ConfirmationDialog } from '@/shared/components/confirmation-dialog/confirmation-dialog';
 import {
   ListPageErrorState,
@@ -110,10 +111,12 @@ export function SourceListContainer() {
         onSubmit={handleCreateFromUrl}
         isSubmitting={createFromUrlMutation.isPending}
       />
-      <ResearchChatContainer
-        open={researchDialogOpen}
-        onOpenChange={setResearchDialogOpen}
-      />
+      {isDeepResearchEnabled ? (
+        <ResearchChatContainer
+          open={researchDialogOpen}
+          onOpenChange={setResearchDialogOpen}
+        />
+      ) : null}
       <ConfirmationDialog
         open={pendingDeleteId !== null}
         onOpenChange={(open) => {

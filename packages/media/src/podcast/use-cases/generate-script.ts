@@ -26,6 +26,7 @@ import { PodcastRepo } from '../repos/podcast-repo';
 export interface GenerateScriptInput {
   podcastId: string;
   promptInstructions?: string;
+  ignoreEpisodePlan?: boolean;
 }
 
 export interface GenerateScriptResult {
@@ -129,16 +130,25 @@ export const generateScript = (input: GenerateScriptInput) =>
     const combinedContent = sourceContents.join('\n\n---\n\n');
 
     const effectivePrompt =
-      input.promptInstructions ?? podcast.promptInstructions ?? '';
+      input.promptInstructions ??
+      (input.ignoreEpisodePlan ? '' : (podcast.promptInstructions ?? ''));
     const promptContext: ScriptPromptContext = {
       format: podcast.format,
+      targetDurationMinutes: podcast.targetDurationMinutes,
       customInstructions: effectivePrompt,
       hostPersona,
       coHostPersona,
+      episodePlan: input.ignoreEpisodePlan
+        ? undefined
+        : (podcast.episodePlan ?? undefined),
     };
     const systemPrompt = buildSystemPrompt(promptContext);
     const userPrompt = buildUserPrompt(
-      { title: podcast.title, description: podcast.description },
+      {
+        title: podcast.title,
+        description: podcast.description,
+        targetDurationMinutes: podcast.targetDurationMinutes,
+      },
       combinedContent,
     );
 

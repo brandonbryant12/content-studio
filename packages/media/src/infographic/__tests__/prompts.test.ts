@@ -9,10 +9,12 @@ describe('buildInfographicPrompt', () => {
       prompt: 'Create a timeline of company history',
     });
 
-    expect(result).toContain('You are designing an infographic');
+    expect(result).toContain('You are designing an image');
+    expect(result).toContain('Do not invent statistics');
     expect(result).toContain(
       'Content direction: Create a timeline of company history',
     );
+    expect(result).toContain('Style: Infographic — data-driven visual summary');
   });
 
   it('groups color properties into a dedicated palette section', () => {
@@ -59,16 +61,48 @@ describe('buildInfographicPrompt', () => {
     );
   });
 
-  it('omits style section when no properties', () => {
+  it('defaults to infographic style when no properties are provided', () => {
     const result = buildInfographicPrompt({
       styleProperties: [],
       format: 'portrait',
       prompt: 'Test',
     });
 
-    expect(result).not.toContain('STYLE DIRECTIVES');
-    expect(result).not.toContain('Color palette');
-    expect(result).not.toContain('Visual direction');
+    expect(result).toContain('STYLE DIRECTIVES');
+    expect(result).toContain('Visual direction:');
+    expect(result).toContain('Style: Infographic — data-driven visual summary');
+  });
+
+  it('adds the default infographic style when other style directives omit content type', () => {
+    const result = buildInfographicPrompt({
+      styleProperties: [{ key: 'Tone', value: 'Analytical', type: 'text' }],
+      format: 'portrait',
+      prompt: 'Test',
+    });
+
+    expect(result).toContain('Style: Infographic — data-driven visual summary');
+    expect(result).toContain('- Tone: Analytical');
+  });
+
+  it('does not add the default infographic style when a custom style is provided', () => {
+    const result = buildInfographicPrompt({
+      styleProperties: [
+        {
+          key: 'Style',
+          value: 'Social media card — punchy, visual-first, shareable',
+          type: 'text',
+        },
+      ],
+      format: 'portrait',
+      prompt: 'Test',
+    });
+
+    expect(result).toContain(
+      '- Style: Social media card — punchy, visual-first, shareable',
+    );
+    expect(result).not.toContain(
+      '- Style: Infographic — data-driven visual summary',
+    );
   });
 
   it('includes correct format dimensions', () => {
@@ -94,7 +128,7 @@ describe('buildInfographicPrompt', () => {
       isEdit: true,
     });
 
-    expect(result).toContain('existing infographic');
+    expect(result).toContain('current design');
     expect(result).toContain('Apply the style directives provided');
     expect(result).not.toContain(
       'Preserve the overall layout, typography, and color scheme',

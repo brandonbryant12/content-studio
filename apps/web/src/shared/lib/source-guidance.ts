@@ -3,7 +3,7 @@ import { APP_NAME } from '@/constants';
 export const SOURCE_DEFINITION = `Sources are reusable reference materials that ${APP_NAME} turns into podcasts, voiceovers, infographics, and future edits.`;
 
 export const SOURCE_LIST_SUPPORT =
-  'Each source stores extracted text from a file, public web page, or AI-assisted research brief so you can reuse the same facts more than once.';
+  'Each source stores extracted text from reusable inputs so you can reference the same facts more than once.';
 
 export const SOURCE_ASSIGNMENT_HELP =
   'Selected sources ground the output. They shape the facts, examples, and claims the model can pull from.';
@@ -42,10 +42,10 @@ export const SOURCE_MANAGER_DIALOG_DESCRIPTION =
   'Choose existing sources or create a new one for this podcast.';
 
 export const SOURCE_MANAGER_DIALOG_HELP =
-  'Use existing sources when you already trust the material. Upload, add a URL, or research a topic when you need a new input without leaving this workflow.';
+  'Use existing sources when you already trust the material. Upload a file or add a URL when you need a new input without leaving this workflow.';
 
 export const SOURCE_PICKER_EMPTY_DESCRIPTION =
-  'No reusable sources are available yet. Upload a file, save a URL, or create a research brief to start grounding your content.';
+  'No reusable sources are available yet. Upload a file or save a URL to start grounding your content.';
 
 export const SOURCE_IMPORT_OPTIONS = [
   {

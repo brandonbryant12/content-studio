@@ -18,10 +18,11 @@ import type {
   GenerateAudioPayload,
   GenerateAudioResult,
 } from '@repo/queue';
+import { emitEntityChange, type PublishEvent } from '../events';
 import { defineJobHandler } from './job-handler';
 
-export const handleGeneratePodcast = defineJobHandler<GeneratePodcastPayload>()(
-  {
+export const createGeneratePodcastHandler = (publishEvent: PublishEvent) =>
+  defineJobHandler<GeneratePodcastPayload>()({
     span: 'worker.handleGeneratePodcast',
     errorMessage: 'Failed to generate podcast',
     attributes: (job) => ({
@@ -29,7 +30,8 @@ export const handleGeneratePodcast = defineJobHandler<GeneratePodcastPayload>()(
     }),
     run: (job) =>
       Effect.gen(function* () {
-        const { podcastId, promptInstructions } = job.payload;
+        const { podcastId, promptInstructions, ignoreEpisodePlan } =
+          job.payload;
 
         // Wait for any pending research sources before generating script
         const podcastRepo = yield* PodcastRepo;
@@ -49,7 +51,15 @@ export const handleGeneratePodcast = defineJobHandler<GeneratePodcastPayload>()(
         const scriptResult: UseCaseScriptResult = yield* generateScript({
           podcastId,
           promptInstructions,
+          ignoreEpisodePlan,
         });
+
+        emitEntityChange(
+          publishEvent,
+          job.payload.userId,
+          'podcast',
+          scriptResult.podcast.id,
+        );
 
         yield* syncEntityTitle(
           scriptResult.podcast.id,
@@ -68,8 +78,7 @@ export const handleGeneratePodcast = defineJobHandler<GeneratePodcastPayload>()(
           duration: audioResult.duration,
         } satisfies GeneratePodcastResult;
       }),
-  },
-);
+  });
 
 export const handleGenerateScript = defineJobHandler<GenerateScriptPayload>()({
   span: 'worker.handleGenerateScript',
@@ -79,11 +88,12 @@ export const handleGenerateScript = defineJobHandler<GenerateScriptPayload>()({
   }),
   run: (job) =>
     Effect.gen(function* () {
-      const { podcastId, promptInstructions } = job.payload;
+      const { podcastId, promptInstructions, ignoreEpisodePlan } = job.payload;
 
       const result: UseCaseScriptResult = yield* generateScript({
         podcastId,
         promptInstructions,
+        ignoreEpisodePlan,
       });
 
       yield* syncEntityTitle(result.podcast.id, result.podcast.title);

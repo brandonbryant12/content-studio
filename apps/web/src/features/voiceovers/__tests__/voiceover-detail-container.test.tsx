@@ -49,7 +49,9 @@ vi.mock('../components/workbench/writing-assistant-container', () => ({
 
 vi.mock('@/shared/hooks', () => ({
   useKeyboardShortcut: vi.fn(),
-  useNavigationBlock: vi.fn(),
+  useNavigationBlock: vi
+    .fn()
+    .mockReturnValue({ isBlocked: false, proceed: vi.fn(), reset: vi.fn() }),
   useSessionGuard: vi.fn(),
   useIsAdmin: vi.fn(),
 }));
@@ -151,6 +153,11 @@ describe('VoiceoverDetailContainer', () => {
   beforeEach(() => {
     vi.clearAllMocks();
 
+    vi.mocked(useNavigationBlock).mockReturnValue({
+      isBlocked: false,
+      proceed: vi.fn(),
+      reset: vi.fn(),
+    });
     vi.mocked(useSessionGuard).mockReturnValue({
       user: { id: 'user-1' },
     } as never);
@@ -220,17 +227,13 @@ describe('VoiceoverDetailContainer', () => {
     );
   });
 
-  it('maps Cmd+S to save (not generate)', () => {
-    const saveSettings = vi.fn().mockResolvedValue(undefined);
-    setSettings({ hasChanges: true, saveSettings });
-
-    const handleGenerate = vi.fn();
-    setActions({ hasChanges: true, handleGenerate });
+  it('does not register a standalone Cmd+S shortcut for voiceovers', () => {
+    setSettings({ hasChanges: true });
+    setActions({ hasChanges: true });
 
     renderContainer();
 
-    expect(getShortcutConfig('s')).toBeDefined();
-    expect(getShortcutConfig('s')?.onTrigger).not.toBe(handleGenerate);
+    expect(getShortcutConfig('s')).toBeUndefined();
   });
 
   it('maps Cmd+Enter to generate', () => {

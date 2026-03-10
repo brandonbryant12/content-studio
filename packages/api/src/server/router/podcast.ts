@@ -10,6 +10,7 @@ import {
   createPodcast,
   updatePodcast,
   deletePodcast,
+  generatePodcastPlan,
   startGeneration,
   saveAndQueueAudio,
   getJob,
@@ -105,7 +106,20 @@ const podcastRouter = {
         startGeneration({
           podcastId: input.id,
           promptInstructions: input.promptInstructions,
+          ignoreEpisodePlan: input.ignoreEpisodePlan,
         }),
+        {
+          attributes: { 'podcast.id': input.id },
+        },
+      ),
+  ),
+
+  generatePlan: protectedProcedure.podcasts.generatePlan.handler(
+    async ({ context, input, errors }) =>
+      bindEffectProtocol({ context, errors }).run(
+        generatePodcastPlan({ podcastId: input.id }).pipe(
+          Effect.flatMap(serializePodcastEffect),
+        ),
         {
           attributes: { 'podcast.id': input.id },
         },

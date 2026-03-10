@@ -293,15 +293,14 @@ echo
 header "Next steps"
 
 if [[ "$MODE" == "docker" ]]; then
-  info "  docker compose up --build"
+  info "  ./deploy  # generates .env.deploy and starts the full Docker Compose stack"
   info ""
-  info "  Or to expose on your network:"
-  info "  HOST_IP=${HOST} docker compose up --build"
-  info ""
-  info "  MinIO console: http://${HOST}:9090 (minioadmin/minioadmin)"
+  info "  Or export the Compose credential vars before docker compose up --build"
+  info "  (CONTENT_STUDIO_POSTGRES_* and CONTENT_STUDIO_S3_*)"
 else
   info "  1. pnpm install"
-  info "  2. docker compose up -d db redis minio minio-init  # start postgres + redis + minio"
+  info "  2. export CONTENT_STUDIO_POSTGRES_* and CONTENT_STUDIO_S3_*"
+  info "     before docker compose up -d db redis minio minio-init"
   info "  3. pnpm db:push"
   info "  4. pnpm dev"
 fi

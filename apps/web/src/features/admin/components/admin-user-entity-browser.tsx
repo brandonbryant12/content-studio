@@ -217,7 +217,7 @@ function EntityResultRow({ entity }: { entity: AdminUserEntity }) {
             {entity.title}
           </h3>
           <p className="mt-1 text-sm text-muted-foreground">
-            {entity.subtitle ?? 'No extra metadata'}
+            {entity.subtitle ?? ''}
           </p>
           <p className="mt-3 text-xs text-muted-foreground">
             Updated {formatDate(entity.updatedAt)} / Created{' '}
@@ -261,13 +261,12 @@ export function AdminUserEntityBrowser({
     <section className="rounded-3xl border border-border/60 bg-card/80 p-5 shadow-sm">
       <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
         <div>
-          <p className="page-eyebrow">Entity explorer</p>
+          <p className="page-eyebrow">Content</p>
           <h2 className="text-2xl font-semibold tracking-tight text-foreground">
-            Search everything this user created
+            All Content
           </h2>
           <p className="mt-2 max-w-2xl text-sm text-muted-foreground">
-            Search across sources, podcasts, voiceovers, personas, and
-            infographics, then open the exact entity detail page.
+            Search and browse content across all types.
           </p>
         </div>
         {isFetching ? (
@@ -284,16 +283,13 @@ export function AdminUserEntityBrowser({
           <Input
             value={searchQuery}
             onChange={(event) => onSearchChange(event.target.value)}
-            placeholder="Search entities by title or name"
+            placeholder="Search by title or name"
             className="search-input"
-            aria-label="Search user entities"
+            aria-label="Search content"
           />
         </div>
 
-        <div
-          className="mt-4 flex flex-wrap gap-2"
-          aria-label="Filter user entities by type"
-        >
+        <div className="mt-4 flex flex-wrap gap-2" aria-label="Filter by type">
           {FILTER_OPTIONS.map((option) => (
             <Button
               key={option.value}
@@ -311,12 +307,12 @@ export function AdminUserEntityBrowser({
       {entityList.entities.length === 0 ? (
         <div className="mt-6 rounded-2xl border border-dashed border-border/70 bg-muted/20 px-6 py-12 text-center">
           <p className="text-base font-medium text-foreground">
-            {hasFilters ? 'No entities found' : 'No entities yet'}
+            {hasFilters ? 'No content found' : 'No content yet'}
           </p>
           <p className="mt-2 text-sm text-muted-foreground">
             {hasFilters
               ? 'Try a different search term or change the type filter.'
-              : 'Entities will appear here once this user starts creating content.'}
+              : 'Content will appear here once this user starts creating.'}
           </p>
         </div>
       ) : (
