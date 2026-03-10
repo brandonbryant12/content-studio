@@ -211,6 +211,39 @@ function ControlsSidebar({
   const failureMessage = !actions.isGenerating
     ? getGenerationFailureMessage(infographic.errorMessage)
     : null;
+  const isFailed = infographic.status === InfographicStatus.FAILED;
+  const shouldGenerateFromLatestBase =
+    hasExistingImage && isViewingHistoricalVersion;
+
+  const generateButtonContent = (() => {
+    if (actions.isGenerating) {
+      return (
+        <>
+          <Spinner className="w-4 h-4 mr-2" />
+          {`${GENERATION_LABELS.statusGenerating}...`}
+        </>
+      );
+    }
+
+    if (isFailed) {
+      return (
+        <>
+          <ReloadIcon className="w-4 h-4 mr-2" />
+          {GENERATION_LABELS.retry}
+        </>
+      );
+    }
+
+    if (shouldGenerateFromLatestBase) {
+      return `Generate From Base v${latestVersionNumber ?? '—'}`;
+    }
+
+    if (hasExistingImage) {
+      return GENERATION_LABELS.saveAndRegenerate;
+    }
+
+    return 'Generate Infographic';
+  })();
 
   return (
     <aside className="w-[380px] shrink-0 border-r border-border bg-card flex flex-col overflow-hidden">
@@ -289,23 +322,7 @@ function ControlsSidebar({
             onClick={onGenerate}
             disabled={!hasPrompt || actions.isGenerating}
           >
-            {actions.isGenerating ? (
-              <>
-                <Spinner className="w-4 h-4 mr-2" />
-                {`${GENERATION_LABELS.statusGenerating}...`}
-              </>
-            ) : infographic.status === InfographicStatus.FAILED ? (
-              <>
-                <ReloadIcon className="w-4 h-4 mr-2" />
-                {GENERATION_LABELS.retry}
-              </>
-            ) : hasExistingImage && isViewingHistoricalVersion ? (
-              `Generate From Base v${latestVersionNumber ?? '—'}`
-            ) : hasExistingImage ? (
-              GENERATION_LABELS.saveAndRegenerate
-            ) : (
-              'Generate Infographic'
-            )}
+            {generateButtonContent}
           </Button>
         </div>
         {hasExistingImage && isViewingHistoricalVersion && selectedVersion ? (
