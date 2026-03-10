@@ -21,7 +21,7 @@ export function getFileExtensionFromUrl(url: string, fallback: string): string {
   const normalizedFallback = fallback.replace(/^\./, '').toLowerCase();
 
   const parse = (value: string): string | null => {
-    const withoutQuery = value.split(/[?#]/)[0] ?? value;
+    const withoutQuery = value.split(/[?#]/)[0];
     const segment = withoutQuery.split('/').pop();
     if (!segment) return null;
 
@@ -79,9 +79,11 @@ export function buildDownloadFileName({
 }: BuildDownloadFileNameInput): string {
   const base = toFileSlug(title, fallbackSlug);
   const normalizedExtension = extension.replace(/^\./, '').toLowerCase();
-  const labelSegments = labels
-    .map((value) => (value ? toFileSlug(value, '') : ''))
-    .filter((value): value is string => value.length > 0);
+  const labelSegments = labels.flatMap((value) => {
+    if (!value) return [];
+    const slug = toFileSlug(value, '');
+    return slug ? [slug] : [];
+  });
   const dateSegment = toFileDateSegment(date);
 
   const fileNameParts = [base, ...labelSegments];
