@@ -10,7 +10,7 @@ import {
 } from '@repo/ui/components/dialog';
 import { Spinner } from '@repo/ui/components/spinner';
 import { Textarea } from '@repo/ui/components/textarea';
-import { useCallback, useMemo } from 'react';
+import { useMemo } from 'react';
 import type { UIMessage } from 'ai';
 import { ChatAutoTriggerConfirmation } from '@/shared/components/chat-auto-trigger-confirmation';
 import { ChatProgressBadge } from '@/shared/components/chat-progress-badge';
@@ -84,17 +84,19 @@ export function ResearchChatDialog({
 }: ResearchChatDialogProps) {
   const suggestions = useMemo(() => pickRandom(EXAMPLE_TOPICS, 3), []);
   const isInputDisabled = isStreaming || isStartingResearch;
+  const shouldShowProgressBadge = followUpCount > 0 && !autoStartReady;
+  const startButtonLabel = isStartingResearch
+    ? 'Preparing research...'
+    : startError
+      ? 'Retry'
+      : 'Start Research';
+  const inputPlaceholder = canStartResearch
+    ? 'Add more details or click Start Research...'
+    : 'Describe your research topic...';
   const composer = useChatComposer({
     isDisabled: isInputDisabled,
     onSendMessage,
   });
-
-  const handleExampleClick = useCallback(
-    (topic: string) => {
-      onSendMessage(topic);
-    },
-    [onSendMessage],
-  );
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -103,7 +105,7 @@ export function ResearchChatDialog({
           <DialogTitle className="flex items-center gap-2">
             <MagnifyingGlassIcon className="w-5 h-5" />
             Deep Research
-            {followUpCount > 0 && !autoStartReady && (
+            {shouldShowProgressBadge && (
               <ChatProgressBadge
                 current={followUpCount}
                 total={followUpLimit}
@@ -131,7 +133,7 @@ export function ResearchChatDialog({
                   <button
                     key={topic}
                     type="button"
-                    onClick={() => handleExampleClick(topic)}
+                    onClick={() => onSendMessage(topic)}
                     className="px-3 py-1.5 text-xs rounded-full border border-border hover:bg-muted transition-colors text-muted-foreground hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                   >
                     {topic}
@@ -190,12 +192,10 @@ export function ResearchChatDialog({
                   {isStartingResearch ? (
                     <>
                       <Spinner className="w-4 h-4 mr-2" />
-                      Preparing research...
+                      {startButtonLabel}
                     </>
-                  ) : startError ? (
-                    'Retry'
                   ) : (
-                    'Start Research'
+                    startButtonLabel
                   )}
                 </Button>
               </div>
@@ -212,11 +212,7 @@ export function ResearchChatDialog({
             value={composer.input}
             onChange={(e) => composer.setInput(e.target.value)}
             onKeyDown={composer.handleInputKeyDown}
-            placeholder={
-              canStartResearch
-                ? 'Add more details or click Start Research...'
-                : 'Describe your research topic...'
-            }
+            placeholder={inputPlaceholder}
             disabled={isInputDisabled}
             maxLength={CHAT_INPUT_MAX_LENGTH}
             rows={1}
