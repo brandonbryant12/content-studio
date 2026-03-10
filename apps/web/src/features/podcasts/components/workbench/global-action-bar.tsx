@@ -5,6 +5,7 @@ import {
 } from '@radix-ui/react-icons';
 import { Button } from '@repo/ui/components/button';
 import { Spinner } from '@repo/ui/components/spinner';
+import type { ReactNode } from 'react';
 import { VersionStatus, type VersionStatusType } from '../../lib/status';
 import { getGenerationFailureMessage } from '@/shared/lib/errors';
 import { GENERATION_LABELS } from '@/shared/lib/generation-language';
@@ -34,29 +35,30 @@ export function GlobalActionBar({
     hasChanges &&
     (status === VersionStatus.READY || status === VersionStatus.FAILED);
 
-  const getStatusMessage = () => {
-    if (isGenerating) {
-      if (status === VersionStatus.GENERATING_SCRIPT)
-        return 'Generating script...';
-      if (
-        status === VersionStatus.GENERATING_AUDIO ||
-        status === VersionStatus.SCRIPT_READY
-      ) {
-        return 'Generating audio...';
-      }
-      return 'Processing...';
+  let statusMessage: string = GENERATION_LABELS.statusDraft;
+  if (isGenerating) {
+    if (status === VersionStatus.GENERATING_SCRIPT) {
+      statusMessage = 'Generating script...';
+    } else if (
+      status === VersionStatus.GENERATING_AUDIO ||
+      status === VersionStatus.SCRIPT_READY
+    ) {
+      statusMessage = 'Generating audio...';
+    } else {
+      statusMessage = 'Processing...';
     }
-    if (showChangesState) return GENERATION_LABELS.statusUnsavedChanges;
-    if (status === VersionStatus.READY) return GENERATION_LABELS.statusReady;
-    if (status === VersionStatus.FAILED) return GENERATION_LABELS.statusFailed;
-    return GENERATION_LABELS.statusDraft;
-  };
+  } else if (showChangesState) {
+    statusMessage = GENERATION_LABELS.statusUnsavedChanges;
+  } else if (status === VersionStatus.READY) {
+    statusMessage = GENERATION_LABELS.statusReady;
+  } else if (status === VersionStatus.FAILED) {
+    statusMessage = GENERATION_LABELS.statusFailed;
+  }
 
-  const renderAction = () => {
-    if (isGenerating) return null;
-
+  let action: ReactNode = null;
+  if (!isGenerating) {
     if (showChangesState) {
-      return (
+      action = (
         <Button
           size="sm"
           onClick={onSave}
@@ -76,10 +78,8 @@ export function GlobalActionBar({
           )}
         </Button>
       );
-    }
-
-    if (status === VersionStatus.DRAFTING) {
-      return (
+    } else if (status === VersionStatus.DRAFTING) {
+      action = (
         <Button
           size="sm"
           onClick={onGenerate}
@@ -90,10 +90,8 @@ export function GlobalActionBar({
           <span>Generate Podcast</span>
         </Button>
       );
-    }
-
-    if (status === VersionStatus.FAILED) {
-      return (
+    } else if (status === VersionStatus.FAILED) {
+      action = (
         <Button
           size="sm"
           onClick={onGenerate}
@@ -105,9 +103,16 @@ export function GlobalActionBar({
         </Button>
       );
     }
+  }
 
-    return null;
-  };
+  let statusIcon: ReactNode = null;
+  if (isGenerating) {
+    statusIcon = <Spinner className="w-4 h-4" />;
+  } else if (showChangesState) {
+    statusIcon = <div className="action-bar-pulse" />;
+  } else if (status === VersionStatus.READY) {
+    statusIcon = <CheckIcon className="w-4 h-4" />;
+  }
 
   const failureMessage =
     !isGenerating && status === VersionStatus.FAILED
@@ -130,17 +135,11 @@ export function GlobalActionBar({
           role="status"
           aria-live="polite"
         >
-          {isGenerating ? (
-            <Spinner className="w-4 h-4" />
-          ) : showChangesState ? (
-            <div className="action-bar-pulse" />
-          ) : status === VersionStatus.READY ? (
-            <CheckIcon className="w-4 h-4" />
-          ) : null}
-          <span>{getStatusMessage()}</span>
+          {statusIcon}
+          <span>{statusMessage}</span>
         </div>
 
-        <div className="action-bar-actions">{renderAction()}</div>
+        <div className="action-bar-actions">{action}</div>
       </div>
     </>
   );
