@@ -8,7 +8,10 @@ const repoRoot = path.resolve(currentDir, '..', '..', '..', '..');
 
 const packageJsonPath = path.join(repoRoot, 'package.json');
 const docsPath = path.join(repoRoot, 'docs/testing/invariants.md');
-const useCaseTestsDocPath = path.join(repoRoot, 'docs/testing/use-case-tests.md');
+const useCaseTestsDocPath = path.join(
+  repoRoot,
+  'docs/testing/use-case-tests.md',
+);
 const datadogDocPath = path.join(repoRoot, 'docs/architecture/datadog.md');
 const observabilityDocPath = path.join(
   repoRoot,

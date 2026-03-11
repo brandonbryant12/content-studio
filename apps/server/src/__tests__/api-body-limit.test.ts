@@ -35,7 +35,9 @@ describe('api body limit', () => {
     const res = await app.request(request);
 
     expect(res.status).toBe(413);
-    expect(res.headers.get('content-type')).toContain('application/problem+json');
+    expect(res.headers.get('content-type')).toContain(
+      'application/problem+json',
+    );
     expect(res.headers.get('X-Request-Id')).toBe('req-payload-too-large');
     await expect(res.json()).resolves.toEqual({
       type: 'https://content-studio.dev/problems/payload-too-large',

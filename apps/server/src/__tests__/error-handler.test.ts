@@ -56,7 +56,9 @@ describe('globalErrorHandler', () => {
     });
 
     expect(res.status).toBe(500);
-    expect(res.headers.get('content-type')).toContain('application/problem+json');
+    expect(res.headers.get('content-type')).toContain(
+      'application/problem+json',
+    );
     expect(res.headers.get('X-Request-Id')).toBe('req-internal-error');
     await expect(res.json()).resolves.toEqual({
       type: 'https://content-studio.dev/problems/internal-error',

@@ -118,21 +118,17 @@ export function ActionBar({
       ? GENERATION_LABELS.statusFailed
       : GENERATION_LABELS.statusDraft;
 
-  const generateAction = isDrafting
-    ? (
-        <>
-          <LightningBoltIcon className="w-3.5 h-3.5 mr-1.5" />
-          Generate Audio
-        </>
-      )
-    : isFailed
-      ? (
-          <>
-            <ReloadIcon className="w-3.5 h-3.5 mr-1.5" />
-            {GENERATION_LABELS.retry}
-          </>
-        )
-      : null;
+  const generateAction = isDrafting ? (
+    <>
+      <LightningBoltIcon className="w-3.5 h-3.5 mr-1.5" />
+      Generate Audio
+    </>
+  ) : isFailed ? (
+    <>
+      <ReloadIcon className="w-3.5 h-3.5 mr-1.5" />
+      {GENERATION_LABELS.retry}
+    </>
+  ) : null;
   const shouldShowGenerateAction = generateAction && (isFailed || hasText);
 
   return (

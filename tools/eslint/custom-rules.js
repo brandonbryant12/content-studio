@@ -120,8 +120,7 @@ const noChatStatusNotReady = {
   meta: {
     type: 'problem',
     docs: {
-      description:
-        'Disallow `status !== "ready"` style checks in chat hooks.',
+      description: 'Disallow `status !== "ready"` style checks in chat hooks.',
     },
     schema: [],
     messages: {
