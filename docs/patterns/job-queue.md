@@ -96,6 +96,24 @@ to decide when a `processing` job has actually gone orphaned.
 This is especially important for deep research, where a worker can spend a long
 time polling an external provider without changing the job status.
 
+## Timeout Budget Model <!-- enforced-by: manual-review -->
+
+Keep long-running job budgets centralized in `@repo/queue` (`job-timeouts.ts`)
+so worker stale recovery and media polling loops cannot drift apart.
+
+- `SOURCE_RESEARCH_MAX_POLL_DURATION_MS` is the one-hour provider budget.
+- `SOURCE_READINESS_MAX_POLL_DURATION_MS` is derived from research budget plus
+  one steady poll window so podcast generation can observe the final ready-state
+  write without racing the timeout edge.
+- `PROCESSING_JOB_HEARTBEAT_MS` defines how often active workers refresh
+  `updatedAt`.
+- `STALE_JOB_MAX_AGE_MS` is derived from heartbeat cadence and missed-heartbeat
+  tolerance, not from total expected job runtime.
+
+Polling loops must measure timeout by wall-clock elapsed time (`Date.now() -
+startedAt`) rather than by summing sleep intervals, since provider calls and DB
+reads also consume real runtime.
+
 ## Concurrency Policy <!-- enforced-by: manual-review -->
 
 Worker concurrency is two-dimensional:

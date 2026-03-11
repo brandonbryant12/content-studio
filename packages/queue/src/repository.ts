@@ -21,6 +21,9 @@ const mapRowToJob = (row: JobRow): Job => ({
   payload: row.payload ?? {},
 });
 
+const isTerminalJobStatus = (status: JobStatus): boolean =>
+  status === JobStatus.COMPLETED || status === JobStatus.FAILED;
+
 const makeQueueService = Effect.gen(function* () {
   const { db } = yield* Db;
 
@@ -185,10 +188,14 @@ const makeQueueService = Effect.gen(function* () {
     status,
     result,
     error,
+    expectedCurrentStatus,
   ) =>
     runQuery(
       'updateJobStatus',
       async (db) => {
+        const guardedStatus =
+          expectedCurrentStatus ??
+          (isTerminalJobStatus(status) ? JobStatus.PROCESSING : undefined);
         const updates: Record<string, unknown> = {
           status,
           updatedAt: new Date(),
@@ -210,10 +217,23 @@ const makeQueueService = Effect.gen(function* () {
         const [row] = await db
           .update(job)
           .set(updates)
-          .where(eq(job.id, jobId))
+          .where(
+            guardedStatus
+              ? and(eq(job.id, jobId), eq(job.status, guardedStatus))
+              : eq(job.id, jobId),
+          )
           .returning();
 
-        return row;
+        if (row) {
+          return row;
+        }
+
+        if (!guardedStatus) {
+          return row;
+        }
+
+        const [currentRow] = await getJobStmt.execute({ jobId });
+        return currentRow;
       },
       'Failed to update job',
     ).pipe(

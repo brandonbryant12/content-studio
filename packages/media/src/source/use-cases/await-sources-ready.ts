@@ -1,4 +1,8 @@
 import { SourceStatus } from '@repo/db/schema';
+import {
+  SOURCE_READINESS_MAX_POLL_DURATION_MS,
+  SOURCE_READINESS_POLL_INTERVAL_MS,
+} from '@repo/queue';
 import { Effect, Schema } from 'effect';
 import { annotateUseCaseSpan, withUseCaseSpan } from '../../shared';
 import { SourceRepo } from '../repos';
@@ -22,11 +26,9 @@ export interface AwaitSourcesReadyInput {
   sourceIds: readonly string[];
 }
 
-/** Max total polling time: 65 minutes (slightly beyond research's 60min max) */
-const MAX_POLL_DURATION_MS = 65 * 60 * 1000;
-
-/** Poll interval: 30 seconds */
-const POLL_INTERVAL_MS = 30_000;
+const getElapsedMs = (startedAtMs: number) => Date.now() - startedAtMs;
+const formatElapsedSeconds = (startedAtMs: number) =>
+  Math.round(getElapsedMs(startedAtMs) / 1000);
 
 export const awaitSourcesReady = (input: AwaitSourcesReadyInput) =>
   Effect.gen(function* () {
@@ -41,6 +43,8 @@ export const awaitSourcesReady = (input: AwaitSourcesReadyInput) =>
     const formatPollStatus = (
       docs: ReadonlyArray<{ title: string; status: string }>,
     ) => docs.map((doc) => `${doc.title}=${doc.status}`).join(', ');
+
+    const startedAtMs = Date.now();
 
     // Check initial status
     let attempt = 1;
@@ -75,16 +79,22 @@ export const awaitSourcesReady = (input: AwaitSourcesReadyInput) =>
     }
 
     // Poll until all ready
-    let elapsed = 0;
-    while (elapsed < MAX_POLL_DURATION_MS) {
-      yield* Effect.sleep(POLL_INTERVAL_MS);
-      elapsed += POLL_INTERVAL_MS;
+    while (true) {
+      const remainingBudgetMs =
+        SOURCE_READINESS_MAX_POLL_DURATION_MS - getElapsedMs(startedAtMs);
+      if (remainingBudgetMs <= 0) {
+        break;
+      }
+
+      yield* Effect.sleep(
+        Math.min(SOURCE_READINESS_POLL_INTERVAL_MS, remainingBudgetMs),
+      );
       attempt += 1;
 
       docs = yield* fetchDocs();
 
       yield* Effect.logInfo(
-        `Poll attempt ${attempt}: ${formatPollStatus(docs)} (elapsed: ${Math.round(elapsed / 1000)}s)`,
+        `Poll attempt ${attempt}: ${formatPollStatus(docs)} (elapsed: ${formatElapsedSeconds(startedAtMs)}s)`,
       );
 
       if (docs.every((d) => d.status === SourceStatus.READY)) return;

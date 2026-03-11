@@ -29,6 +29,7 @@ export interface QueueService {
     status: JobStatus,
     result?: unknown,
     error?: string,
+    expectedCurrentStatus?: JobStatus,
   ) => Effect.Effect<Job, QueueError | JobNotFoundError>;
 
   readonly processNextJob: <R = never>(

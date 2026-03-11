@@ -9,6 +9,11 @@ import {
   SourceStatus,
   type ResearchConfig,
 } from '@repo/db/schema';
+import {
+  SOURCE_RESEARCH_INITIAL_POLL_MS,
+  SOURCE_RESEARCH_MAX_POLL_DURATION_MS,
+  SOURCE_RESEARCH_STEADY_POLL_MS,
+} from '@repo/queue';
 import { Storage } from '@repo/storage';
 import { Effect, Schema } from 'effect';
 import { logActivity } from '../../activity';
@@ -66,12 +71,12 @@ export interface ProcessResearchInput {
   query: string;
 }
 
-/** Max total polling time: 60 minutes (Google's documented max for Deep Research) */
-const MAX_POLL_DURATION_MS = 60 * 60 * 1000;
-
-/** Backoff: 30s for first poll, then 60s thereafter */
-const INITIAL_POLL_MS = 30_000;
-const STEADY_POLL_MS = 60_000;
+const getElapsedMs = (startedAtMs: number) => Date.now() - startedAtMs;
+const formatElapsedSeconds = (startedAtMs: number) =>
+  Math.round(getElapsedMs(startedAtMs) / 1000);
+const RESEARCH_TIMEOUT_MINUTES = Math.round(
+  SOURCE_RESEARCH_MAX_POLL_DURATION_MS / 60_000,
+);
 const getPollStatusLabel = <T>(result: T | null) =>
   result === null ? 'in_progress' : 'completed';
 const getErrorTag = (error: unknown) =>
@@ -177,26 +182,35 @@ export const processResearch = (input: ProcessResearchInput) => {
       });
 
     // 3. Poll for result: 30s first, then every 60s
-    let elapsed = 0;
+    const startedAtMs = Date.now();
     let attempt = 1;
     let result = yield* research.getResult(interactionId);
     yield* Effect.logInfo(
       `Poll attempt ${attempt}: status=${getPollStatusLabel(result)} (elapsed: 0s)`,
     );
 
-    while (result === null && elapsed < MAX_POLL_DURATION_MS) {
-      const delay = elapsed === 0 ? INITIAL_POLL_MS : STEADY_POLL_MS;
-      yield* Effect.sleep(delay);
-      elapsed += delay;
+    while (
+      result === null &&
+      getElapsedMs(startedAtMs) < SOURCE_RESEARCH_MAX_POLL_DURATION_MS
+    ) {
+      const remainingBudgetMs =
+        SOURCE_RESEARCH_MAX_POLL_DURATION_MS - getElapsedMs(startedAtMs);
+      const delay =
+        attempt === 1
+          ? SOURCE_RESEARCH_INITIAL_POLL_MS
+          : SOURCE_RESEARCH_STEADY_POLL_MS;
+      yield* Effect.sleep(Math.min(delay, remainingBudgetMs));
       attempt += 1;
       result = yield* research.getResult(interactionId);
       yield* Effect.logInfo(
-        `Poll attempt ${attempt}: status=${getPollStatusLabel(result)} (elapsed: ${Math.round(elapsed / 1000)}s)`,
+        `Poll attempt ${attempt}: status=${getPollStatusLabel(result)} (elapsed: ${formatElapsedSeconds(startedAtMs)}s)`,
       );
     }
 
     if (result === null) {
-      yield* markResearchFailed('Research timed out after 60 minutes');
+      yield* markResearchFailed(
+        `Research timed out after ${RESEARCH_TIMEOUT_MINUTES} minutes`,
+      );
       return yield* new ResearchTimeoutError({ sourceId, interactionId });
     }
 

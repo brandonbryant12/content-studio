@@ -1,4 +1,5 @@
 import type { JobType } from '@repo/queue';
+export { PROCESSING_JOB_HEARTBEAT_MS, STALE_JOB_MAX_AGE_MS } from '@repo/queue';
 
 export const WORKER_DEFAULTS = {
   POLL_INTERVAL_MS: 60_000,
@@ -27,16 +28,6 @@ export const DEFAULT_PER_TYPE_CONCURRENCY = {
   'process-url': 5,
   'process-research': 3,
 } as const satisfies Record<JobType, number>;
-
-/** Active jobs heartbeat this often while they remain in `processing`. */
-export const PROCESSING_JOB_HEARTBEAT_MS = 30 * 1000; // 30 seconds
-
-/**
- * Jobs whose heartbeat goes quiet longer than this are considered orphaned.
- * With heartbeats active, this can stay short without interrupting healthy
- * long-running research polls.
- */
-export const STALE_JOB_MAX_AGE_MS = 5 * 60 * 1000; // 5 minutes
 
 /** Run the stale-job reaper every N milliseconds */
 export const STALE_CHECK_INTERVAL_MS = 3 * 60 * 1000;

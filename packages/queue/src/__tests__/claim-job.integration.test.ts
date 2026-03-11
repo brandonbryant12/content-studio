@@ -1,93 +1,64 @@
 import { eq } from '@repo/db';
-import { createDb, type DatabaseInstance } from '@repo/db/client';
-import { Db } from '@repo/db/effect';
-import { job, JobStatus, JobType } from '@repo/db/schema';
-import { user } from '@repo/db/schema';
+import { job, JobStatus, JobType, user } from '@repo/db/schema';
+import {
+  createTestContext,
+  createTestUser,
+  resetAllFactories,
+  type TestContext,
+  type TestUser,
+} from '@repo/testing';
 import { Effect, Layer } from 'effect';
-import { describe, it, expect, beforeAll, afterAll, afterEach } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { JobProcessingError } from '../errors';
+import { STALE_JOB_MAX_AGE_MS } from '../job-timeouts';
 import { QueueLive } from '../repository';
 import { Queue } from '../service';
 
-/**
- * Integration tests for the queue's atomic job claiming mechanism.
- *
- * These tests verify that processNextJob uses FOR UPDATE SKIP LOCKED
- * to prevent duplicate job processing with concurrent workers.
- *
- * Requires: SERVER_POSTGRES_URL env var pointing to a running Postgres instance
- * with the schema pushed via `pnpm db:push`.
- */
-const POSTGRES_URL = process.env.SERVER_POSTGRES_URL;
+const insertTestUser = async (
+  ctx: TestContext,
+  testUser: TestUser,
+): Promise<void> => {
+  await ctx.db.insert(user).values({
+    ...testUser,
+    emailVerified: true,
+    createdAt: new Date(),
+    updatedAt: new Date(),
+  });
+};
 
-describe.skipIf(!POSTGRES_URL)('Queue atomic job claim (integration)', () => {
-  let db: DatabaseInstance;
-  let testUserId: string;
-
-  const testLayer = Layer.effect(
-    Db,
-    Effect.sync(() => ({ db })),
-  );
-
-  const queueLayer = QueueLive.pipe(Layer.provide(testLayer));
+describe('Queue atomic job claim (integration)', () => {
+  let ctx: TestContext;
+  let queueLayer: Layer.Layer<Queue>;
+  let testUser: TestUser;
 
   const runEffect = <A, E>(effect: Effect.Effect<A, E, Queue>) =>
     Effect.runPromise(effect.pipe(Effect.provide(queueLayer)));
 
-  beforeAll(async () => {
-    db = createDb({ databaseUrl: POSTGRES_URL });
-
-    // Create a test user for the foreign key constraint
-    const [existingUser] = await db
-      .select()
-      .from(user)
-      .where(eq(user.email, 'queue-test@test.com'))
-      .limit(1);
-
-    if (existingUser) {
-      testUserId = existingUser.id;
-    } else {
-      const [created] = await db
-        .insert(user)
-        .values({
-          id: 'queue-test-user-' + Date.now(),
-          name: 'Queue Test User',
-          email: 'queue-test@test.com',
-          emailVerified: true,
-          createdAt: new Date(),
-          updatedAt: new Date(),
-        })
-        .returning();
-      testUserId = created!.id;
-    }
+  beforeEach(async () => {
+    resetAllFactories();
+    ctx = await createTestContext();
+    queueLayer = QueueLive.pipe(Layer.provide(ctx.dbLayer));
+    testUser = createTestUser();
+    await insertTestUser(ctx, testUser);
   });
 
   afterEach(async () => {
-    // Clean up test jobs
-    await db.delete(job).where(eq(job.createdBy, testUserId));
-  });
-
-  afterAll(async () => {
-    // Clean up test user
-    await db.delete(user).where(eq(user.email, 'queue-test@test.com'));
-    await db.$client.end();
+    await ctx.rollback();
   });
 
   it('claims and processes a single pending job', async () => {
-    // Enqueue a job
     const enqueued = await runEffect(
       Effect.flatMap(Queue, (q) =>
-        q.enqueue(JobType.GENERATE_VOICEOVER, { test: true }, testUserId),
+        q.enqueue(JobType.GENERATE_VOICEOVER, { test: true }, testUser.id),
       ),
     );
 
     expect(enqueued.status).toBe(JobStatus.PENDING);
 
-    // Process it
     const result = await runEffect(
       Effect.flatMap(Queue, (q) =>
-        q.processNextJob(JobType.GENERATE_VOICEOVER, (j) =>
-          Effect.succeed({ processed: j.id }),
+        q.processNextJob(JobType.GENERATE_VOICEOVER, (claimedJob) =>
+          Effect.succeed({ processed: claimedJob.id }),
         ),
       ),
     );
@@ -111,16 +82,16 @@ describe.skipIf(!POSTGRES_URL)('Queue atomic job claim (integration)', () => {
   it('marks job as FAILED when handler throws JobProcessingError', async () => {
     await runEffect(
       Effect.flatMap(Queue, (q) =>
-        q.enqueue(JobType.GENERATE_VOICEOVER, { fail: true }, testUserId),
+        q.enqueue(JobType.GENERATE_VOICEOVER, { fail: true }, testUser.id),
       ),
     );
 
     const result = await runEffect(
       Effect.flatMap(Queue, (q) =>
-        q.processNextJob(JobType.GENERATE_VOICEOVER, (j) =>
+        q.processNextJob(JobType.GENERATE_VOICEOVER, (claimedJob) =>
           Effect.fail(
             new JobProcessingError({
-              jobId: j.id,
+              jobId: claimedJob.id,
               message: 'intentional test failure',
             }),
           ),
@@ -134,27 +105,24 @@ describe.skipIf(!POSTGRES_URL)('Queue atomic job claim (integration)', () => {
   });
 
   it('processes jobs in FIFO order', async () => {
-    // Enqueue two jobs with slight delay for ordering
     const first = await runEffect(
       Effect.flatMap(Queue, (q) =>
-        q.enqueue(JobType.GENERATE_VOICEOVER, { order: 1 }, testUserId),
+        q.enqueue(JobType.GENERATE_VOICEOVER, { order: 1 }, testUser.id),
       ),
     );
 
-    // Small delay to ensure different created_at timestamps
-    await new Promise((r) => setTimeout(r, 10));
+    await new Promise((resolve) => setTimeout(resolve, 10));
 
     await runEffect(
       Effect.flatMap(Queue, (q) =>
-        q.enqueue(JobType.GENERATE_VOICEOVER, { order: 2 }, testUserId),
+        q.enqueue(JobType.GENERATE_VOICEOVER, { order: 2 }, testUser.id),
       ),
     );
 
-    // Process first job
     const processed = await runEffect(
       Effect.flatMap(Queue, (q) =>
-        q.processNextJob(JobType.GENERATE_VOICEOVER, (j) =>
-          Effect.succeed({ id: j.id }),
+        q.processNextJob(JobType.GENERATE_VOICEOVER, (claimedJob) =>
+          Effect.succeed({ id: claimedJob.id }),
         ),
       ),
     );
@@ -163,37 +131,89 @@ describe.skipIf(!POSTGRES_URL)('Queue atomic job claim (integration)', () => {
   });
 
   it('concurrent claims do not process the same job twice', async () => {
-    // Enqueue a single job
     await runEffect(
       Effect.flatMap(Queue, (q) =>
-        q.enqueue(JobType.GENERATE_VOICEOVER, { concurrent: true }, testUserId),
+        q.enqueue(
+          JobType.GENERATE_VOICEOVER,
+          { concurrent: true },
+          testUser.id,
+        ),
       ),
     );
 
-    // Race two processNextJob calls
     const [result1, result2] = await Promise.all([
       runEffect(
         Effect.flatMap(Queue, (q) =>
-          q.processNextJob(JobType.GENERATE_VOICEOVER, (j) =>
-            Effect.succeed({ worker: 'A', jobId: j.id }),
+          q.processNextJob(JobType.GENERATE_VOICEOVER, (claimedJob) =>
+            Effect.succeed({ worker: 'A', jobId: claimedJob.id }),
           ),
         ),
       ),
       runEffect(
         Effect.flatMap(Queue, (q) =>
-          q.processNextJob(JobType.GENERATE_VOICEOVER, (j) =>
-            Effect.succeed({ worker: 'B', jobId: j.id }),
+          q.processNextJob(JobType.GENERATE_VOICEOVER, (claimedJob) =>
+            Effect.succeed({ worker: 'B', jobId: claimedJob.id }),
           ),
         ),
       ),
     ]);
 
-    // Exactly one should get the job, the other should get null
-    const claimed = [result1, result2].filter((r) => r !== null);
-    const missed = [result1, result2].filter((r) => r === null);
+    const claimed = [result1, result2].filter((result) => result !== null);
+    const missed = [result1, result2].filter((result) => result === null);
 
     expect(claimed).toHaveLength(1);
     expect(missed).toHaveLength(1);
     expect(claimed[0]!.status).toBe(JobStatus.COMPLETED);
+  });
+
+  it('preserves a stale failure when a handler completion arrives late', async () => {
+    const enqueued = await runEffect(
+      Effect.flatMap(Queue, (q) =>
+        q.enqueue(
+          JobType.PROCESS_RESEARCH,
+          { sourceId: 'source-1', query: 'late result', userId: testUser.id },
+          testUser.id,
+        ),
+      ),
+    );
+
+    await runEffect(
+      Effect.flatMap(Queue, (q) =>
+        q.updateJobStatus(enqueued.id, JobStatus.PROCESSING),
+      ),
+    );
+
+    await ctx.db
+      .update(job)
+      .set({
+        updatedAt: new Date(Date.now() - STALE_JOB_MAX_AGE_MS - 1_000),
+      })
+      .where(eq(job.id, enqueued.id));
+
+    const staleJobs = await runEffect(
+      Effect.flatMap(Queue, (q) => q.failStaleJobs(STALE_JOB_MAX_AGE_MS)),
+    );
+
+    expect(staleJobs).toHaveLength(1);
+    expect(staleJobs[0]?.status).toBe(JobStatus.FAILED);
+
+    const lateCompletion = await runEffect(
+      Effect.flatMap(Queue, (q) =>
+        q.updateJobStatus(enqueued.id, JobStatus.COMPLETED, {
+          deliveredLate: true,
+        }),
+      ),
+    );
+
+    expect(lateCompletion.status).toBe(JobStatus.FAILED);
+    expect(lateCompletion.error).toContain('timed out');
+    expect(lateCompletion.result).toBeNull();
+
+    const reloaded = await runEffect(
+      Effect.flatMap(Queue, (q) => q.getJob(enqueued.id)),
+    );
+
+    expect(reloaded.status).toBe(JobStatus.FAILED);
+    expect(reloaded.result).toBeNull();
   });
 });

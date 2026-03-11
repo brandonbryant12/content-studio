@@ -1,5 +1,46 @@
 [
   {
+    "id": "2026-03-11-feature-delivery-align-long-running-job-timeout-budgets-with-stale-reaper-and-cas",
+    "date": "2026-03-11",
+    "month": "2026-03",
+    "workflow": "Feature Delivery",
+    "title": "Align long-running job timeout budgets with stale-reaper and CAS terminal updates",
+    "severity": "high",
+    "status": "done",
+    "tags": [
+      "timeouts",
+      "queue",
+      "stale-reaper",
+      "skill:feature-delivery",
+      "skill:code-simplifier",
+      "issue:377"
+    ],
+    "importance": 0.89,
+    "confidence": 0.94,
+    "eventFile": "events/2026-03.jsonl"
+  },
+  {
+    "id": "2026-03-11-feature-delivery-centralized-long-running-job-timeout-budgets-and-guarded-termina",
+    "date": "2026-03-11",
+    "month": "2026-03",
+    "workflow": "Feature Delivery",
+    "title": "Centralized long-running job timeout budgets and guarded terminal queue updates",
+    "severity": "high",
+    "status": "closed",
+    "tags": [
+      "timeouts",
+      "queue-race",
+      "worker",
+      "source",
+      "tests",
+      "skill:feature-delivery",
+      "skill:code-simplifier"
+    ],
+    "importance": 0.86,
+    "confidence": 0.92,
+    "eventFile": "events/2026-03.jsonl"
+  },
+  {
     "id": "2026-03-11-feature-delivery-deploy-proxy-ca-handling-now-uses-node-extra-ca-certs-only",
     "date": "2026-03-11",
     "month": "2026-03",

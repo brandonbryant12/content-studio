@@ -211,12 +211,18 @@ const handleJobFailure = <TPayload>(
       queue.updateJobStatus(job.id, JobStatus.FAILED, undefined, errorMessage),
     ),
     Effect.tap((result) =>
-      Effect.logError(
-        `Job ${result.type} ${result.id} failed: ${result.error ?? 'unknown error'}`,
-      ),
+      result.status === JobStatus.FAILED
+        ? Effect.logError(
+            `Job ${result.type} ${result.id} failed: ${result.error ?? 'unknown error'}`,
+          )
+        : Effect.logWarning(
+            `Job ${result.type} ${result.id} finished with status ${result.status} before failure cleanup applied`,
+          ),
     ),
     Effect.tap((result) =>
-      Effect.sync(() => onJobComplete?.(result as Job<TPayload>)),
+      result.status === JobStatus.FAILED
+        ? Effect.sync(() => onJobComplete?.(result as Job<TPayload>))
+        : Effect.void,
     ),
     Effect.catchAll((updateErr) =>
       Effect.logError(
@@ -359,7 +365,13 @@ export const createWorker = <
             `Finished processing ${result.type} job ${result.id}, status: ${result.status}`,
           ),
         ),
-        Effect.tap(notifyJobComplete),
+        Effect.tap((result) =>
+          result.status === JobStatus.COMPLETED
+            ? notifyJobComplete(result)
+            : Effect.logWarning(
+                `Job ${result.type} ${result.id} reached status ${result.status} before completion cleanup finished`,
+              ),
+        ),
         Effect.catchAll((err) =>
           handleJobFailure(
             queue,

@@ -376,6 +376,7 @@ describe('processResearch', () => {
   describe('timeout ownership', () => {
     it('fails with use-case-owned ResearchTimeoutError and timeout payload', async () => {
       vi.useFakeTimers();
+      vi.setSystemTime(new Date('2026-01-01T00:00:00.000Z'));
       const consoleLogSpy = vi
         .spyOn(console, 'log')
         .mockImplementation(() => undefined);
@@ -394,6 +395,8 @@ describe('processResearch', () => {
           status: SourceStatus;
           message?: string;
         }> = [];
+        const advanceWallClock = (ms: number) =>
+          vi.setSystemTime(new Date(Date.now() + ms));
 
         const layers = Layer.mergeAll(
           MockDbLive,
@@ -419,7 +422,11 @@ describe('processResearch', () => {
           createMockDeepResearch({
             startResearch: () =>
               Effect.succeed({ interactionId: 'op-timeout-123' }),
-            getResult: () => Effect.succeed(null),
+            getResult: () =>
+              Effect.sync(() => {
+                advanceWallClock(20 * 60_000);
+                return null;
+              }),
           }),
           createMockStorage(),
           mockOutlineLLM(),
@@ -433,7 +440,7 @@ describe('processResearch', () => {
           ),
         );
 
-        await vi.advanceTimersByTimeAsync(3_700_000);
+        await vi.advanceTimersByTimeAsync(90_000);
         const result = await resultExit;
 
         expect(result._tag).toBe('Failure');
