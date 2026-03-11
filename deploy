@@ -846,7 +846,7 @@ collect_variables() {
   printf "  ${DIM}The CA bundle is copied from the deploy host into Docker build/runtime assets.${RESET}\n\n"
 
   local configure_proxy_default="n"
-  if [[ -n "${_DEF_HTTPS_PROXY:-}" || -n "${_DEF_HTTP_PROXY:-}" || -n "${_DEF_NODE_EXTRA_CA_CERTS:-}" ]]; then
+  if [[ -n "${_DEF_HTTPS_PROXY:-}" || -n "${_DEF_HTTP_PROXY:-}" ]]; then
     configure_proxy_default="y"
   fi
   prompt_yesno CONFIGURE_PROXY "Configure outbound proxy variables?" "$configure_proxy_default"
