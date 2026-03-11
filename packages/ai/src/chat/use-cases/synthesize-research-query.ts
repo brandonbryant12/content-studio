@@ -7,7 +7,7 @@ import {
 } from '../../prompt-registry';
 import { withAIUsageScope } from '../../usage';
 import {
-  formatMessagesForSynthesis,
+  buildSynthesisPrompts,
   getMessageText,
   normalizeStringWithFallback,
 } from './chat-message-utils';
@@ -16,18 +16,6 @@ const SynthesisResult = Schema.Struct({
   query: Schema.String,
   title: Schema.String,
 });
-
-const PRIMARY_FORMAT_OPTIONS = {
-  maxMessages: 24,
-  maxCharsPerMessage: 700,
-  maxTotalChars: 12_000,
-} as const;
-
-const FALLBACK_FORMAT_OPTIONS = {
-  maxMessages: 10,
-  maxCharsPerMessage: 300,
-  maxTotalChars: 4_000,
-} as const;
 
 function buildFallbackTitle(topic: string) {
   const words = topic
@@ -61,10 +49,15 @@ function buildFallbackResearchBrief(topic: string) {
 }
 
 function getFallbackTopic(messages: readonly UIMessage[]) {
-  const latestUserMessage = [...messages]
-    .reverse()
-    .find((message) => message.role === 'user');
-  const fallback = latestUserMessage ? getMessageText(latestUserMessage) : '';
+  let fallback = '';
+  for (let index = messages.length - 1; index >= 0; index -= 1) {
+    const message = messages[index];
+    if (message?.role === 'user') {
+      fallback = getMessageText(message);
+      break;
+    }
+  }
+
   return normalizeStringWithFallback(
     fallback,
     'Research this topic using the latest conversation context.',
@@ -87,14 +80,8 @@ export const synthesizeResearchQuery = (input: SynthesizeResearchQueryInput) =>
         maxTokens,
       });
 
-    const primaryPrompt = formatMessagesForSynthesis(
-      input.messages,
-      PRIMARY_FORMAT_OPTIONS,
-    );
-    const fallbackPrompt = formatMessagesForSynthesis(
-      input.messages,
-      FALLBACK_FORMAT_OPTIONS,
-    );
+    const { primary: primaryPrompt, fallback: fallbackPrompt } =
+      buildSynthesisPrompts(input.messages);
 
     const result = yield* generate(primaryPrompt, 0.3, 2048).pipe(
       Effect.catchTag('LLMError', () => generate(fallbackPrompt, 0.2, 1024)),
