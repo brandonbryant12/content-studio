@@ -6,7 +6,10 @@ import {
   renderPrompt,
 } from '../../prompt-registry';
 import { withAIUsageScope } from '../../usage';
-import { formatMessagesForSynthesis } from './chat-message-utils';
+import {
+  formatMessagesForSynthesis,
+  normalizeStringWithFallback,
+} from './chat-message-utils';
 
 const SynthesisResult = Schema.Struct({
   name: Schema.String,
@@ -33,11 +36,6 @@ const FALLBACK_FORMAT_OPTIONS = {
 const FALLBACK_QUOTE = 'Let us unpack this topic with clarity and curiosity.';
 const FALLBACK_VOICE = 'Puck';
 
-function normalizeString(value: string, fallback: string) {
-  const normalized = value.trim();
-  return normalized.length > 0 ? normalized : fallback;
-}
-
 function normalizeSynthesisResult(result: {
   readonly name: string;
   readonly role: string;
@@ -53,19 +51,19 @@ function normalizeSynthesisResult(result: {
     .slice(0, 3);
 
   return {
-    name: normalizeString(result.name, 'Podcast Persona'),
-    role: normalizeString(result.role, 'Podcast Co-Host'),
-    personalityDescription: normalizeString(
+    name: normalizeStringWithFallback(result.name, 'Podcast Persona'),
+    role: normalizeStringWithFallback(result.role, 'Podcast Co-Host'),
+    personalityDescription: normalizeStringWithFallback(
       result.personalityDescription,
       'Confident, insightful, and engaging communicator.',
     ),
-    speakingStyle: normalizeString(
+    speakingStyle: normalizeStringWithFallback(
       result.speakingStyle,
       'Conversational, concise, and audience-focused.',
     ),
     exampleQuotes: exampleQuotes.length > 0 ? exampleQuotes : [FALLBACK_QUOTE],
-    voiceId: normalizeString(result.voiceId, FALLBACK_VOICE),
-    voiceName: normalizeString(result.voiceName, FALLBACK_VOICE),
+    voiceId: normalizeStringWithFallback(result.voiceId, FALLBACK_VOICE),
+    voiceName: normalizeStringWithFallback(result.voiceName, FALLBACK_VOICE),
   };
 }
 
