@@ -51,6 +51,13 @@ function EmptyState({
   hasSearch: boolean;
   action?: React.ReactNode;
 }) {
+  const title = hasSearch ? 'No sources found' : 'No sources yet';
+  const description = hasSearch
+    ? 'Try adjusting your search query.'
+    : isDeepResearchEnabled
+      ? 'Add your first source from a file, URL, or research brief so future content has something reliable to draw from.'
+      : 'Add your first source from a file or URL so future content has something reliable to draw from.';
+
   return (
     <div className="empty-state-lg">
       <div className="empty-state-icon">
@@ -69,16 +76,8 @@ function EmptyState({
           />
         </svg>
       </div>
-      <h2 className="empty-state-title">
-        {hasSearch ? 'No sources found' : 'No sources yet'}
-      </h2>
-      <p className="empty-state-description">
-        {hasSearch
-          ? 'Try adjusting your search query.'
-          : isDeepResearchEnabled
-            ? 'Add your first source from a file, URL, or research brief so future content has something reliable to draw from.'
-            : 'Add your first source from a file or URL so future content has something reliable to draw from.'}
-      </p>
+      <h2 className="empty-state-title">{title}</h2>
+      <p className="empty-state-description">{description}</p>
       {action ? <div className="mt-4">{action}</div> : null}
     </div>
   );
@@ -218,6 +217,22 @@ export function SourceList({
   onBulkDelete,
 }: SourceListProps) {
   const [isPending, startTransition] = useTransition();
+  const openUploadDialog = useCallback(() => onUploadOpen(true), [onUploadOpen]);
+  const openUrlDialog = useCallback(() => onUrlDialogOpen(true), [onUrlDialogOpen]);
+  const openResearchDialog = useCallback(
+    () => onResearchDialogOpen(true),
+    [onResearchDialogOpen],
+  );
+
+  const addSourceMenu = (
+    <SourceEntryMenu
+      showResearch={isDeepResearchEnabled}
+      onResearch={openResearchDialog}
+      onUrl={openUrlDialog}
+      onUpload={openUploadDialog}
+    />
+  );
+
   const importOptions = isDeepResearchEnabled
     ? SOURCE_IMPORT_OPTIONS
     : SOURCE_IMPORT_OPTIONS.filter(
@@ -260,6 +275,8 @@ export function SourceList({
 
   const isEmpty = sources.length === 0;
   const hasNoResults = filteredSources.length === 0 && searchQuery.length > 0;
+  const sourceCountLabel =
+    filteredSources.length === 1 ? 'source' : 'sources';
 
   return (
     <div className="page-container">
@@ -271,14 +288,7 @@ export function SourceList({
             {SOURCE_DEFINITION} {sourceListSupport}
           </p>
         </div>
-        <div className="flex items-center gap-2">
-          <SourceEntryMenu
-            showResearch={isDeepResearchEnabled}
-            onResearch={() => onResearchDialogOpen(true)}
-            onUrl={() => onUrlDialogOpen(true)}
-            onUpload={() => onUploadOpen(true)}
-          />
-        </div>
+        <div className="flex items-center gap-2">{addSourceMenu}</div>
       </div>
 
       <CollectionGuidancePanel
@@ -323,17 +333,7 @@ export function SourceList({
 
       {/* Content */}
       {isEmpty ? (
-        <EmptyState
-          hasSearch={false}
-          action={
-            <SourceEntryMenu
-              showResearch={isDeepResearchEnabled}
-              onResearch={() => onResearchDialogOpen(true)}
-              onUrl={() => onUrlDialogOpen(true)}
-              onUpload={() => onUploadOpen(true)}
-            />
-          }
-        />
+        <EmptyState hasSearch={false} action={addSourceMenu} />
       ) : hasNoResults ? (
         <EmptyState hasSearch={true} />
       ) : (
@@ -342,8 +342,7 @@ export function SourceList({
           aria-busy={isPending}
         >
           <div role="status" aria-live="polite" className="sr-only">
-            {filteredSources.length}{' '}
-            {filteredSources.length === 1 ? 'source' : 'sources'} found
+            {filteredSources.length} {sourceCountLabel} found
           </div>
           <div className="list-toolbar">
             <Checkbox
@@ -356,8 +355,7 @@ export function SourceList({
               aria-label="Select all sources"
             />
             <span className="list-toolbar-count">
-              {filteredSources.length}{' '}
-              {filteredSources.length === 1 ? 'source' : 'sources'}
+              {filteredSources.length} {sourceCountLabel}
             </span>
           </div>
           <div className="space-y-1.5" role="list" aria-label="Sources">
