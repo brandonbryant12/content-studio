@@ -45,17 +45,6 @@ export interface InfographicJobCompletionEvent {
   error?: string;
 }
 
-export interface ActivityLoggedEvent {
-  type: 'activity_logged';
-  activityId: string;
-  userId: string;
-  action: string;
-  entityType: string;
-  entityId?: string;
-  entityTitle?: string;
-  timestamp: string;
-}
-
 export interface SourceJobCompletionEvent {
   type: 'source_job_completion';
   jobId: string;
@@ -76,7 +65,6 @@ export type SSEEvent =
   | VoiceoverJobCompletionEvent
   | InfographicJobCompletionEvent
   | SourceJobCompletionEvent
-  | ActivityLoggedEvent
   | ConnectionEvent;
 
 const EntityChangeEventSchema = Schema.Struct({
@@ -119,17 +107,6 @@ const InfographicJobCompletionEventSchema = Schema.Struct({
   error: Schema.optional(Schema.String),
 });
 
-const ActivityLoggedEventSchema = Schema.Struct({
-  type: Schema.Literal('activity_logged'),
-  activityId: Schema.String,
-  userId: Schema.String,
-  action: Schema.String,
-  entityType: Schema.String,
-  entityId: Schema.optional(Schema.String),
-  entityTitle: Schema.optional(Schema.String),
-  timestamp: Schema.String,
-});
-
 const SourceJobCompletionEventSchema = Schema.Struct({
   type: Schema.Literal('source_job_completion'),
   jobId: Schema.String,
@@ -150,7 +127,6 @@ const SSEEventSchema = Schema.Union(
   VoiceoverJobCompletionEventSchema,
   InfographicJobCompletionEventSchema,
   SourceJobCompletionEventSchema,
-  ActivityLoggedEventSchema,
   ConnectionEventSchema,
 );
 

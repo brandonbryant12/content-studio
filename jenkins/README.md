@@ -36,6 +36,21 @@ For cadence and gate recommendations, see:
 - [`jenkins/RECOMMENDED_SETUP.md`](./RECOMMENDED_SETUP.md)
 - [`jenkins/JOB_SETUP_QUICKSTART.md`](./JOB_SETUP_QUICKSTART.md)
 
+## Core Quality Gate Topology
+
+Use `pnpm ci:quality-gates` for the combined `typecheck`, `lint`, `test`, and
+`test:invariants` gate. The wrapper keeps those tasks inside one coordinated
+Turbo invocation, so shared `^build` dependencies execute once per pipeline run
+instead of fanning out repeatedly across separate commands or parallel stages.
+
+Reproducible check:
+
+```bash
+pnpm ci:quality-gates:dry-run
+```
+
+The dry-run graph should show one shared build fan-out for the combined run.
+
 ## Recommended Jenkins Jobs
 
 1. `content-studio-pr-ci`
@@ -92,3 +107,4 @@ For cadence and gate recommendations, see:
 2. Treat failing `spec:check` as behavior-contract drift, not a cosmetic docs issue.
 3. Treat invariant failures as policy/safety regressions and fix before merge.
 4. Dependency audit is advisory in weekly job by default; upgrade to blocking once baseline debt is manageable.
+5. Do not split core quality gates back into separate `pnpm typecheck`, `pnpm lint`, `pnpm test`, and `pnpm test:invariants` Jenkins steps; use the coordinated wrapper to avoid duplicated Turbo build fan-out.

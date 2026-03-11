@@ -25,28 +25,28 @@ sequenceDiagram
 
 ## Architecture Overview
 
-| Layer | Component | Location |
-|-------|-----------|----------|
-| Publish | `ssePublisher.publish(userId, event)` | `packages/api/src/server/publisher.ts` |
-| Transport | Redis Pub/Sub (production) or in-memory `EventPublisher` (dev) | Same file |
-| Subscribe (server) | `subscribeToSSEEvents(userId, { signal })` | Same file |
-| Contract | oRPC `eventIterator` contract | `packages/api/src/contracts/events.ts` |
-| Subscribe (client) | `rawApiClient.events.subscribe()` | `apps/web/src/shared/hooks/use-sse.ts` |
-| Handle | `useSSE` hook + `sse-handlers.ts` | Same directory |
+| Layer              | Component                                                      | Location                               |
+| ------------------ | -------------------------------------------------------------- | -------------------------------------- |
+| Publish            | `ssePublisher.publish(userId, event)`                          | `packages/api/src/server/publisher.ts` |
+| Transport          | Redis Pub/Sub (production) or in-memory `EventPublisher` (dev) | Same file                              |
+| Subscribe (server) | `subscribeToSSEEvents(userId, { signal })`                     | Same file                              |
+| Contract           | oRPC `eventIterator` contract                                  | `packages/api/src/contracts/events.ts` |
+| Subscribe (client) | `rawApiClient.events.subscribe()`                              | `apps/web/src/shared/hooks/use-sse.ts` |
+| Handle             | `useSSE` hook + `sse-handlers.ts`                              | Same directory                         |
 
 ## Server: Publishing Events
 
 Workers and use cases publish events after completing work:
 
 ```tsx
-import { ssePublisher } from '@repo/api/server/publisher';
+import { ssePublisher } from "@repo/api/server/publisher";
 
 // After podcast generation completes:
 ssePublisher.publish(userId, {
-  type: 'job_completion',
+  type: "job_completion",
   jobId,
-  jobType: 'generate-podcast',
-  status: 'completed',
+  jobType: "generate-podcast",
+  status: "completed",
   podcastId,
 });
 ```
@@ -72,43 +72,44 @@ const iterator = await rawApiClient.events.subscribe(undefined, {
 
 for await (const event of iterator) {
   switch (event.type) {
-    case 'job_completion':
+    case "job_completion":
       handleJobCompletion(event, queryClient);
       break;
-    case 'source_job_completion':
+    case "source_job_completion":
       handleSourceJobCompletion(event, queryClient);
       break;
-    case 'entity_change':
+    case "entity_change":
       handleEntityChange(event, queryClient);
       break;
-    // ... other event types
   }
 }
 ```
 
 ## Event Types
 
-| Event Type | Payload | Cache Action |
-|-----------|---------|-------------|
-| `connected` | -- | Reset reconnection counter |
-| `job_completion` | `{ jobId, jobType, status, podcastId }` | Invalidate podcast + job queries |
-| `voiceover_job_completion` | `{ jobId, status, voiceoverId }` | Invalidate voiceover queries |
-| `infographic_job_completion` | `{ jobId, status, infographicId }` | Invalidate infographic queries |
-| `source_job_completion` | `{ jobId, jobType, status, sourceId }` | Invalidate source queries |
-| `entity_change` | `{ entityType, changeType, entityId }` | Invalidate entity list + detail |
-| `activity_logged` | `{ activityType }` | Invalidate activity queries |
+| Event Type                   | Payload                                 | Cache Action                     |
+| ---------------------------- | --------------------------------------- | -------------------------------- |
+| `connected`                  | `{ userId }`                            | Reset reconnection counter       |
+| `job_completion`             | `{ jobId, jobType, status, podcastId }` | Invalidate podcast + job queries |
+| `voiceover_job_completion`   | `{ jobId, status, voiceoverId }`        | Invalidate voiceover queries     |
+| `infographic_job_completion` | `{ jobId, status, infographicId }`      | Invalidate infographic queries   |
+| `source_job_completion`      | `{ jobId, jobType, status, sourceId }`  | Invalidate source queries        |
+| `entity_change`              | `{ entityType, changeType, entityId }`  | Invalidate entity list + detail  |
+
+Admin activity views are intentionally not part of the SSE contract. They refresh through their normal query lifecycle rather than a dedicated `activity_logged` event.
 
 ## Reconnection
 
 The `useSSE` hook handles reconnection with exponential backoff:
 
-| Parameter | Value |
-|-----------|-------|
-| Max attempts | 10 |
-| Base delay | 1,000ms |
-| Max delay | 30,000ms |
-| Jitter | Random 0-1,000ms added |
-| Reset | On `connected` event, attempts reset to 0 |
+| Parameter     | Value                                                                                                                               |
+| ------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
+| Max attempts  | 10                                                                                                                                  |
+| Base delay    | 1,000ms                                                                                                                             |
+| Max delay     | 30,000ms                                                                                                                            |
+| Jitter        | Random 0-1,000ms added                                                                                                              |
+| Reset         | On `connected` event, attempts reset to 0                                                                                           |
+| Resume cursor | Only replayable events advance `lastEventId`; `connected(id=0)` is an acknowledgement sentinel and never replaces the stored cursor |
 
 After `MAX_ATTEMPTS`, connection state becomes `'error'`. The hook exposes `reconnect()` for manual retry.
 
@@ -123,7 +124,10 @@ const getPodcastQueryKey = (podcastId: string) =>
 const getPodcastsListQueryKey = () =>
   apiClient.podcasts.list.queryOptions({ input: {} }).queryKey;
 
-export function handleJobCompletion(event: JobCompletionEvent, qc: QueryClient) {
+export function handleJobCompletion(
+  event: JobCompletionEvent,
+  qc: QueryClient,
+) {
   if (event.podcastId) {
     qc.invalidateQueries({ queryKey: getPodcastQueryKey(event.podcastId) });
   }
@@ -137,13 +141,15 @@ When a connection drops, events published during the gap are replayed on reconne
 
 ### How It Works
 
-| Step | Component | Action |
-|------|-----------|--------|
-| 1 | Server publisher | Pushes every event into per-user `SSEReplayBuffer`, assigns monotonic ID |
-| 2 | Server handler | Tags each yielded event with `withEventMeta(event, { id })` |
-| 3 | Client hook | Stores latest event ID in `lastEventIdRef` via `getEventMeta()` |
-| 4 | On reconnect | Client passes `lastEventId` to subscribe call |
-| 5 | Server handler | Replays buffered events with `id > lastEventId`, then deduplicates live stream |
+| Step | Component        | Action                                                                         |
+| ---- | ---------------- | ------------------------------------------------------------------------------ |
+| 1    | Server publisher | Pushes every event into per-user `SSEReplayBuffer`, assigns monotonic ID       |
+| 2    | Server handler   | Tags each yielded event with `withEventMeta(event, { id })`                    |
+| 3    | Client hook      | Stores the latest replayable event ID in `lastEventIdRef` via `getEventMeta()` |
+| 4    | On reconnect     | Client passes `lastEventId` to subscribe call                                  |
+| 5    | Server handler   | Replays buffered events with `id > lastEventId`, then deduplicates live stream |
+
+The `connected` event is a transport acknowledgement only. Its sentinel ID (`0`) resets the reconnect-attempt counter, but it does not advance the replay cursor.
 
 ### Limitations
 

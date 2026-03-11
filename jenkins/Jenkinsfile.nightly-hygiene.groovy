@@ -65,10 +65,7 @@ pipeline {
         sh '''
           # Nightly still includes core guarantees.
           pnpm spec:check
-          pnpm typecheck
-          pnpm lint
-          pnpm test
-          pnpm test:invariants
+          pnpm ci:quality-gates
         '''
       }
     }

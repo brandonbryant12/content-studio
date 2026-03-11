@@ -5,15 +5,12 @@ import type {
   JobCompletionEvent,
   EntityChangeEvent,
   InfographicJobCompletionEvent,
-  ActivityLoggedEvent,
 } from '@repo/api/contracts';
 import {
   handleJobCompletion,
   handleEntityChange,
   handleInfographicJobCompletion,
-  handleActivityLogged,
 } from '../sse-handlers';
-import { getActivityListQueryKey } from '@/features/admin/hooks';
 import { getInfographicQueryKey } from '@/features/infographics/hooks/use-infographic';
 import { getInfographicListQueryKey } from '@/features/infographics/hooks/use-infographic-list';
 import { getInfographicVersionsQueryKey } from '@/features/infographics/hooks/use-infographic-versions';
@@ -50,23 +47,6 @@ vi.mock('@/clients/apiClient', () => {
           queryOptions: vi.fn(({ input }: { input: { id: string } }) => ({
             queryKey: ['infographics', 'versions', input.id],
           })),
-        },
-      },
-      admin: {
-        activity: {
-          list: {
-            queryOptions: vi.fn(
-              ({ input }: { input?: Record<string, unknown> }) => ({
-                queryKey: [
-                  {
-                    scope: 'activity',
-                    route: 'admin.activity.list',
-                  },
-                  input ?? {},
-                ],
-              }),
-            ),
-          },
         },
       },
     },
@@ -346,28 +326,5 @@ describe('SSE Handlers', () => {
         expect(invalidateSpy).toHaveBeenCalledTimes(expectedQueryKeys.length);
       },
     );
-  });
-
-  describe('handleActivityLogged', () => {
-    it('invalidates by canonical activity list key scope', () => {
-      const invalidateSpy = vi.spyOn(queryClient, 'invalidateQueries');
-
-      const event: ActivityLoggedEvent = {
-        type: 'activity_logged',
-        activityId: 'activity-123',
-        userId: 'user-123',
-        action: 'podcast_generated',
-        entityType: 'podcast',
-        entityId: 'podcast-123',
-        timestamp: new Date().toISOString(),
-      };
-
-      handleActivityLogged(event, queryClient);
-
-      expect(invalidateSpy).toHaveBeenCalledWith({
-        queryKey: getActivityListQueryKey().slice(0, 1),
-      });
-      expect(invalidateSpy).toHaveBeenCalledTimes(1);
-    });
   });
 });

@@ -243,7 +243,7 @@ function UploadPanel({
             type="text"
             value={uploadTitle}
             onChange={(e) => onUploadTitleChange(e.target.value)}
-            placeholder="Document title"
+            placeholder="Source title"
             className="setup-input"
           />
         </div>
@@ -282,7 +282,7 @@ function UploadPanel({
       }}
       role="button"
       tabIndex={0}
-      aria-label="Upload a document file. Supports TXT, PDF, DOCX, PPTX"
+      aria-label="Upload a source file. Supports TXT, PDF, DOCX, PPTX"
       className={`setup-upload-zone ${isDragging ? 'dragging' : ''}`}
     >
       <input
@@ -422,7 +422,7 @@ export function StepSources({
   const uploadMutation = useMutation(
     apiClient.sources.upload.mutationOptions({
       onError: (error) => {
-        toast.error(getErrorMessage(error, 'Failed to upload document'));
+        toast.error(getErrorMessage(error, 'Failed to upload source'));
       },
     }),
   );
@@ -508,7 +508,7 @@ export function StepSources({
       },
       {
         onSuccess: (data) => {
-          toast.success('Document uploaded');
+          toast.success('Source uploaded');
           handleSourceCreated(data.id, () => {
             setUploadFile(null);
             setUploadTitle('');

@@ -24,6 +24,7 @@ import { BulkActionBar } from '@/shared/components/bulk-action-bar';
 import { CollectionGuidancePanel } from '@/shared/components/collection-guidance-panel';
 import { formatDate, formatFileSize } from '@/shared/lib/formatters';
 import {
+  DEEP_RESEARCH_NAME,
   SOURCE_ASSIGNMENT_HELP,
   SOURCE_DEFINITION,
   SOURCE_IMPORT_OPTIONS,
@@ -217,8 +218,14 @@ export function SourceList({
   onBulkDelete,
 }: SourceListProps) {
   const [isPending, startTransition] = useTransition();
-  const openUploadDialog = useCallback(() => onUploadOpen(true), [onUploadOpen]);
-  const openUrlDialog = useCallback(() => onUrlDialogOpen(true), [onUrlDialogOpen]);
+  const openUploadDialog = useCallback(
+    () => onUploadOpen(true),
+    [onUploadOpen],
+  );
+  const openUrlDialog = useCallback(
+    () => onUrlDialogOpen(true),
+    [onUrlDialogOpen],
+  );
   const openResearchDialog = useCallback(
     () => onResearchDialogOpen(true),
     [onResearchDialogOpen],
@@ -236,7 +243,7 @@ export function SourceList({
   const importOptions = isDeepResearchEnabled
     ? SOURCE_IMPORT_OPTIONS
     : SOURCE_IMPORT_OPTIONS.filter(
-        (option) => option.title !== 'Research a topic',
+        (option) => option.title !== DEEP_RESEARCH_NAME,
       );
   const sourceListSupport = isDeepResearchEnabled
     ? SOURCE_LIST_SUPPORT
@@ -275,8 +282,7 @@ export function SourceList({
 
   const isEmpty = sources.length === 0;
   const hasNoResults = filteredSources.length === 0 && searchQuery.length > 0;
-  const sourceCountLabel =
-    filteredSources.length === 1 ? 'source' : 'sources';
+  const sourceCountLabel = filteredSources.length === 1 ? 'source' : 'sources';
 
   return (
     <div className="page-container">

@@ -1,5 +1,7 @@
 import { APP_NAME } from '@/constants';
 
+export const DEEP_RESEARCH_NAME = 'Deep Research';
+
 export const SOURCE_DEFINITION = `Sources are reusable reference materials that ${APP_NAME} turns into podcasts, voiceovers, infographics, and future edits.`;
 
 export const SOURCE_LIST_SUPPORT =
@@ -58,7 +60,7 @@ export const SOURCE_IMPORT_OPTIONS = [
       'Save a single article, blog post, or docs page as a reusable source.',
   },
   {
-    title: 'Research a topic',
+    title: DEEP_RESEARCH_NAME,
     description:
       'Let AI gather citations around a topic and create a source you can review later.',
   },

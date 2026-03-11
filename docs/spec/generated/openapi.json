@@ -9,7 +9,7 @@
     "/admin/activity/": {
       "get": {
         "description": "Retrieve paginated activity log entries (admin only)",
-        "operationId": "admin.list",
+        "operationId": "admin.activity.list",
         "responses": {
           "200": {
             "description": "Successful response"
@@ -24,13 +24,58 @@
     "/admin/activity/stats": {
       "get": {
         "description": "Retrieve activity statistics summary (admin only)",
-        "operationId": "admin.stats",
+        "operationId": "admin.activity.stats",
         "responses": {
           "200": {
             "description": "Successful response"
           }
         },
         "summary": "Get activity stats",
+        "tags": [
+          "admin"
+        ]
+      }
+    },
+    "/admin/users/": {
+      "get": {
+        "description": "Search users by name or email. Admin-only.",
+        "operationId": "admin.users.search",
+        "responses": {
+          "200": {
+            "description": "Successful response"
+          }
+        },
+        "summary": "Search users",
+        "tags": [
+          "admin"
+        ]
+      }
+    },
+    "/admin/users/{userId}": {
+      "get": {
+        "description": "Retrieve a user profile with recent entities and AI usage. Admin-only.",
+        "operationId": "admin.users.get",
+        "responses": {
+          "200": {
+            "description": "Successful response"
+          }
+        },
+        "summary": "Get admin user detail",
+        "tags": [
+          "admin"
+        ]
+      }
+    },
+    "/admin/users/{userId}/entities": {
+      "get": {
+        "description": "List a user’s entities with search, type filtering, and pagination. Admin-only.",
+        "operationId": "admin.users.entities",
+        "responses": {
+          "200": {
+            "description": "Successful response"
+          }
+        },
+        "summary": "List admin user entities",
         "tags": [
           "admin"
         ]
@@ -518,6 +563,21 @@
           }
         },
         "summary": "Generate podcast",
+        "tags": [
+          "podcast"
+        ]
+      }
+    },
+    "/podcasts/{id}/generate-plan": {
+      "post": {
+        "description": "Generate a structured episode plan from the selected sources and persist it on the podcast.",
+        "operationId": "podcasts.generatePlan",
+        "responses": {
+          "200": {
+            "description": "Successful response"
+          }
+        },
+        "summary": "Generate episode plan",
         "tags": [
           "podcast"
         ]

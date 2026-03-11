@@ -10,6 +10,7 @@ import {
 import { Button } from '@repo/ui/components/button';
 import type { ReactNode } from 'react';
 import { isDeepResearchEnabled } from '@/env';
+import { DEEP_RESEARCH_NAME } from '@/shared/lib/source-guidance';
 
 interface ContentCounts {
   sources: number;
@@ -118,7 +119,7 @@ function AddSourcesCard({
               <MagnifyingGlassIcon className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
             ),
             iconBg: 'bg-emerald-500/10',
-            title: 'AI deep research',
+            title: DEEP_RESEARCH_NAME,
             description: 'Let AI explore a topic',
             onClick: () => documentDialogs.onResearchDialogOpenChange(true),
           },

@@ -13,6 +13,7 @@ import { useEffect } from 'react';
 import { authClient } from '@/clients/authClient';
 import { AI_APP_NAME, APP_NAME, formatProductPageTitle } from '@/constants';
 import { isDeepResearchEnabled, isPasswordAuthEnabled } from '@/env';
+import { DEEP_RESEARCH_NAME } from '@/shared/lib/source-guidance';
 
 export const Route = createFileRoute('/')({
   component: RouteComponent,
@@ -59,7 +60,7 @@ function RouteComponent() {
       icon: FileTextIcon,
       title: 'Add your sources',
       desc: isDeepResearchEnabled
-        ? 'Upload PDFs, paste URLs, or let AI deep-research a topic for you.'
+        ? `Upload PDFs, paste URLs, or use ${DEEP_RESEARCH_NAME} on a topic.`
         : 'Upload PDFs or paste URLs to ground your content.',
       color: 'text-sky-500',
       bg: 'bg-sky-500',
@@ -87,7 +88,7 @@ function RouteComponent() {
       label: 'Sources',
       headline: 'Ground every asset in verified source material',
       desc: isDeepResearchEnabled
-        ? 'Upload approved files, import web pages, or let AI deep-research a topic. Your source library becomes the single source of truth behind every piece of content.'
+        ? `Upload approved files, import web pages, or use ${DEEP_RESEARCH_NAME} on a topic. Your source library becomes the single source of truth behind every piece of content.`
         : 'Upload approved files or import web pages. Your source library becomes the single source of truth behind every piece of content.',
       color: 'text-sky-400',
       iconBg: 'bg-sky-500/10',
@@ -121,7 +122,7 @@ function RouteComponent() {
     '30+ natural voices',
     'PDF, DOCX, URL import',
     '4 infographic formats',
-    ...(isDeepResearchEnabled ? ['AI deep research'] : []),
+    ...(isDeepResearchEnabled ? [DEEP_RESEARCH_NAME] : []),
     'Full script review',
     'Source-grounded output',
   ];

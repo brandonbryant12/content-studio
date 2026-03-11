@@ -48,19 +48,19 @@ For orientation, runtime understanding, and day-one ownership, use
 <!-- BEGIN GENERATED:snapshot-metadata -->
 # Snapshot Metadata (Generated)
 
-- Generated at: 2026-03-05T21:24:00.955Z
+- Generated at: 2026-03-11T12:58:54.816Z
 - Git branch: main
-- Git commit: ab071fc4
+- Git commit: 95c7e4d5
 
 ## Inventory
 
-- API endpoints: 59
+- API endpoints: 63
 - API tags: 9
 - Domains: 5
-- Use cases: 57
-- Database tables: 13
+- Use cases: 58
+- Database tables: 14
 - Database enums: 9
-- UI routes: 15
+- UI routes: 19
 - UI feature modules: 7
 
 ## Generated Files
@@ -76,13 +76,16 @@ For orientation, runtime understanding, and day-one ownership, use
 <!-- BEGIN GENERATED:api-surface -->
 # API Contract Surface (Generated)
 
-- Endpoints: 59
+- Endpoints: 63
 - Tags: admin, chat, events, infographic, persona, podcast, source, voiceover, voices
 
 | Method | Path | Operation ID | Tags | Streaming | Summary |
 |---|---|---|---|---|---|
-| GET | /admin/activity/ | admin.list | admin | no | List activity log |
-| GET | /admin/activity/stats | admin.stats | admin | no | Get activity stats |
+| GET | /admin/activity/ | admin.activity.list | admin | no | List activity log |
+| GET | /admin/activity/stats | admin.activity.stats | admin | no | Get activity stats |
+| GET | /admin/users/ | admin.users.search | admin | no | Search users |
+| GET | /admin/users/{userId} | admin.users.get | admin | no | Get admin user detail |
+| GET | /admin/users/{userId}/entities | admin.users.entities | admin | no | List admin user entities |
 | POST | /chat/persona-chat | chat.personaChat | chat | yes |  |
 | POST | /chat/research | chat.research | chat | yes |  |
 | POST | /chat/synthesize-persona | chat.synthesizePersona | chat | no |  |
@@ -116,6 +119,7 @@ For orientation, runtime understanding, and day-one ownership, use
 | POST | /podcasts/{id}/approve | podcasts.approve | podcast | no | Approve podcast |
 | DELETE | /podcasts/{id}/approve | podcasts.revokeApproval | podcast | no | Revoke approval |
 | POST | /podcasts/{id}/generate | podcasts.generate | podcast | no | Generate podcast |
+| POST | /podcasts/{id}/generate-plan | podcasts.generatePlan | podcast | no | Generate episode plan |
 | POST | /podcasts/{id}/save-changes | podcasts.saveChanges | podcast | no | Save changes and regenerate audio |
 | GET | /podcasts/{id}/script | podcasts.getScript | podcast | no | Get script |
 | GET | /podcasts/jobs/{jobId} | podcasts.getJob | podcast | no | Get job status |
@@ -147,13 +151,13 @@ For orientation, runtime understanding, and day-one ownership, use
 # Domain Capability Surface (Generated)
 
 - Domains: 5
-- Exported use cases: 57
+- Exported use cases: 58
 
 | Domain | Use Cases | API Endpoints |
 |---|---|---|
 | infographic | 14 | 13 |
 | persona | 6 | 6 |
-| podcast | 14 | 11 |
+| podcast | 15 | 12 |
 | source | 13 | 10 |
 | voiceover | 10 | 9 |
 
@@ -192,6 +196,7 @@ For orientation, runtime understanding, and day-one ownership, use
 - `delete-podcast`
 - `generate-audio`
 - `generate-cover-image`
+- `generate-plan`
 - `generate-script`
 - `get-job`
 - `get-podcast`
@@ -236,7 +241,7 @@ For orientation, runtime understanding, and day-one ownership, use
 <!-- BEGIN GENERATED:data-model -->
 # Data Model Surface (Generated)
 
-- Tables: 13
+- Tables: 14
 - Enums: 9
 
 ## Tables
@@ -245,6 +250,7 @@ For orientation, runtime understanding, and day-one ownership, use
 |---|---|---|
 | account | `account` | `packages/db/src/schemas/auth.ts` |
 | activity_log | `activityLog` | `packages/db/src/schemas/activity-log.ts` |
+| ai_usage_event | `aiUsageEvent` | `packages/db/src/schemas/ai-usage-events.ts` |
 | infographic | `infographic` | `packages/db/src/schemas/infographics.ts` |
 | infographic_style_preset | `infographicStylePreset` | `packages/db/src/schemas/style-presets.ts` |
 | infographic_version | `infographicVersion` | `packages/db/src/schemas/infographics.ts` |
@@ -276,7 +282,7 @@ For orientation, runtime understanding, and day-one ownership, use
 <!-- BEGIN GENERATED:ui-surface -->
 # UI Surface (Generated)
 
-- Routes: 15
+- Routes: 19
 - Feature modules: 7
 
 ## Routes
@@ -284,6 +290,8 @@ For orientation, runtime understanding, and day-one ownership, use
 | Path | Access |
 |---|---|
 | / | public |
+| /admin/ | protected |
+| /admin/$userId | protected |
 | /admin/activity | protected |
 | /dashboard | protected |
 | /infographics/ | protected |
@@ -291,8 +299,10 @@ For orientation, runtime understanding, and day-one ownership, use
 | /login | public |
 | /personas/ | protected |
 | /personas/$personaId | protected |
+| /personas/new | protected |
 | /podcasts/ | protected |
 | /podcasts/$podcastId | protected |
+| /podcasts/new | protected |
 | /register | public |
 | /sources/ | protected |
 | /sources/$sourceId | protected |

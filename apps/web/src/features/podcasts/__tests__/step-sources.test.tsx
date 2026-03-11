@@ -1,6 +1,12 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { StepSources } from '../components/setup/steps/step-sources';
-import { renderWithQuery, screen, userEvent, waitFor } from '@/test-utils';
+import {
+  fireEvent,
+  renderWithQuery,
+  screen,
+  userEvent,
+  waitFor,
+} from '@/test-utils';
 
 const { mockUploadMutationFn, mockFromUrlMutationFn, mockUseSources } =
   vi.hoisted(() => ({
@@ -107,5 +113,41 @@ describe('StepSources', () => {
     ).toBeInTheDocument();
     expect(screen.getByRole('tab', { name: 'Upload New' })).toBeInTheDocument();
     expect(screen.getByRole('tab', { name: 'From URL' })).toBeInTheDocument();
+  });
+
+  it('uses source-first wording in upload copy', async () => {
+    const user = userEvent.setup();
+
+    const { container } = renderWithQuery(
+      <StepSources selectedIds={[]} onSelectionChange={vi.fn()} />,
+    );
+
+    await user.click(screen.getByRole('tab', { name: 'Upload New' }));
+    expect(
+      screen.getByLabelText(
+        'Upload a source file. Supports TXT, PDF, DOCX, PPTX',
+      ),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByLabelText(
+        'Upload a document file. Supports TXT, PDF, DOCX, PPTX',
+      ),
+    ).not.toBeInTheDocument();
+
+    const fileInput = container.querySelector(
+      'input[type="file"]',
+    ) as HTMLInputElement;
+    fireEvent.change(fileInput, {
+      target: {
+        files: [
+          new File(['source body'], 'source.txt', { type: 'text/plain' }),
+        ],
+      },
+    });
+
+    expect(screen.getByPlaceholderText('Source title')).toBeInTheDocument();
+    expect(
+      screen.queryByPlaceholderText('Document title'),
+    ).not.toBeInTheDocument();
   });
 });

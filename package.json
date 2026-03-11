@@ -6,6 +6,8 @@
     "auth:schema:generate": "turbo run auth:schema:generate",
     "postauth:schema:generate": "echo NOTE: you will also need to fix styles and db:push your new schema",
     "build": "turbo run build",
+    "ci:quality-gates": "pnpm scripts:lint && turbo run typecheck lint test test:invariants --continue --cache-dir ${TURBO_CACHE_DIR:-$HOME/.cache/turbo/content-studio}",
+    "ci:quality-gates:dry-run": "turbo run typecheck lint test test:invariants --dry=json --cache-dir ${TURBO_CACHE_DIR:-$HOME/.cache/turbo/content-studio}",
     "clean": "turbo run clean",
     "deploy:linux": "./deploy",
     "redeploy:linux": "./redeploy",

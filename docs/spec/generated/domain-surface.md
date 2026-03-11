@@ -1,13 +1,13 @@
 # Domain Capability Surface (Generated)
 
 - Domains: 5
-- Exported use cases: 57
+- Exported use cases: 58
 
 | Domain | Use Cases | API Endpoints |
 |---|---|---|
 | infographic | 14 | 13 |
 | persona | 6 | 6 |
-| podcast | 14 | 11 |
+| podcast | 15 | 12 |
 | source | 13 | 10 |
 | voiceover | 10 | 9 |
 
@@ -46,6 +46,7 @@
 - `delete-podcast`
 - `generate-audio`
 - `generate-cover-image`
+- `generate-plan`
 - `generate-script`
 - `get-job`
 - `get-podcast`

@@ -58,22 +58,8 @@ pipeline {
     }
 
     stage('Quality Gates') {
-      parallel {
-        stage('Typecheck') {
-          steps {
-            sh 'pnpm typecheck'
-          }
-        }
-        stage('Lint') {
-          steps {
-            sh 'pnpm lint'
-          }
-        }
-        stage('Test + Invariants') {
-          steps {
-            sh 'pnpm test && pnpm test:invariants'
-          }
-        }
+      steps {
+        sh 'pnpm ci:quality-gates'
       }
     }
 

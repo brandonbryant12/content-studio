@@ -48,6 +48,19 @@ This document defines the recommended Jenkins pipeline model for maintaining and
 | `pnpm audit --prod`              | Skip     | Skip     | Optional                         | Advisory |
 | `pnpm outdated --recursive`      | Skip     | Skip     | Skip                             | Advisory |
 
+## Core Gate Topology
+
+Run the shared `typecheck`, `lint`, `test`, and `test:invariants` gate through
+`pnpm ci:quality-gates`. That wrapper keeps the four tasks in one Turbo graph,
+which preserves the logical gates while preventing duplicate `^build`
+dependency fan-out across Jenkins stages.
+
+Use this dry-run check when changing pipeline topology:
+
+```bash
+pnpm ci:quality-gates:dry-run
+```
+
 ## Recommended Jenkins Job Types
 
 1. PR CI: Multibranch Pipeline job (PR event aware)

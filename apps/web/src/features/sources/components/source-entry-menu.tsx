@@ -12,6 +12,7 @@ import {
   DropdownMenuTrigger,
 } from '@repo/ui/components/dropdown-menu';
 import type { ComponentProps } from 'react';
+import { DEEP_RESEARCH_NAME } from '@/shared/lib/source-guidance';
 
 interface SourceEntryMenuProps {
   label?: string;
@@ -51,7 +52,7 @@ export function SourceEntryMenu({
         {showResearch ? (
           <DropdownMenuItem onSelect={onResearch}>
             <MagnifyingGlassIcon aria-hidden="true" />
-            Research
+            {DEEP_RESEARCH_NAME}
           </DropdownMenuItem>
         ) : null}
         <DropdownMenuItem onSelect={onUrl}>

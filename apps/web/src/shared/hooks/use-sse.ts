@@ -7,7 +7,6 @@ import {
   handleInfographicJobCompletion,
   handleSourceJobCompletion,
   handleEntityChange,
-  handleActivityLogged,
 } from './sse-handlers';
 import { rawApiClient } from '@/clients/apiClient';
 
@@ -23,6 +22,29 @@ const MAX_DELAY = 30000;
 
 function getDelay(attempt: number): number {
   return Math.min(BASE_DELAY * 2 ** attempt, MAX_DELAY) + Math.random() * 1000;
+}
+
+function advanceResumeCursor(
+  currentId: string | undefined,
+  eventType: string,
+  nextId: string | undefined,
+): string | undefined {
+  if (!nextId || eventType === 'connected') {
+    return currentId;
+  }
+
+  if (!currentId) {
+    return nextId;
+  }
+
+  const currentSequence = Number(currentId);
+  const nextSequence = Number(nextId);
+
+  if (Number.isFinite(currentSequence) && Number.isFinite(nextSequence)) {
+    return nextSequence > currentSequence ? nextId : currentId;
+  }
+
+  return nextId;
 }
 
 export function useSSE({ enabled = true }: { enabled?: boolean } = {}) {
@@ -56,9 +78,11 @@ export function useSSE({ enabled = true }: { enabled?: boolean } = {}) {
 
             // Track event ID for resume on reconnect
             const meta = getEventMeta(event);
-            if (meta?.id) {
-              lastEventIdRef.current = meta.id;
-            }
+            lastEventIdRef.current = advanceResumeCursor(
+              lastEventIdRef.current,
+              event.type,
+              meta?.id,
+            );
 
             const qc = queryClientRef.current;
 
@@ -81,9 +105,6 @@ export function useSSE({ enabled = true }: { enabled?: boolean } = {}) {
                 break;
               case 'entity_change':
                 handleEntityChange(event, qc);
-                break;
-              case 'activity_logged':
-                handleActivityLogged(event, qc);
                 break;
             }
           }

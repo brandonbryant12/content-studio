@@ -1,18 +1,18 @@
 # Snapshot Metadata (Generated)
 
-- Generated at: 2026-03-05T21:24:00.955Z
+- Generated at: 2026-03-11T12:58:54.816Z
 - Git branch: main
-- Git commit: ab071fc4
+- Git commit: 95c7e4d5
 
 ## Inventory
 
-- API endpoints: 59
+- API endpoints: 63
 - API tags: 9
 - Domains: 5
-- Use cases: 57
-- Database tables: 13
+- Use cases: 58
+- Database tables: 14
 - Database enums: 9
-- UI routes: 15
+- UI routes: 19
 - UI feature modules: 7
 
 ## Generated Files

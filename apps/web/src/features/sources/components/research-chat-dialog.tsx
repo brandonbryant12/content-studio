@@ -21,6 +21,7 @@ import {
   CHAT_INPUT_TEXTAREA_CLASS,
 } from '@/shared/lib/chat-input';
 import {
+  DEEP_RESEARCH_NAME,
   SOURCE_RESEARCH_DIALOG_DESCRIPTION,
   SOURCE_RESEARCH_DIALOG_PROMPT,
 } from '@/shared/lib/source-guidance';
@@ -104,7 +105,7 @@ export function ResearchChatDialog({
         <DialogHeader className="px-6 pt-6 pb-2">
           <DialogTitle className="flex items-center gap-2">
             <MagnifyingGlassIcon className="w-5 h-5" />
-            Deep Research
+            {DEEP_RESEARCH_NAME}
             {shouldShowProgressBadge && (
               <ChatProgressBadge
                 current={followUpCount}

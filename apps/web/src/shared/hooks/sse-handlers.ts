@@ -5,11 +5,9 @@ import type {
   InfographicJobCompletionEvent,
   SourceJobCompletionEvent,
   EntityChangeEvent,
-  ActivityLoggedEvent,
 } from '@repo/api/contracts';
 import type { QueryClient } from '@tanstack/react-query';
 import { apiClient } from '@/clients/apiClient';
-import { getActivityListQueryKey } from '@/features/admin/hooks';
 import { getInfographicQueryKey } from '@/features/infographics/hooks/use-infographic';
 import { getInfographicListQueryKey } from '@/features/infographics/hooks/use-infographic-list';
 import { getInfographicVersionsQueryKey } from '@/features/infographics/hooks/use-infographic-versions';
@@ -278,18 +276,6 @@ export function handleSourceJobCompletion(
       queryClient.fetchQuery(
         apiClient.sources.get.queryOptions({ input: { id: sourceId } }),
       ),
-  });
-}
-
-export function handleActivityLogged(
-  _event: ActivityLoggedEvent,
-  queryClient: QueryClient,
-): void {
-  // Scope invalidation to the canonical admin activity list key prefix.
-  const activityListQueryKeyScope = getActivityListQueryKey().slice(0, 1);
-
-  queryClient.invalidateQueries({
-    queryKey: activityListQueryKeyScope,
   });
 }
 

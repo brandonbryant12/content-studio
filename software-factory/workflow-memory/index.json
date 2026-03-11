@@ -16,6 +16,25 @@
     "eventFile": "events/2026-03.jsonl"
   },
   {
+    "id": "2026-03-11-feature-delivery-multi-issue-cleanup-aligned-sse-ci-topology-copy-and-stale-job-i",
+    "date": "2026-03-11",
+    "month": "2026-03",
+    "workflow": "Feature Delivery",
+    "title": "Multi-issue cleanup aligned SSE, CI topology, copy, and stale-job indexing",
+    "severity": "medium",
+    "status": "completed",
+    "tags": [
+      "skill:intake-triage",
+      "skill:feature-delivery",
+      "sse",
+      "ci",
+      "queue",
+      "ux",
+      "github-issues"
+    ],
+    "eventFile": "events/2026-03.jsonl"
+  },
+  {
     "id": "2026-03-11-feature-delivery-podcast-generation-now-uses-gemini-3-1-pro-preview-and-calibrate",
     "date": "2026-03-11",
     "month": "2026-03",

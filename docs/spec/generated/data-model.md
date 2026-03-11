@@ -1,6 +1,6 @@
 # Data Model Surface (Generated)
 
-- Tables: 13
+- Tables: 14
 - Enums: 9
 
 ## Tables
@@ -9,6 +9,7 @@
 |---|---|---|
 | account | `account` | `packages/db/src/schemas/auth.ts` |
 | activity_log | `activityLog` | `packages/db/src/schemas/activity-log.ts` |
+| ai_usage_event | `aiUsageEvent` | `packages/db/src/schemas/ai-usage-events.ts` |
 | infographic | `infographic` | `packages/db/src/schemas/infographics.ts` |
 | infographic_style_preset | `infographicStylePreset` | `packages/db/src/schemas/style-presets.ts` |
 | infographic_version | `infographicVersion` | `packages/db/src/schemas/infographics.ts` |

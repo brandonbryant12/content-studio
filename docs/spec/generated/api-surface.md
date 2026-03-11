@@ -1,12 +1,15 @@
 # API Contract Surface (Generated)
 
-- Endpoints: 59
+- Endpoints: 63
 - Tags: admin, chat, events, infographic, persona, podcast, source, voiceover, voices
 
 | Method | Path | Operation ID | Tags | Streaming | Summary |
 |---|---|---|---|---|---|
-| GET | /admin/activity/ | admin.list | admin | no | List activity log |
-| GET | /admin/activity/stats | admin.stats | admin | no | Get activity stats |
+| GET | /admin/activity/ | admin.activity.list | admin | no | List activity log |
+| GET | /admin/activity/stats | admin.activity.stats | admin | no | Get activity stats |
+| GET | /admin/users/ | admin.users.search | admin | no | Search users |
+| GET | /admin/users/{userId} | admin.users.get | admin | no | Get admin user detail |
+| GET | /admin/users/{userId}/entities | admin.users.entities | admin | no | List admin user entities |
 | POST | /chat/persona-chat | chat.personaChat | chat | yes |  |
 | POST | /chat/research | chat.research | chat | yes |  |
 | POST | /chat/synthesize-persona | chat.synthesizePersona | chat | no |  |
@@ -40,6 +43,7 @@
 | POST | /podcasts/{id}/approve | podcasts.approve | podcast | no | Approve podcast |
 | DELETE | /podcasts/{id}/approve | podcasts.revokeApproval | podcast | no | Revoke approval |
 | POST | /podcasts/{id}/generate | podcasts.generate | podcast | no | Generate podcast |
+| POST | /podcasts/{id}/generate-plan | podcasts.generatePlan | podcast | no | Generate episode plan |
 | POST | /podcasts/{id}/save-changes | podcasts.saveChanges | podcast | no | Save changes and regenerate audio |
 | GET | /podcasts/{id}/script | podcasts.getScript | podcast | no | Get script |
 | GET | /podcasts/jobs/{jobId} | podcasts.getJob | podcast | no | Get job status |

@@ -90,5 +90,6 @@ Require these statuses before merge:
 1. Run each job once manually to validate SCM credentials and agent labels.
 2. Confirm `pnpm` bootstraps correctly (`corepack prepare pnpm@10.23.0` in logs).
 3. Confirm Docker-backed test steps can start Testcontainers / Compose services.
-4. Confirm test reports and artifacts are archived.
-5. Confirm PR status checks report back to your SCM provider.
+4. Confirm PR/main/nightly logs run `pnpm ci:quality-gates` for the shared `typecheck`/`lint`/`test`/`test:invariants` gate instead of separate commands.
+5. Confirm test reports and artifacts are archived.
+6. Confirm PR status checks report back to your SCM provider.

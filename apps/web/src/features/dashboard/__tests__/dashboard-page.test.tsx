@@ -99,7 +99,7 @@ describe('DashboardPage quick-start panel', () => {
     expect(screen.getByText('Add your first source')).toBeInTheDocument();
     expect(screen.getByText('Upload a file')).toBeInTheDocument();
     expect(screen.getByText('Import from URL')).toBeInTheDocument();
-    expect(screen.getByText('AI deep research')).toBeInTheDocument();
+    expect(screen.getByText('Deep Research')).toBeInTheDocument();
   });
 
   it('shows create first content panel when documents exist but no generated content', () => {

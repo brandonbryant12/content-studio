@@ -60,6 +60,9 @@ export const job = pgTable(
     index('job_processing_idx')
       .on(table.type, table.startedAt)
       .where(sql`status = 'processing'`),
+    index('job_processing_updatedAt_idx')
+      .on(table.updatedAt)
+      .where(sql`status = 'processing'`),
   ],
 );
 

@@ -1,0 +1,1 @@
+CREATE INDEX "job_processing_updatedAt_idx" ON "job" USING btree ("updatedAt") WHERE status = 'processing';

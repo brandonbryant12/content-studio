@@ -16,7 +16,6 @@ vi.mock('../sse-handlers', () => ({
   handleInfographicJobCompletion: vi.fn(),
   handleSourceJobCompletion: vi.fn(),
   handleEntityChange: vi.fn(),
-  handleActivityLogged: vi.fn(),
 }));
 
 vi.mock('@repo/api/client', () => ({
@@ -283,6 +282,62 @@ describe('useSSE', () => {
       });
 
       expect(mockSubscribe.mock.calls[1]?.[1]).toMatchObject({
+        lastEventId: '42',
+      });
+    });
+
+    it('does not let the connected sentinel reset the resume cursor', async () => {
+      const stream1 = createMockIterator();
+      const stream2 = createMockIterator();
+      const stream3 = createMockIterator();
+      mockSubscribe
+        .mockResolvedValueOnce(stream1.iterator)
+        .mockResolvedValueOnce(stream2.iterator)
+        .mockResolvedValueOnce(stream3.iterator);
+
+      renderHook(() => useSSE({ enabled: true }), {
+        wrapper: createWrapper(),
+      });
+
+      await act(async () => {
+        stream1.push({
+          type: 'entity_change',
+          entityType: 'podcast',
+          changeType: 'update',
+          entityId: 'podcast-123',
+          userId: 'user-456',
+          timestamp: new Date().toISOString(),
+          __meta: { id: '42' },
+        });
+      });
+
+      await act(async () => {
+        stream1.end();
+        await new Promise((r) => setTimeout(r, 3000));
+      });
+
+      await waitFor(() => {
+        expect(mockSubscribe).toHaveBeenCalledTimes(2);
+      });
+
+      await act(async () => {
+        stream2.push({
+          type: 'connected',
+          userId: 'user-123',
+          __meta: { id: '0' },
+        });
+      });
+
+      await act(async () => {
+        stream2.end();
+        await new Promise((r) => setTimeout(r, 3000));
+      });
+
+      await waitFor(() => {
+        expect(mockSubscribe).toHaveBeenCalledTimes(3);
+      });
+
+      expect(mockSubscribe.mock.calls[2]?.[1]).toMatchObject({
         lastEventId: '42',
       });
     });

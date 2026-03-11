@@ -22,7 +22,7 @@ export function getFileExtensionFromUrl(url: string, fallback: string): string {
   const normalizedFallback = fallback.replace(/^\./, '').toLowerCase();
 
   const parse = (value: string): string | null => {
-    const withoutQuery = value.split(/[?#]/)[0];
+    const [withoutQuery = ''] = value.split(/[?#]/);
     const segment = withoutQuery.split('/').pop();
     if (!segment) return null;
 

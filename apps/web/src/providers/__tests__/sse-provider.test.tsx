@@ -11,7 +11,6 @@ vi.mock('@/shared/hooks/sse-handlers', () => ({
   handleInfographicJobCompletion: vi.fn(),
   handleSourceJobCompletion: vi.fn(),
   handleEntityChange: vi.fn(),
-  handleActivityLogged: vi.fn(),
 }));
 
 // Mock TanStack Router
