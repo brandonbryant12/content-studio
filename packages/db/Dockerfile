@@ -1,10 +1,8 @@
-# syntax=docker/dockerfile:1
 ARG DOCKER_REGISTRY="docker.io"
 ARG HTTP_PROXY=""
 ARG HTTPS_PROXY=""
 ARG NO_PROXY=""
 ARG NODE_EXTRA_CA_CERTS=""
-ARG CORPORATE_CA_CERT_FILE=""
 
 FROM ${DOCKER_REGISTRY}/node:22-alpine AS base
 
@@ -12,7 +10,6 @@ ARG HTTP_PROXY
 ARG HTTPS_PROXY
 ARG NO_PROXY
 ARG NODE_EXTRA_CA_CERTS
-ARG CORPORATE_CA_CERT_FILE
 
 WORKDIR /app
 
@@ -34,8 +31,8 @@ ENV TURBO_TELEMETRY_DISABLED=1 \
 COPY docker/certs/ /opt/content-studio/certs/
 
 RUN apk add --no-cache ca-certificates \
-    && if [ -n "$CORPORATE_CA_CERT_FILE" ] && [ -s "/opt/content-studio/certs/$CORPORATE_CA_CERT_FILE" ]; then \
-         cat "/opt/content-studio/certs/$CORPORATE_CA_CERT_FILE" >> /etc/ssl/certs/ca-certificates.crt; \
+    && if [ -n "$NODE_EXTRA_CA_CERTS" ] && [ -s "$NODE_EXTRA_CA_CERTS" ]; then \
+         cat "$NODE_EXTRA_CA_CERTS" >> /etc/ssl/certs/ca-certificates.crt; \
        fi
 
 RUN corepack enable pnpm \
@@ -55,8 +52,7 @@ FROM base AS runner
 
 COPY --from=builder /app/out/json/ .
 
-RUN --mount=type=cache,id=pnpm,target=/pnpm/store \
-    NODE_ENV=development pnpm install --frozen-lockfile
+RUN NODE_ENV=development pnpm install --frozen-lockfile
 
 COPY --from=builder /app/out/full/ .
 

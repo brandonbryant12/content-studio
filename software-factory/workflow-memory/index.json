@@ -57,6 +57,25 @@
     "eventFile": "events/2026-03.jsonl"
   },
   {
+    "id": "2026-03-11-feature-delivery-docker-deploy-no-longer-depends-on-external-syntax-frontend-or-d",
+    "date": "2026-03-11",
+    "month": "2026-03",
+    "workflow": "Feature Delivery",
+    "title": "Docker deploy no longer depends on external syntax frontend or duplicate CA arg",
+    "severity": "medium",
+    "status": "completed",
+    "tags": [
+      "skill:feature-delivery",
+      "docker-compose",
+      "deploy",
+      "docker-registry",
+      "proxy",
+      "env-vars"
+    ],
+    "confidence": 0.97,
+    "eventFile": "events/2026-03.jsonl"
+  },
+  {
     "id": "2026-03-11-feature-delivery-issues-311-and-322-aligned-test-mock-guidance-with-a-docs-backed",
     "date": "2026-03-11",
     "month": "2026-03",

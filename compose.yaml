@@ -40,7 +40,6 @@ services:
         HTTPS_PROXY: "${HTTPS_PROXY:-}"
         NO_PROXY: "${NO_PROXY:-}"
         NODE_EXTRA_CA_CERTS: "${NODE_EXTRA_CA_CERTS:-}"
-        CORPORATE_CA_CERT_FILE: "corporate-ca.pem"
         PUBLIC_SERVER_URL: "http://placeholder.invalid"
         PUBLIC_SERVER_API_PATH: "/api"
         PUBLIC_AUTH_MODE: "dev-password"
@@ -81,7 +80,6 @@ services:
         HTTPS_PROXY: "${HTTPS_PROXY:-}"
         NO_PROXY: "${NO_PROXY:-}"
         NODE_EXTRA_CA_CERTS: "${NODE_EXTRA_CA_CERTS:-}"
-        CORPORATE_CA_CERT_FILE: "corporate-ca.pem"
     ports:
       # Set SERVER_BIND_IP=127.0.0.1 when nginx/reverse proxy is the only ingress.
       - "${SERVER_BIND_IP:-0.0.0.0}:${SERVER_PORT:-3036}:3036"
@@ -156,7 +154,6 @@ services:
         HTTPS_PROXY: "${HTTPS_PROXY:-}"
         NO_PROXY: "${NO_PROXY:-}"
         NODE_EXTRA_CA_CERTS: "${NODE_EXTRA_CA_CERTS:-}"
-        CORPORATE_CA_CERT_FILE: "corporate-ca.pem"
     volumes:
       - ./docker/certs:/opt/content-studio/certs:ro
     environment:
