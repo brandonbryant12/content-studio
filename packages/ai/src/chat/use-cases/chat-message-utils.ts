@@ -18,6 +18,11 @@ export interface SynthesisFormatOptions {
   readonly maxTotalChars: number;
 }
 
+export function normalizeStringWithFallback(value: string, fallback: string) {
+  const normalized = value.trim();
+  return normalized.length > 0 ? normalized : fallback;
+}
+
 const DEFAULT_SYNTHESIS_FORMAT_OPTIONS: SynthesisFormatOptions = {
   maxMessages: 18,
   maxCharsPerMessage: 700,

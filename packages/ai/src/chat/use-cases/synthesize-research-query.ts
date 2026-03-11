@@ -9,6 +9,7 @@ import { withAIUsageScope } from '../../usage';
 import {
   formatMessagesForSynthesis,
   getMessageText,
+  normalizeStringWithFallback,
 } from './chat-message-utils';
 
 const SynthesisResult = Schema.Struct({
@@ -28,11 +29,6 @@ const FALLBACK_FORMAT_OPTIONS = {
   maxTotalChars: 4_000,
 } as const;
 
-function normalizeString(value: string, fallback: string) {
-  const normalized = value.trim();
-  return normalized.length > 0 ? normalized : fallback;
-}
-
 function buildFallbackTitle(topic: string) {
   const words = topic
     .replace(/\s+/g, ' ')
@@ -51,7 +47,7 @@ function ensureSentence(text: string) {
 }
 
 function buildFallbackResearchBrief(topic: string) {
-  const normalizedTopic = normalizeString(
+  const normalizedTopic = normalizeStringWithFallback(
     topic,
     'the topic from the current conversation',
   );
@@ -69,7 +65,7 @@ function getFallbackTopic(messages: readonly UIMessage[]) {
     .reverse()
     .find((message) => message.role === 'user');
   const fallback = latestUserMessage ? getMessageText(latestUserMessage) : '';
-  return normalizeString(
+  return normalizeStringWithFallback(
     fallback,
     'Research this topic using the latest conversation context.',
   );
@@ -106,11 +102,11 @@ export const synthesizeResearchQuery = (input: SynthesizeResearchQueryInput) =>
 
     const fallbackTopic = getFallbackTopic(input.messages);
     return {
-      query: normalizeString(
+      query: normalizeStringWithFallback(
         result.object.query,
         buildFallbackResearchBrief(fallbackTopic),
       ),
-      title: normalizeString(
+      title: normalizeStringWithFallback(
         result.object.title,
         buildFallbackTitle(fallbackTopic),
       ),
