@@ -47,7 +47,7 @@ describe('getSource', () => {
     const layers = Layer.mergeAll(
       MockDbLive,
       createMockSourceRepo({
-        findById: () => Effect.succeed(source),
+        findByIdForUser: () => Effect.succeed(source),
       }),
     );
 
@@ -66,7 +66,7 @@ describe('getSource', () => {
     const layers = Layer.mergeAll(
       MockDbLive,
       createMockSourceRepo({
-        findById: (id) => Effect.fail(new SourceNotFound({ id })),
+        findByIdForUser: (id) => Effect.fail(new SourceNotFound({ id })),
       }),
     );
 
@@ -121,10 +121,20 @@ import {
 const layers = Layer.mergeAll(
   MockDbLive,
   createMockSourceRepo({
-    findById: () => Effect.succeed(testSource),
+    findByIdForUser: () => Effect.succeed(testSource),
   }),
 );
 ```
+
+Representative migrated example:
+
+- `packages/media/src/source/use-cases/__tests__/get-source.test.ts`
+
+Exception policy:
+
+- Use shared `createMock*Repo(overrides)` helpers for repo-backed use-case tests by default.
+- Do not hand-roll repo service objects filled with `Effect.die('not implemented')` in use-case tests.
+- A test-local helper is acceptable only when no shared factory exists yet or the test needs coordinated multi-method state that the shared helper cannot model. In that case, implement only the exercised methods and keep the helper narrowly scoped to that file.
 
 Available exports today:
 

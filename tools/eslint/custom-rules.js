@@ -23,6 +23,68 @@ const getObjectProperty = (objectExpression, keyName) => {
   );
 };
 
+const unwrapExpression = (node) => {
+  let current = node;
+
+  while (current) {
+    if (
+      current.type === 'TSAsExpression' ||
+      current.type === 'TSSatisfiesExpression' ||
+      current.type === 'TSTypeAssertion' ||
+      current.type === 'TSNonNullExpression' ||
+      current.type === 'ParenthesizedExpression' ||
+      current.type === 'ChainExpression'
+    ) {
+      current = current.expression;
+      continue;
+    }
+
+    break;
+  }
+
+  return current;
+};
+
+const isDirectConstructionExpression = (node) => {
+  const expression = unwrapExpression(node);
+
+  return (
+    expression?.type === 'CallExpression' ||
+    expression?.type === 'NewExpression'
+  );
+};
+
+const findInlineConstructionInObject = (node) => {
+  const expression = unwrapExpression(node);
+  if (expression?.type !== 'ObjectExpression') return null;
+
+  for (const property of expression.properties) {
+    if (property.type === 'SpreadElement') {
+      if (isDirectConstructionExpression(property.argument)) {
+        return unwrapExpression(property.argument);
+      }
+      continue;
+    }
+
+    if (property.type !== 'Property') continue;
+    if (property.kind !== 'init') continue;
+
+    const propertyValue = unwrapExpression(property.value);
+    if (
+      propertyValue?.type === 'FunctionExpression' ||
+      propertyValue?.type === 'ArrowFunctionExpression'
+    ) {
+      continue;
+    }
+
+    if (isDirectConstructionExpression(propertyValue)) {
+      return propertyValue;
+    }
+  }
+
+  return null;
+};
+
 const noUnknownChatStreamContract = {
   meta: {
     type: 'problem',
@@ -59,7 +121,7 @@ const noChatStatusNotReady = {
     type: 'problem',
     docs: {
       description:
-        'Disallow `status !== \"ready\"` style checks in chat hooks.',
+        'Disallow `status !== "ready"` style checks in chat hooks.',
     },
     schema: [],
     messages: {
@@ -173,6 +235,42 @@ const noThrowInEffectGen = {
   },
 };
 
+const noLayerSucceedConstruction = {
+  meta: {
+    type: 'problem',
+    docs: {
+      description:
+        'Disallow direct factory or constructor work inside Layer.succeed service values.',
+    },
+    schema: [],
+    messages: {
+      noInlineConstruction:
+        'Layer.succeed must receive a pure object literal or already-constructed plain value. Use Layer.sync(...) for constructors/factories or Layer.effect(...) when construction depends on other services.',
+    },
+  },
+  create(context) {
+    return {
+      CallExpression(node) {
+        if (!isMemberExpressionNamed(node.callee, 'Layer', 'succeed')) return;
+
+        const serviceArg = node.arguments[1];
+        if (!serviceArg) return;
+
+        const directConstruction = isDirectConstructionExpression(serviceArg)
+          ? unwrapExpression(serviceArg)
+          : findInlineConstructionInObject(serviceArg);
+
+        if (!directConstruction) return;
+
+        context.report({
+          node: directConstruction,
+          messageId: 'noInlineConstruction',
+        });
+      },
+    };
+  },
+};
+
 const noInstanceofInEffectTests = {
   meta: {
     type: 'problem',
@@ -247,6 +345,7 @@ const customRules = {
     'no-unknown-chat-stream-contract': noUnknownChatStreamContract,
     'no-chat-status-not-ready': noChatStatusNotReady,
     'no-inline-invalidate-querykey-array': noInlineInvalidateQueryKeyArray,
+    'no-layer-succeed-construction': noLayerSucceedConstruction,
     'no-throw-in-effect-gen': noThrowInEffectGen,
     'no-instanceof-in-effect-tests': noInstanceofInEffectTests,
     'no-error-instanceof-in-backend-tests': noErrorInstanceofInBackendTests,

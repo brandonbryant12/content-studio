@@ -15,7 +15,7 @@ flowchart LR
 3. **All DB ops via `withDb(span, fn)`** for tracing and connection handling <!-- enforced-by: architecture -->
 4. **Ownership-scoped access should use `userId` params** and conceal unauthorized access as typed not-found <!-- enforced-by: architecture -->
 5. **Require `Db` context** in every method's Effect type <!-- enforced-by: types -->
-6. **Use `Layer.succeed` for repo layers** when the repo is a pure object literal <!-- enforced-by: eslint -->
+6. **Use `Layer.succeed` for repo layers** when the repo is a pure object literal <!-- enforced-by: eslint, manual-review -->
 
 ## File Location
 
@@ -128,9 +128,11 @@ For owner-only resources, repository methods should include `userId` in the quer
 '@repo/{package}/{EntityRepo}'   // e.g. '@repo/media/SourceRepo'
 ```
 
-### 5. Layer Uses `Layer.succeed` <!-- enforced-by: eslint -->
+### 5. Layer Uses `Layer.succeed` <!-- enforced-by: eslint, manual-review -->
 
 Repos are plain object literals with no side effects -- always use `Layer.succeed`.
+
+ESLint rejects direct constructor or factory work inside `Layer.succeed(...)` in production code. Review still has to catch cases where construction was hoisted into an identifier before the layer assembly line.
 
 ### 6. No Serialization in Repos <!-- enforced-by: invariant-test -->
 

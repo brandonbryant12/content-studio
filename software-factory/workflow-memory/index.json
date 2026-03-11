@@ -16,6 +16,25 @@
     "eventFile": "events/2026-03.jsonl"
   },
   {
+    "id": "2026-03-11-feature-delivery-issues-311-and-322-aligned-test-mock-guidance-with-a-docs-backed",
+    "date": "2026-03-11",
+    "month": "2026-03",
+    "workflow": "Feature Delivery",
+    "title": "Issues #311 and #322 aligned test-mock guidance with a docs-backed ESLint guardrail",
+    "severity": "medium",
+    "status": "completed",
+    "tags": [
+      "skill:feature-delivery",
+      "github-issues",
+      "testing",
+      "eslint",
+      "docs",
+      "guardrail"
+    ],
+    "confidence": 0.95,
+    "eventFile": "events/2026-03.jsonl"
+  },
+  {
     "id": "2026-03-11-feature-delivery-multi-issue-cleanup-aligned-sse-ci-topology-copy-and-stale-job-i",
     "date": "2026-03-11",
     "month": "2026-03",

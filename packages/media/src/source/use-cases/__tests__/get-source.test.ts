@@ -1,4 +1,4 @@
-import { Db } from '@repo/db/effect';
+import { createMockSourceRepo, MockDbLive } from '@repo/media/test-utils';
 import {
   createTestUser,
   createTestAdmin,
@@ -10,49 +10,7 @@ import { Effect, Layer } from 'effect';
 import { describe, it, expect, beforeEach } from 'vitest';
 import type { UnauthorizedError } from '@repo/db/errors';
 import { SourceNotFound } from '../../../errors';
-import { SourceRepo, type SourceRepoService } from '../../repos';
 import { getSource } from '../get-source';
-
-// =============================================================================
-// Test Setup
-// =============================================================================
-
-/**
- * Create a mock SourceRepo layer with custom findById behavior.
- */
-const createMockSourceRepo = (
-  overrides: {
-    findById?: SourceRepoService['findById'];
-    findByIdForUser?: SourceRepoService['findByIdForUser'];
-  } = {},
-): Layer.Layer<SourceRepo> =>
-  Layer.succeed(SourceRepo, {
-    findByIdForUser: (id, userId) =>
-      overrides.findByIdForUser
-        ? overrides.findByIdForUser(id, userId)
-        : overrides.findById
-          ? overrides.findById(id)
-          : Effect.die('findByIdForUser not implemented'),
-    findById:
-      overrides.findById ?? (() => Effect.die('findById not implemented')),
-    insert: () => Effect.die('not implemented'),
-    list: () => Effect.die('not implemented'),
-    update: () => Effect.die('not implemented'),
-    delete: () => Effect.die('not implemented'),
-    count: () => Effect.die('not implemented'),
-    updateStatus: () => Effect.die('not implemented'),
-    updateContent: () => Effect.die('not implemented'),
-    findBySourceUrl: () => Effect.die('not implemented'),
-    updateResearchConfig: () => Effect.die('not implemented'),
-    findOrphanedResearch: () => Effect.die('not implemented'),
-  });
-
-/**
- * Create a mock Db layer (required by use case signature but not used when repo is mocked).
- */
-const MockDbLive: Layer.Layer<Db> = Layer.succeed(Db, {
-  db: {} as never,
-});
 
 // =============================================================================
 // Tests
@@ -71,10 +29,12 @@ describe('getSource', () => {
         createdBy: user.id,
       });
 
-      const mockRepo = createMockSourceRepo({
-        findByIdForUser: () => Effect.succeed(source),
-      });
-      const layers = Layer.mergeAll(MockDbLive, mockRepo);
+      const layers = Layer.mergeAll(
+        MockDbLive,
+        createMockSourceRepo({
+          findByIdForUser: () => Effect.succeed(source),
+        }),
+      );
 
       const result = await Effect.runPromise(
         withTestUser(user)(
@@ -94,11 +54,12 @@ describe('getSource', () => {
         createdBy: 'member-1',
       });
 
-      const mockRepo = createMockSourceRepo({
-        findById: () => Effect.succeed(source),
-        findByIdForUser: (id) => Effect.fail(new SourceNotFound({ id })),
-      });
-      const layers = Layer.mergeAll(MockDbLive, mockRepo);
+      const layers = Layer.mergeAll(
+        MockDbLive,
+        createMockSourceRepo({
+          findById: () => Effect.succeed(source),
+        }),
+      );
 
       const result = await Effect.runPromise(
         withTestUser(admin)(
@@ -114,10 +75,12 @@ describe('getSource', () => {
       const user = createTestUser({ id: 'user-1' });
       const sourceId = 'doc_hidden';
 
-      const mockRepo = createMockSourceRepo({
-        findByIdForUser: (id) => Effect.fail(new SourceNotFound({ id })),
-      });
-      const layers = Layer.mergeAll(MockDbLive, mockRepo);
+      const layers = Layer.mergeAll(
+        MockDbLive,
+        createMockSourceRepo({
+          findByIdForUser: (id) => Effect.fail(new SourceNotFound({ id })),
+        }),
+      );
 
       const result = await Effect.runPromiseExit(
         withTestUser(user)(
@@ -139,10 +102,12 @@ describe('getSource', () => {
       const user = createTestUser({ id: 'user-1' });
       const nonExistentId = 'doc_nonexistent';
 
-      const mockRepo = createMockSourceRepo({
-        findByIdForUser: (id) => Effect.fail(new SourceNotFound({ id })),
-      });
-      const layers = Layer.mergeAll(MockDbLive, mockRepo);
+      const layers = Layer.mergeAll(
+        MockDbLive,
+        createMockSourceRepo({
+          findByIdForUser: (id) => Effect.fail(new SourceNotFound({ id })),
+        }),
+      );
 
       const result = await Effect.runPromiseExit(
         withTestUser(user)(
@@ -163,10 +128,12 @@ describe('getSource', () => {
     it('fails with UnauthorizedError when no user context', async () => {
       const testSource = createTestSource({ createdBy: 'user-1' });
 
-      const mockRepo = createMockSourceRepo({
-        findByIdForUser: () => Effect.succeed(testSource),
-      });
-      const layers = Layer.mergeAll(MockDbLive, mockRepo);
+      const layers = Layer.mergeAll(
+        MockDbLive,
+        createMockSourceRepo({
+          findByIdForUser: () => Effect.succeed(testSource),
+        }),
+      );
 
       // Run without withTestUser - no user context
       const result = await Effect.runPromiseExit(

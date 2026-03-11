@@ -1,12 +1,12 @@
 /// <reference types="./types.d.ts" />
 
 import js from '@eslint/js';
+import { defineConfig } from 'eslint/config';
 import eslintConfigPrettier from 'eslint-config-prettier';
 import turboConfig from 'eslint-config-turbo/flat';
 import eslintPluginImport from 'eslint-plugin-import';
 import turboPlugin from 'eslint-plugin-turbo';
 import tseslint from 'typescript-eslint';
-import { defineConfig } from 'eslint/config';
 import customRules from './custom-rules.js';
 
 /** @type {any} */
@@ -165,7 +165,15 @@ export default defineConfig([
   {
     files: ['**/*.ts', '**/*.tsx'],
     rules: {
+      'repo-custom/no-layer-succeed-construction': 'error',
       'repo-custom/no-throw-in-effect-gen': 'error',
+    },
+  },
+  // Test files may use compact inline layer helpers without production-layer constructor restrictions
+  {
+    files: ['**/*.test.ts', '**/*.test.tsx', '**/*.integration.test.ts'],
+    rules: {
+      'repo-custom/no-layer-succeed-construction': 'off',
     },
   },
   // Ban `as any` in test files — use branded types or typed helpers instead

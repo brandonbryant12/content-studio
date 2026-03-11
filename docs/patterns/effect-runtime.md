@@ -26,8 +26,8 @@ sequenceDiagram
 
 1. **One shared `ManagedRuntime` per process**. Create it once at boot and reuse it. <!-- enforced-by: architecture -->
 2. **User context comes from FiberRef**, never a request-scoped service layer. <!-- enforced-by: architecture -->
-3. **Do not cast away Effect requirements**. Let the compiler prove the layer graph is complete. <!-- enforced-by: eslint -->
-4. **Use the right layer constructor**: `Layer.succeed` for pure objects, `Layer.sync` for constructors and factories, `Layer.effect` for dependency-driven composition. <!-- enforced-by: eslint -->
+3. **Do not cast away Effect requirements**. Let the compiler prove the layer graph is complete. <!-- enforced-by: manual-review -->
+4. **Use the right layer constructor**: `Layer.succeed` for pure objects, `Layer.sync` for constructors and factories, `Layer.effect` for dependency-driven composition. <!-- enforced-by: eslint, manual-review -->
 5. **Derive environment types from layers** instead of maintaining them manually. <!-- enforced-by: types -->
 6. **Inside `Effect.gen`, model failure with `Effect.fail` or `Effect.die`**, not raw `throw`. <!-- enforced-by: eslint -->
 
@@ -94,6 +94,8 @@ export const createSource = (input: CreateSourceInput) =>
 | `Layer.effect` | Construction needs other Effect services | Composite layers with dependencies |
 
 Rule of thumb: if a helper calls `new SomeClass(...)` or `createSomeSDK(...)`, use `Layer.sync`.
+
+ESLint now blocks the most common production-footgun directly at the layer site: `Layer.succeed(Tag, makeService())`, `Layer.succeed(Tag, new Client())`, and inline object literals that hide those calls in property values. If construction is hidden behind an identifier (for example `const make = createService(); Layer.succeed(Tag, make)`), reviewers still need to verify the constructor choice manually. Test files are exempt so focused layer helpers can stay concise.
 
 ## Adding New Services
 <!-- enforced-by: types -->

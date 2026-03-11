@@ -8,6 +8,7 @@ const repoRoot = path.resolve(currentDir, '..', '..', '..', '..');
 
 const packageJsonPath = path.join(repoRoot, 'package.json');
 const docsPath = path.join(repoRoot, 'docs/testing/invariants.md');
+const useCaseTestsDocPath = path.join(repoRoot, 'docs/testing/use-case-tests.md');
 const datadogDocPath = path.join(repoRoot, 'docs/architecture/datadog.md');
 const observabilityDocPath = path.join(
   repoRoot,
@@ -141,6 +142,23 @@ describe('invariant docs sync', () => {
     );
     expect(datadogDoc).not.toMatch(
       /`?shutdownTelemetry\(\)`?\s+during\s+graceful\s+shutdown/i,
+    );
+  });
+
+  it('keeps use-case test mock guidance aligned with the canonical shared-factory pattern', () => {
+    const useCaseTestsDoc = fs.readFileSync(useCaseTestsDocPath, 'utf-8');
+
+    expect(useCaseTestsDoc).toContain(
+      'packages/media/src/source/use-cases/__tests__/get-source.test.ts',
+    );
+    expect(useCaseTestsDoc).toContain('@repo/media/test-utils');
+    expect(useCaseTestsDoc).toContain('createMockSourceRepo({');
+    expect(useCaseTestsDoc).toContain('findByIdForUser: () => Effect.succeed');
+    expect(useCaseTestsDoc).toContain(
+      "Do not hand-roll repo service objects filled with `Effect.die('not implemented')` in use-case tests.",
+    );
+    expect(useCaseTestsDoc).toContain(
+      'A test-local helper is acceptable only when no shared factory exists yet',
     );
   });
 });
