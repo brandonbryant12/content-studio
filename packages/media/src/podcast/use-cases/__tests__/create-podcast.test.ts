@@ -162,7 +162,7 @@ describe('createPodcast', () => {
             coHostVoice: 'Aoede',
             setupInstructions: 'Focus on billing clarity',
             promptInstructions: 'Be casual',
-            targetDurationMinutes: 15,
+            targetDurationMinutes: 10,
           }).pipe(Effect.provide(layers)),
         ),
       );
@@ -176,7 +176,7 @@ describe('createPodcast', () => {
           coHostVoice: 'Aoede',
           setupInstructions: 'Focus on billing clarity',
           promptInstructions: 'Be casual',
-          targetDurationMinutes: 15,
+          targetDurationMinutes: 10,
           createdBy: user.id,
         }),
         [],
@@ -215,7 +215,7 @@ describe('createPodcast', () => {
     it('creates podcast with source IDs', async () => {
       const user = createTestUser();
       const doc1 = createTestSource({ createdBy: user.id });
-      const doc2 = createTestSource({ createdBy: user.id });
+      const doc2 = createTestSource({ createdBy: user.id, wordCount: 2400 });
       const insertSpy = vi.fn();
 
       const mockPodcastRepo = createMockPodcastRepo(
@@ -234,10 +234,40 @@ describe('createPodcast', () => {
       );
 
       expect(result.sources).toHaveLength(2);
-      expect(insertSpy).toHaveBeenCalledWith(expect.anything(), [
-        doc1.id,
-        doc2.id,
-      ]);
+      expect(insertSpy).toHaveBeenCalledWith(
+        expect.objectContaining({
+          targetDurationMinutes: 5,
+        }),
+        [doc1.id, doc2.id],
+      );
+    });
+
+    it('derives a target duration from source volume when none is provided', async () => {
+      const user = createTestUser();
+      const doc = createTestSource({ createdBy: user.id, wordCount: 3800 });
+      const insertSpy = vi.fn();
+
+      const mockPodcastRepo = createMockPodcastRepo(
+        { sources: [doc] },
+        { onInsert: insertSpy },
+      );
+      const layers = Layer.mergeAll(MockDbLive, mockPodcastRepo);
+
+      await Effect.runPromise(
+        withTestUser(user)(
+          createPodcast({
+            format: 'conversation',
+            sourceIds: [doc.id],
+          }).pipe(Effect.provide(layers)),
+        ),
+      );
+
+      expect(insertSpy).toHaveBeenCalledWith(
+        expect.objectContaining({
+          targetDurationMinutes: 7,
+        }),
+        [doc.id],
+      );
     });
 
     it('verifies sources exist before creating podcast', async () => {

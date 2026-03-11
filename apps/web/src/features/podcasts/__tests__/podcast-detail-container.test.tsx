@@ -25,7 +25,7 @@ const {
   confirmationDialogSpy,
 } = vi.hoisted(() => ({
   podcastDetailSpy: vi.fn(),
-  downloadFromUrlSpy: vi.fn(),
+  downloadFromUrlSpy: vi.fn().mockResolvedValue(undefined),
   downloadTextFileSpy: vi.fn(),
   confirmationDialogSpy: vi.fn(),
 }));
@@ -277,7 +277,7 @@ describe('PodcastDetailContainer', () => {
   it('uses smart filename when exporting audio', () => {
     setPodcast({
       title: 'Market Update',
-      audioUrl: 'https://cdn.example.com/audio/final.wav?x=1',
+      audioUrl: 'https://api.example.com/api/audio/playback?token=podcast_1',
       duration: 120,
     });
 
@@ -288,7 +288,7 @@ describe('PodcastDetailContainer', () => {
     }>()?.onExportAudio?.();
 
     expect(downloadFromUrlSpy).toHaveBeenCalledWith(
-      'https://cdn.example.com/audio/final.wav?x=1',
+      'https://api.example.com/api/audio/playback?token=podcast_1',
       'market-update-audio-20260220.wav',
     );
   });

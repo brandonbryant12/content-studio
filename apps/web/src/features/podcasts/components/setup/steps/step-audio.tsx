@@ -61,6 +61,10 @@ function SetupVoicePreviewBtn({
 interface StepAudioProps {
   format: string;
   duration: number;
+  recommendedDuration: number | null;
+  selectedSourceCount: number;
+  selectedSourceWordCount: number;
+  pendingSourceCount: number;
   hostVoice: string;
   coHostVoice: string;
   hostPersonaId: string | null;
@@ -140,6 +144,10 @@ function VoiceCard({
 export function StepAudio({
   format,
   duration,
+  recommendedDuration,
+  selectedSourceCount,
+  selectedSourceWordCount,
+  pendingSourceCount,
   hostVoice,
   coHostVoice,
   hostPersonaId,
@@ -155,6 +163,7 @@ export function StepAudio({
   const isConversation = format === 'conversation';
   const femaleVoices = VOICES.filter((v) => v.gender === 'female');
   const maleVoices = VOICES.filter((v) => v.gender === 'male');
+  const formattedSourceWordCount = selectedSourceWordCount.toLocaleString();
 
   const hostVoiceInfo = hostPersonaVoiceId
     ? VOICES.find((v) => v.id === hostPersonaVoiceId)
@@ -177,7 +186,7 @@ export function StepAudio({
         <h2 className="setup-step-title">Audio Settings</h2>
         <p className="setup-step-description">
           Choose the duration and voice{isConversation ? 's' : ''} for your
-          podcast.
+          podcast. Runtime suggestions adjust to the amount of source material.
         </p>
       </div>
 
@@ -185,6 +194,39 @@ export function StepAudio({
         <div className="mb-4 rounded-lg border border-warning/30 bg-warning/5 px-4 py-3 text-sm text-warning">
           Host and co-host are using the same voice. Consider assigning
           different voices.
+        </div>
+      )}
+
+      {recommendedDuration !== null && (
+        <div className="mb-6 rounded-xl border border-emerald-500/20 bg-emerald-500/5 px-4 py-3">
+          <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+            <div>
+              <p className="text-sm font-semibold text-foreground">
+                Recommended runtime: {recommendedDuration} min
+              </p>
+              <p className="mt-1 text-sm leading-relaxed text-muted-foreground">
+                Based on {selectedSourceCount} selected source
+                {selectedSourceCount === 1 ? '' : 's'} and about{' '}
+                {formattedSourceWordCount} words of material.
+              </p>
+            </div>
+            {duration !== recommendedDuration && (
+              <button
+                type="button"
+                onClick={() => onDurationChange(recommendedDuration)}
+                className="inline-flex items-center justify-center rounded-lg border border-emerald-500/30 bg-background px-3 py-2 text-sm font-medium text-emerald-700 transition-colors hover:bg-emerald-500/10 dark:text-emerald-300"
+              >
+                Use {recommendedDuration} min
+              </button>
+            )}
+          </div>
+        </div>
+      )}
+
+      {recommendedDuration === null && pendingSourceCount > 0 && (
+        <div className="mb-6 rounded-xl border border-border/60 bg-card px-4 py-3 text-sm text-muted-foreground">
+          We&apos;ll recommend a better runtime after your remaining source
+          {pendingSourceCount === 1 ? '' : 's'} finish processing.
         </div>
       )}
 

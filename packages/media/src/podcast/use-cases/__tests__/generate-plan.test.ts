@@ -18,6 +18,7 @@ import {
   MockDbLive,
 } from '../../../test-utils';
 import { createMockPersonaRepo } from '../../../test-utils/mock-repos';
+import { PODCAST_LLM_MODEL } from '../../constants';
 import {
   generatePodcastPlan,
   type PodcastPlanSourcesNotReadyError,
@@ -164,6 +165,7 @@ describe('generatePodcastPlan', () => {
 
     expect(generateSpy).toHaveBeenCalledWith(
       expect.objectContaining({
+        model: PODCAST_LLM_MODEL,
         prompt: expect.stringContaining(
           'Keep the first section focused on bill anatomy.',
         ),
@@ -231,6 +233,7 @@ describe('generatePodcastPlan', () => {
 
     expect(generateSpy).toHaveBeenCalledWith(
       expect.objectContaining({
+        model: PODCAST_LLM_MODEL,
         system: expect.stringContaining(
           'Target total runtime: about 14 minutes',
         ),

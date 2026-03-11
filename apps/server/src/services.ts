@@ -14,7 +14,6 @@ import { createStorageAccessProxy } from './storage-access-proxy';
 
 export const storageConfig = buildStorageConfig();
 export const audioPlaybackProxy = createAudioPlaybackProxy({
-  enabled: env.AUDIO_PLAYBACK_PROXY_ENABLED,
   signingSecret: env.AUDIO_PLAYBACK_SIGNING_SECRET,
   ttlSeconds: env.AUDIO_PLAYBACK_URL_TTL_SECONDS,
   serverUrl: env.PUBLIC_SERVER_URL,

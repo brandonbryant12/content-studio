@@ -646,7 +646,7 @@ describe('processResearch', () => {
       expect(insertSpy.mock.calls[0]?.[0]).toEqual(
         expect.objectContaining({
           format: 'conversation',
-          targetDurationMinutes: 5,
+          targetDurationMinutes: 1,
           hostVoice: 'Aoede',
           hostVoiceName: 'Aoede',
           coHostVoice: 'Charon',

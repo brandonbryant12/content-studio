@@ -4,6 +4,7 @@ import { Effect, Schema } from 'effect';
 import { loadPersonaByIdSafe } from '../../persona';
 import { defineAuthedUseCase } from '../../shared';
 import { getSourceContent } from '../../source';
+import { PODCAST_LLM_MODEL } from '../constants';
 import { sanitizePodcastEpisodePlan } from '../episode-plan';
 import { buildPlanSystemPrompt, buildPlanUserPrompt } from '../prompts';
 import { PodcastRepo } from '../repos/podcast-repo';
@@ -108,6 +109,7 @@ export const generatePodcastPlan =
             sourceEntries,
           }),
           schema: PodcastEpisodePlanSchema,
+          model: PODCAST_LLM_MODEL,
           temperature: 0.4,
         });
 

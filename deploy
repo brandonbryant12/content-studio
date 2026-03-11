@@ -9,6 +9,11 @@ set -euo pipefail
 # ─────────────────────────────────────────────────────────────────────────────
 
 ENV_FILE=".env.deploy"
+DEPLOY_CA_CERT_DIR="docker/certs"
+DEPLOY_CA_CERT_BASENAME="corporate-ca.pem"
+DEPLOY_CA_CERT_REPO_PATH="${DEPLOY_CA_CERT_DIR}/${DEPLOY_CA_CERT_BASENAME}"
+DEPLOY_CA_CERT_CONTAINER_DIR="/opt/content-studio/certs"
+DEPLOY_CA_CERT_CONTAINER_PATH="${DEPLOY_CA_CERT_CONTAINER_DIR}/${DEPLOY_CA_CERT_BASENAME}"
 
 # ── Colors ───────────────────────────────────────────────────────────────────
 BOLD='\033[1m'
@@ -153,13 +158,142 @@ normalize_cors_origins() {
   CORS_ORIGINS="${normalized_origins:-*}"
 }
 
+trim_whitespace() {
+  local value="$1"
+  value="${value#"${value%%[![:space:]]*}"}"
+  value="${value%"${value##*[![:space:]]}"}"
+  printf '%s' "$value"
+}
+
+append_csv_unique() {
+  local current="$1"
+  local candidate
+  candidate=$(trim_whitespace "$2")
+
+  if [[ -z "$candidate" ]]; then
+    printf '%s' "$current"
+    return
+  fi
+
+  if [[ ",${current}," == *",${candidate},"* ]]; then
+    printf '%s' "$current"
+    return
+  fi
+
+  printf '%s' "${current:+${current},}${candidate}"
+}
+
+resolve_node_extra_ca_certs_source_path() {
+  local value="$1"
+
+  if [[ -z "$value" ]]; then
+    printf '%s' ""
+    return
+  fi
+
+  if [[ "$value" == "$DEPLOY_CA_CERT_CONTAINER_PATH" ]]; then
+    printf '%s' "$DEPLOY_CA_CERT_REPO_PATH"
+    return
+  fi
+
+  printf '%s' "$value"
+}
+
+normalize_no_proxy() {
+  local original_no_proxy="${NO_PROXY:-}"
+  local normalized=""
+  local host
+  local -a _no_proxy_parts
+
+  if [[ -n "${NO_PROXY:-}" ]]; then
+    IFS=',' read -r -a _no_proxy_parts <<< "$NO_PROXY"
+    for host in "${_no_proxy_parts[@]}"; do
+      normalized=$(append_csv_unique "$normalized" "$host")
+    done
+  fi
+
+  if [[ -n "${HTTPS_PROXY:-}" || -n "${HTTP_PROXY:-}" || -n "$normalized" ]]; then
+    local required_hosts=(
+      localhost
+      127.0.0.1
+      ::1
+      db
+      redis
+      minio
+      minio-init
+      server
+      worker
+      web
+      host.docker.internal
+    )
+
+    for host in "${required_hosts[@]}"; do
+      normalized=$(append_csv_unique "$normalized" "$host")
+    done
+  fi
+
+  NO_PROXY="$normalized"
+  if [[ "$original_no_proxy" != "$NO_PROXY" ]]; then
+    NO_PROXY_UPDATED="true"
+  fi
+}
+
+prepare_proxy_certificate() {
+  local proxy_configured="false"
+  local original_node_extra_ca_certs="${NODE_EXTRA_CA_CERTS:-}"
+  local source_ca_cert_path=""
+
+  if [[ -n "${HTTPS_PROXY:-}" || -n "${HTTP_PROXY:-}" ]]; then
+    proxy_configured="true"
+  fi
+
+  mkdir -p "$DEPLOY_CA_CERT_DIR"
+
+  if [[ "$proxy_configured" == "true" ]]; then
+    if [[ -z "${NODE_EXTRA_CA_CERTS:-}" ]]; then
+      error "NODE_EXTRA_CA_CERTS is required when HTTPS_PROXY or HTTP_PROXY is configured."
+      exit 1
+    fi
+
+    source_ca_cert_path=$(resolve_node_extra_ca_certs_source_path "${NODE_EXTRA_CA_CERTS:-}")
+
+    if [[ ! -f "$source_ca_cert_path" ]]; then
+      error "Corporate CA bundle not found: $source_ca_cert_path"
+      exit 1
+    fi
+
+    if [[ "$source_ca_cert_path" != "$DEPLOY_CA_CERT_REPO_PATH" ]]; then
+      install -m 0644 "$source_ca_cert_path" "$DEPLOY_CA_CERT_REPO_PATH"
+    fi
+    NODE_EXTRA_CA_CERTS="$DEPLOY_CA_CERT_CONTAINER_PATH"
+    info "Corporate CA bundle staged at $DEPLOY_CA_CERT_REPO_PATH"
+    warn "Docker daemon pulls must already trust the proxy or use an internal registry mirror."
+  else
+    NODE_EXTRA_CA_CERTS=""
+    rm -f "$DEPLOY_CA_CERT_REPO_PATH"
+  fi
+
+  if [[ "$original_node_extra_ca_certs" != "${NODE_EXTRA_CA_CERTS:-}" ]]; then
+    PROXY_ENV_UPDATED="true"
+  fi
+}
+
 validate_runtime_constraints() {
   validate_public_url "PUBLIC_WEB_URL" "${PUBLIC_WEB_URL:-}"
   validate_public_url "PUBLIC_SERVER_URL" "${PUBLIC_SERVER_URL:-}"
 
   if [[ -n "${HTTPS_PROXY:-}" || -n "${HTTP_PROXY:-}" ]]; then
+    local resolved_node_extra_ca_certs
+
     if [[ -z "${NODE_EXTRA_CA_CERTS:-}" ]]; then
       error "NODE_EXTRA_CA_CERTS is required when HTTPS_PROXY or HTTP_PROXY is configured."
+      exit 1
+    fi
+
+    resolved_node_extra_ca_certs=$(resolve_node_extra_ca_certs_source_path "${NODE_EXTRA_CA_CERTS:-}")
+
+    if [[ ! -f "$resolved_node_extra_ca_certs" ]]; then
+      error "Corporate CA bundle not found: $resolved_node_extra_ca_certs"
       exit 1
     fi
   fi
@@ -267,6 +401,9 @@ load_app_defaults() {
   [[ -z "$_DEF_NO_PROXY" ]] && _DEF_NO_PROXY=$(read_env_value "$worker_env" "NO_PROXY")
   _DEF_NODE_EXTRA_CA_CERTS=$(read_env_value "$server_env" "NODE_EXTRA_CA_CERTS")
   [[ -z "$_DEF_NODE_EXTRA_CA_CERTS" ]] && _DEF_NODE_EXTRA_CA_CERTS=$(read_env_value "$worker_env" "NODE_EXTRA_CA_CERTS")
+  if [[ -n "$_DEF_NODE_EXTRA_CA_CERTS" ]]; then
+    _DEF_NODE_EXTRA_CA_CERTS=$(resolve_node_extra_ca_certs_source_path "$_DEF_NODE_EXTRA_CA_CERTS")
+  fi
 
   # ── Ports (extract from URLs or explicit vars) ────────────────────────
   _DEF_SERVER_PORT=$(read_env_value "$server_env" "SERVER_PORT")
@@ -315,15 +452,23 @@ load_app_defaults() {
   [[ -z "$_DEF_PUBLIC_WEB_URL" ]] && _DEF_PUBLIC_WEB_URL=$(read_env_value "$existing_env" "PUBLIC_WEB_URL")
   [[ -z "$_DEF_PUBLIC_SERVER_URL" ]] && _DEF_PUBLIC_SERVER_URL=$(read_env_value "$existing_env" "PUBLIC_SERVER_URL")
   _DEF_COMPOSE_PROJECT_NAME=$(read_env_value "$existing_env" "COMPOSE_PROJECT_NAME")
-  _DEF_CONTENT_STUDIO_POSTGRES_USER=$(read_env_value "$existing_env" "CONTENT_STUDIO_POSTGRES_USER")
-  _DEF_CONTENT_STUDIO_POSTGRES_PASSWORD=$(read_env_value "$existing_env" "CONTENT_STUDIO_POSTGRES_PASSWORD")
-  _DEF_CONTENT_STUDIO_POSTGRES_DB=$(read_env_value "$existing_env" "CONTENT_STUDIO_POSTGRES_DB")
-  _DEF_CONTENT_STUDIO_S3_ACCESS_KEY_ID=$(read_env_value "$existing_env" "CONTENT_STUDIO_S3_ACCESS_KEY_ID")
-  _DEF_CONTENT_STUDIO_S3_SECRET_ACCESS_KEY=$(read_env_value "$existing_env" "CONTENT_STUDIO_S3_SECRET_ACCESS_KEY")
+  _DEF_POSTGRES_USER=$(read_env_value "$existing_env" "POSTGRES_USER")
+  [[ -z "$_DEF_POSTGRES_USER" ]] && _DEF_POSTGRES_USER=$(read_env_value "$existing_env" "CONTENT_STUDIO_POSTGRES_USER")
+  _DEF_POSTGRES_PASSWORD=$(read_env_value "$existing_env" "POSTGRES_PASSWORD")
+  [[ -z "$_DEF_POSTGRES_PASSWORD" ]] && _DEF_POSTGRES_PASSWORD=$(read_env_value "$existing_env" "CONTENT_STUDIO_POSTGRES_PASSWORD")
+  _DEF_POSTGRES_DB=$(read_env_value "$existing_env" "POSTGRES_DB")
+  [[ -z "$_DEF_POSTGRES_DB" ]] && _DEF_POSTGRES_DB=$(read_env_value "$existing_env" "CONTENT_STUDIO_POSTGRES_DB")
+  _DEF_S3_ACCESS_KEY_ID=$(read_env_value "$existing_env" "S3_ACCESS_KEY_ID")
+  [[ -z "$_DEF_S3_ACCESS_KEY_ID" ]] && _DEF_S3_ACCESS_KEY_ID=$(read_env_value "$existing_env" "CONTENT_STUDIO_S3_ACCESS_KEY_ID")
+  _DEF_S3_SECRET_ACCESS_KEY=$(read_env_value "$existing_env" "S3_SECRET_ACCESS_KEY")
+  [[ -z "$_DEF_S3_SECRET_ACCESS_KEY" ]] && _DEF_S3_SECRET_ACCESS_KEY=$(read_env_value "$existing_env" "CONTENT_STUDIO_S3_SECRET_ACCESS_KEY")
   [[ -z "$_DEF_HTTPS_PROXY" ]] && _DEF_HTTPS_PROXY=$(read_env_value "$existing_env" "HTTPS_PROXY")
   [[ -z "$_DEF_HTTP_PROXY" ]] && _DEF_HTTP_PROXY=$(read_env_value "$existing_env" "HTTP_PROXY")
   [[ -z "$_DEF_NO_PROXY" ]] && _DEF_NO_PROXY=$(read_env_value "$existing_env" "NO_PROXY")
   [[ -z "$_DEF_NODE_EXTRA_CA_CERTS" ]] && _DEF_NODE_EXTRA_CA_CERTS=$(read_env_value "$existing_env" "NODE_EXTRA_CA_CERTS")
+  if [[ -n "$_DEF_NODE_EXTRA_CA_CERTS" ]]; then
+    _DEF_NODE_EXTRA_CA_CERTS=$(resolve_node_extra_ca_certs_source_path "$_DEF_NODE_EXTRA_CA_CERTS")
+  fi
   _DEF_WEB_BIND_IP=$(read_env_value "$existing_env" "WEB_BIND_IP")
   _DEF_SERVER_BIND_IP=$(read_env_value "$existing_env" "SERVER_BIND_IP")
   _DEF_POSTGRES_BIND_IP=$(read_env_value "$existing_env" "POSTGRES_BIND_IP")
@@ -532,28 +677,28 @@ compose_default_s3_secret_access_key() {
 ensure_internal_service_credentials() {
   INTERNAL_SERVICE_ENV_UPDATED="false"
 
-  if [[ -z "${CONTENT_STUDIO_POSTGRES_USER:-}" ]]; then
-    CONTENT_STUDIO_POSTGRES_USER=$(compose_default_postgres_user)
+  if [[ -z "${POSTGRES_USER:-}" ]]; then
+    POSTGRES_USER=$(compose_default_postgres_user)
     INTERNAL_SERVICE_ENV_UPDATED="true"
   fi
 
-  if [[ -z "${CONTENT_STUDIO_POSTGRES_PASSWORD:-}" ]]; then
-    CONTENT_STUDIO_POSTGRES_PASSWORD=$(compose_default_postgres_password)
+  if [[ -z "${POSTGRES_PASSWORD:-}" ]]; then
+    POSTGRES_PASSWORD=$(compose_default_postgres_password)
     INTERNAL_SERVICE_ENV_UPDATED="true"
   fi
 
-  if [[ -z "${CONTENT_STUDIO_POSTGRES_DB:-}" ]]; then
-    CONTENT_STUDIO_POSTGRES_DB=$(compose_default_postgres_db)
+  if [[ -z "${POSTGRES_DB:-}" ]]; then
+    POSTGRES_DB=$(compose_default_postgres_db)
     INTERNAL_SERVICE_ENV_UPDATED="true"
   fi
 
-  if [[ -z "${CONTENT_STUDIO_S3_ACCESS_KEY_ID:-}" ]]; then
-    CONTENT_STUDIO_S3_ACCESS_KEY_ID=$(compose_default_s3_access_key_id)
+  if [[ -z "${S3_ACCESS_KEY_ID:-}" ]]; then
+    S3_ACCESS_KEY_ID=$(compose_default_s3_access_key_id)
     INTERNAL_SERVICE_ENV_UPDATED="true"
   fi
 
-  if [[ -z "${CONTENT_STUDIO_S3_SECRET_ACCESS_KEY:-}" ]]; then
-    CONTENT_STUDIO_S3_SECRET_ACCESS_KEY=$(compose_default_s3_secret_access_key)
+  if [[ -z "${S3_SECRET_ACCESS_KEY:-}" ]]; then
+    S3_SECRET_ACCESS_KEY=$(compose_default_s3_secret_access_key)
     INTERNAL_SERVICE_ENV_UPDATED="true"
   fi
 }
@@ -580,16 +725,17 @@ collect_variables() {
 
   # ── Docker Registry ──────────────────────────────────────────────────────
   header "Docker Registry"
-  printf "  ${DIM}Registry used to pull base images (postgres, redis, minio).${RESET}\n"
+  printf "  ${DIM}Registry used for all image pulls in this deploy.${RESET}\n"
+  printf "  ${DIM}That includes compose service images and Dockerfile base images.${RESET}\n"
   printf "  ${DIM}Examples: docker.io, ghcr.io, registry.example.com${RESET}\n\n"
 
   prompt DOCKER_REGISTRY "Docker image registry" "docker.io"
   COMPOSE_PROJECT_NAME="${_DEF_COMPOSE_PROJECT_NAME:-content-studio-deploy}"
-  CONTENT_STUDIO_POSTGRES_USER="${_DEF_CONTENT_STUDIO_POSTGRES_USER:-}"
-  CONTENT_STUDIO_POSTGRES_PASSWORD="${_DEF_CONTENT_STUDIO_POSTGRES_PASSWORD:-}"
-  CONTENT_STUDIO_POSTGRES_DB="${_DEF_CONTENT_STUDIO_POSTGRES_DB:-}"
-  CONTENT_STUDIO_S3_ACCESS_KEY_ID="${_DEF_CONTENT_STUDIO_S3_ACCESS_KEY_ID:-}"
-  CONTENT_STUDIO_S3_SECRET_ACCESS_KEY="${_DEF_CONTENT_STUDIO_S3_SECRET_ACCESS_KEY:-}"
+  POSTGRES_USER="${_DEF_POSTGRES_USER:-}"
+  POSTGRES_PASSWORD="${_DEF_POSTGRES_PASSWORD:-}"
+  POSTGRES_DB="${_DEF_POSTGRES_DB:-}"
+  S3_ACCESS_KEY_ID="${_DEF_S3_ACCESS_KEY_ID:-}"
+  S3_SECRET_ACCESS_KEY="${_DEF_S3_SECRET_ACCESS_KEY:-}"
   ensure_internal_service_credentials
 
   # ── Network ──────────────────────────────────────────────────────────────
@@ -696,8 +842,8 @@ collect_variables() {
 
   # ── Outbound Proxy ───────────────────────────────────────────────────────
   header "Outbound Proxy (optional)"
-  printf "  ${DIM}Set these if your VM must route outbound traffic through a proxy.${RESET}\n"
-  printf "  ${DIM}If HTTPS_PROXY or HTTP_PROXY is set, NODE_EXTRA_CA_CERTS is required.${RESET}\n\n"
+  printf "  ${DIM}Set these if your VM must route outbound traffic through a corporate proxy.${RESET}\n"
+  printf "  ${DIM}The CA bundle is copied from the deploy host into Docker build/runtime assets.${RESET}\n\n"
 
   local configure_proxy_default="n"
   if [[ -n "${_DEF_HTTPS_PROXY:-}" || -n "${_DEF_HTTP_PROXY:-}" || -n "${_DEF_NODE_EXTRA_CA_CERTS:-}" ]]; then
@@ -712,8 +858,10 @@ collect_variables() {
   if [[ "$CONFIGURE_PROXY" == "true" ]]; then
     prompt HTTPS_PROXY "HTTPS proxy URL (optional)" "${_DEF_HTTPS_PROXY:-}"
     prompt HTTP_PROXY "HTTP proxy URL (optional)" "${_DEF_HTTP_PROXY:-}"
-    prompt NO_PROXY "NO_PROXY hosts (comma-separated, optional)" "${_DEF_NO_PROXY:-localhost,127.0.0.1,db,redis,minio}"
-    prompt NODE_EXTRA_CA_CERTS "Path to CA bundle file" "${_DEF_NODE_EXTRA_CA_CERTS:-/etc/ssl/certs/ca-certificates.crt}"
+    prompt NO_PROXY "NO_PROXY hosts (comma-separated, optional)" "${_DEF_NO_PROXY:-localhost,127.0.0.1,::1,db,redis,minio,minio-init,server,worker,web,host.docker.internal}"
+    if [[ -n "$HTTPS_PROXY" || -n "$HTTP_PROXY" ]]; then
+      prompt NODE_EXTRA_CA_CERTS "Host path to CA bundle file" "${_DEF_NODE_EXTRA_CA_CERTS:-/etc/ssl/certs/ca-certificates.crt}"
+    fi
   fi
 
   # ── Ports ────────────────────────────────────────────────────────────────
@@ -771,8 +919,10 @@ collect_variables() {
   fi
 
   normalize_cors_origins
+  normalize_no_proxy
   info "CORS_ORIGINS set to: ${CORS_ORIGINS}"
   validate_runtime_constraints
+  prepare_proxy_certificate
 }
 
 # ── Write .env file ─────────────────────────────────────────────────────────
@@ -816,11 +966,11 @@ DEPLOY_NODE_ENV=${DEPLOY_NODE_ENV}
 TRUST_PROXY=${TRUST_PROXY}
 
 # ── Internal Compose Services ────────────────────────────────────────────────
-CONTENT_STUDIO_POSTGRES_USER=${CONTENT_STUDIO_POSTGRES_USER}
-CONTENT_STUDIO_POSTGRES_PASSWORD=${CONTENT_STUDIO_POSTGRES_PASSWORD}
-CONTENT_STUDIO_POSTGRES_DB=${CONTENT_STUDIO_POSTGRES_DB}
-CONTENT_STUDIO_S3_ACCESS_KEY_ID=${CONTENT_STUDIO_S3_ACCESS_KEY_ID}
-CONTENT_STUDIO_S3_SECRET_ACCESS_KEY=${CONTENT_STUDIO_S3_SECRET_ACCESS_KEY}
+POSTGRES_USER=${POSTGRES_USER}
+POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+POSTGRES_DB=${POSTGRES_DB}
+S3_ACCESS_KEY_ID=${S3_ACCESS_KEY_ID}
+S3_SECRET_ACCESS_KEY=${S3_SECRET_ACCESS_KEY}
 
 # ── Authentication ───────────────────────────────────────────────────────────
 SERVER_AUTH_SECRET=${SERVER_AUTH_SECRET}
@@ -869,12 +1019,9 @@ build_and_run() {
   # shellcheck disable=SC1090
   source "$ENV_FILE"
   set +a
+  PROXY_ENV_UPDATED="false"
+  NO_PROXY_UPDATED="false"
   ensure_internal_service_credentials
-
-  if [[ "$INTERNAL_SERVICE_ENV_UPDATED" == "true" ]]; then
-    warn "Updating $ENV_FILE with internal Compose credential defaults."
-    write_env_file
-  fi
 
   DEPLOY_NODE_ENV="${DEPLOY_NODE_ENV:-development}"
   COMPOSE_PROJECT_NAME="${COMPOSE_PROJECT_NAME:-content-studio-deploy}"
@@ -888,7 +1035,14 @@ build_and_run() {
   normalize_host_ip
   ensure_public_urls
   normalize_cors_origins
+  normalize_no_proxy
   validate_runtime_constraints
+  prepare_proxy_certificate
+
+  if [[ "$INTERNAL_SERVICE_ENV_UPDATED" == "true" || "$NO_PROXY_UPDATED" == "true" || "$PROXY_ENV_UPDATED" == "true" ]]; then
+    warn "Updating $ENV_FILE with normalized deploy defaults."
+    write_env_file
+  fi
 
   local deploy_log
   deploy_log="$(mktemp)"

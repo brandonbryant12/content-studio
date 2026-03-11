@@ -1,4 +1,5 @@
 import { createMockTTS } from '@repo/ai/testing';
+import { TTS, type TTSService } from '@repo/ai/tts';
 import { createMockStorage } from '@repo/storage/testing';
 import {
   createTestUser,
@@ -9,7 +10,10 @@ import {
 } from '@repo/testing';
 import { Effect, Layer } from 'effect';
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import type { PodcastWithSources } from '../../repos/podcast-repo';
+import type {
+  PodcastRepoService,
+  PodcastWithSources,
+} from '../../repos/podcast-repo';
 import type { Podcast } from '@repo/db/schema';
 import {
   createMockPodcastRepo,
@@ -190,5 +194,72 @@ describe('generateAudio', () => {
       expect(status).toBe('failed');
       expect(String(errorMessage)).toContain('TTS failed');
     }
+  });
+
+  it('drops blank leading segments and preserves script order before synthesis', async () => {
+    const user = createTestUser();
+    const podcast = {
+      ...createScriptReadyPodcast({
+        createdBy: user.id,
+        segments: [
+          { speaker: 'cohost', line: '  Second line.  ', index: 2 },
+          { speaker: 'host', line: '   ', index: 0 },
+          { speaker: 'host', line: '  First line.  ', index: 1 },
+        ],
+      }),
+      sources: [],
+    } satisfies PodcastWithSources;
+
+    const synthesizeSpy = vi.fn<TTSService['synthesize']>(() =>
+      Effect.succeed({
+        audioContent: Buffer.alloc(48_000),
+        audioEncoding: 'LINEAR16',
+        mimeType: 'audio/wav',
+      }),
+    );
+
+    const ttsLayer = Layer.succeed(TTS, {
+      listVoices: () => Effect.succeed([]),
+      previewVoice: () => Effect.die('previewVoice not implemented'),
+      synthesize: synthesizeSpy,
+    } satisfies TTSService);
+
+    const repoOverrides: Partial<PodcastRepoService> = {
+      findByIdForUser: () => Effect.succeed(podcast),
+      updateStatus: (id, status, errorMessage) =>
+        Effect.succeed({
+          ...podcast,
+          id: id as Podcast['id'],
+          status,
+          errorMessage: errorMessage ?? null,
+        } as Podcast),
+      updateAudio: (_id, data) =>
+        Effect.succeed({ ...podcast, ...data } as Podcast),
+    };
+
+    const layers = Layer.mergeAll(
+      MockDbLive,
+      createMockPodcastRepo(repoOverrides),
+      createMockPersonaRepo(),
+      ttsLayer,
+      createMockStorage({ baseUrl: 'https://storage.example/' }),
+    );
+
+    await Effect.runPromise(
+      withTestUser(user)(
+        generateAudio({ podcastId: podcast.id }).pipe(Effect.provide(layers)),
+      ),
+    );
+
+    expect(synthesizeSpy).toHaveBeenCalledWith({
+      turns: [
+        { speaker: 'host', text: 'First line.' },
+        { speaker: 'cohost', text: 'Second line.' },
+      ],
+      voiceConfigs: [
+        { speakerAlias: 'host', voiceId: 'Charon' },
+        { speakerAlias: 'cohost', voiceId: 'Kore' },
+      ],
+    });
   });
 });

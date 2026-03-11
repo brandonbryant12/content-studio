@@ -16,7 +16,7 @@ import { render } from '@/test-utils';
 const { voiceoverDetailSpy, downloadFromUrlSpy, downloadTextFileSpy } =
   vi.hoisted(() => ({
     voiceoverDetailSpy: vi.fn(),
-    downloadFromUrlSpy: vi.fn(),
+    downloadFromUrlSpy: vi.fn().mockResolvedValue(undefined),
     downloadTextFileSpy: vi.fn(),
   }));
 
@@ -197,7 +197,7 @@ describe('VoiceoverDetailContainer', () => {
     setVoiceover({
       title: 'Launch Narration',
       status: 'ready',
-      audioUrl: 'https://cdn.example.com/audio/voiceover.mp3?x=1',
+      audioUrl: 'https://api.example.com/api/audio/playback?token=voiceover_1',
       duration: 75,
       updatedAt: '2026-02-19T14:00:00.000Z',
     });
@@ -209,8 +209,8 @@ describe('VoiceoverDetailContainer', () => {
     }>()?.onExportAudio?.();
 
     expect(downloadFromUrlSpy).toHaveBeenCalledWith(
-      'https://cdn.example.com/audio/voiceover.mp3?x=1',
-      'launch-narration-audio-20260219.mp3',
+      'https://api.example.com/api/audio/playback?token=voiceover_1',
+      'launch-narration-audio-20260219.wav',
     );
   });
 

@@ -1,9 +1,18 @@
 import { Storage } from '@repo/storage';
 import { Cause, Effect, Option } from 'effect';
 import { Hono } from 'hono';
+import { cors } from 'hono/cors';
+import { bearerCorsPolicy } from '../config';
 import { serverRuntime, storageAccessProxy } from '../services';
 
-export const staticRoute = new Hono();
+export const staticRoute = new Hono().use(
+  cors({
+    ...bearerCorsPolicy,
+    allowMethods: ['GET', 'HEAD', 'OPTIONS'],
+    exposeHeaders: ['Content-Length'],
+    maxAge: 600,
+  }),
+);
 
 const STORAGE_ROUTE_PREFIX = '/storage/';
 

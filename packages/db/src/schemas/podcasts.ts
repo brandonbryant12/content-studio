@@ -51,6 +51,49 @@ export const VersionStatus = {
   FAILED: 'failed',
 } as const;
 
+export interface PodcastDurationRecommendationInput {
+  totalSourceWords: number;
+  sourceCount: number;
+  minMinutes?: number;
+  maxMinutes?: number;
+}
+
+export const MIN_PODCAST_TARGET_DURATION_MINUTES = 1;
+export const MAX_PODCAST_TARGET_DURATION_MINUTES = 10;
+
+const DEFAULT_RECOMMENDED_DURATION_MINUTES = 1;
+const DEFAULT_RECOMMENDED_DURATION_MAX_MINUTES =
+  MAX_PODCAST_TARGET_DURATION_MINUTES;
+const SOURCE_WORDS_PER_MINUTE = 550;
+
+const clampMinutes = (value: number, minMinutes: number, maxMinutes: number) =>
+  Math.min(maxMinutes, Math.max(minMinutes, value));
+
+export function recommendPodcastTargetDurationMinutes({
+  totalSourceWords,
+  sourceCount,
+  minMinutes = DEFAULT_RECOMMENDED_DURATION_MINUTES,
+  maxMinutes = DEFAULT_RECOMMENDED_DURATION_MAX_MINUTES,
+}: PodcastDurationRecommendationInput): number | null {
+  const normalizedWordCount = Math.max(0, Math.round(totalSourceWords));
+  const normalizedSourceCount = Math.max(0, Math.round(sourceCount));
+
+  if (normalizedWordCount === 0 || normalizedSourceCount === 0) {
+    return null;
+  }
+
+  const baseMinutes = Math.round(normalizedWordCount / SOURCE_WORDS_PER_MINUTE);
+  const breadthBoost =
+    normalizedSourceCount >= 3 && normalizedWordCount >= 1200 ? 1 : 0;
+  const minimumSuggestedMinutes = normalizedSourceCount >= 2 ? 2 : 1;
+
+  return clampMinutes(
+    Math.max(baseMinutes + breadthBoost, minimumSuggestedMinutes),
+    minMinutes,
+    maxMinutes,
+  );
+}
+
 export interface GenerationContext {
   systemPromptTemplate: string;
   userInstructions: string;
@@ -174,8 +217,8 @@ export const CreatePodcastSchema = Schema.Struct({
   promptInstructions: Schema.optional(Schema.String),
   targetDurationMinutes: Schema.optional(
     Schema.Number.pipe(
-      Schema.greaterThanOrEqualTo(1),
-      Schema.lessThanOrEqualTo(60),
+      Schema.greaterThanOrEqualTo(MIN_PODCAST_TARGET_DURATION_MINUTES),
+      Schema.lessThanOrEqualTo(MAX_PODCAST_TARGET_DURATION_MINUTES),
     ),
   ),
   hostVoice: Schema.optional(Schema.String),
@@ -197,8 +240,8 @@ export const PodcastEpisodePlanSectionSchema = Schema.Struct({
   ),
   estimatedMinutes: Schema.optional(
     Schema.Number.pipe(
-      Schema.greaterThanOrEqualTo(1),
-      Schema.lessThanOrEqualTo(60),
+      Schema.greaterThanOrEqualTo(MIN_PODCAST_TARGET_DURATION_MINUTES),
+      Schema.lessThanOrEqualTo(MAX_PODCAST_TARGET_DURATION_MINUTES),
     ),
   ),
 });

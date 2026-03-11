@@ -22,7 +22,6 @@ import {
   buildDownloadFileName,
   downloadFromUrl,
   downloadTextFile,
-  getFileExtensionFromUrl,
 } from '@/shared/lib/file-download';
 
 interface VoiceoverDetailContainerProps {
@@ -110,9 +109,13 @@ export function VoiceoverDetailContainer({
 
   const handleExportAudio = useCallback(() => {
     if (!voiceover.audioUrl) return;
-    const extension = getFileExtensionFromUrl(voiceover.audioUrl, 'mp3');
-    const fileName = buildVoiceoverFileName(extension, ['audio']);
-    downloadFromUrl(voiceover.audioUrl, fileName);
+    const fileName = buildVoiceoverFileName('wav', ['audio']);
+    const downloadTask = Promise.resolve(
+      downloadFromUrl(voiceover.audioUrl, fileName),
+    );
+    void downloadTask.catch(() => {
+      toast.error('Failed to download audio');
+    });
   }, [voiceover.audioUrl, buildVoiceoverFileName]);
 
   const handleExportScript = useCallback(() => {

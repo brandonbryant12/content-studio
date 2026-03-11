@@ -296,10 +296,11 @@ if [[ "$MODE" == "docker" ]]; then
   info "  ./deploy  # generates .env.deploy and starts the full Docker Compose stack"
   info ""
   info "  Or export the Compose credential vars before docker compose up --build"
-  info "  (CONTENT_STUDIO_POSTGRES_* and CONTENT_STUDIO_S3_*)"
+  info "  (POSTGRES_USER / POSTGRES_PASSWORD / POSTGRES_DB and S3_ACCESS_KEY_ID / S3_SECRET_ACCESS_KEY)"
 else
   info "  1. pnpm install"
-  info "  2. export CONTENT_STUDIO_POSTGRES_* and CONTENT_STUDIO_S3_*"
+  info "  2. export POSTGRES_USER / POSTGRES_PASSWORD / POSTGRES_DB"
+  info "     and S3_ACCESS_KEY_ID / S3_SECRET_ACCESS_KEY"
   info "     before docker compose up -d db redis minio minio-init"
   info "  3. pnpm db:push"
   info "  4. pnpm dev"

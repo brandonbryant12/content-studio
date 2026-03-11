@@ -10,9 +10,12 @@ import { LLM } from '../service';
 import { GoogleLive } from './google';
 
 const mockGenerateObject = vi.hoisted(() => vi.fn());
+const mockGoogleModel = vi.hoisted(() =>
+  vi.fn((modelId: string) => ({ provider: modelId })),
+);
 
 vi.mock('@ai-sdk/google', () => ({
-  createGoogleGenerativeAI: () => () => ({ provider: 'google-test-model' }),
+  createGoogleGenerativeAI: () => mockGoogleModel,
 }));
 
 vi.mock('ai', async () => {
@@ -50,6 +53,7 @@ const runGenerateExit = () =>
 describe('GoogleLive LLM provider', () => {
   beforeEach(() => {
     mockGenerateObject.mockReset();
+    mockGoogleModel.mockClear();
   });
 
   it('retries retryable LLM failures and then succeeds', async () => {
@@ -158,6 +162,35 @@ describe('GoogleLive LLM provider', () => {
     expect(callArgs.abortSignal.aborted).toBe(false);
   });
 
+  it('uses a per-call model override when provided', async () => {
+    mockGenerateObject.mockResolvedValueOnce({
+      object: { answer: 'ok' },
+      usage: {
+        inputTokens: 1,
+        outputTokens: 1,
+        totalTokens: 2,
+        inputTokenDetails: undefined,
+        outputTokenDetails: undefined,
+      },
+    } as never);
+
+    await Effect.runPromise(
+      Effect.gen(function* () {
+        const llm = yield* LLM;
+        return yield* llm.generate({
+          prompt: 'Return an answer',
+          schema: TestSchema,
+          model: 'gemini-3.1-pro-preview',
+        });
+      }).pipe(Effect.provide(GoogleLive({ apiKey: 'test-key' }))),
+    );
+
+    expect(mockGoogleModel).toHaveBeenCalledWith('gemini-3.1-pro-preview');
+
+    const [callArgs] = mockGenerateObject.mock.calls[0] ?? [];
+    expect(callArgs?.model).toEqual({ provider: 'gemini-3.1-pro-preview' });
+  });
+
   it('retries object-generation parse failures', async () => {
     mockGenerateObject
       .mockRejectedValueOnce(
@@ -240,6 +273,53 @@ describe('GoogleLive LLM provider', () => {
         totalTokens: 18,
       },
       estimatedCostUsdMicros: 13,
+    });
+  });
+
+  it('records the overridden model and pricing when generation succeeds', async () => {
+    const recorded: PersistAIUsageInput[] = [];
+    const recorderLayer = Layer.succeed(AIUsageRecorder, {
+      record: (input: PersistAIUsageInput) =>
+        Effect.sync(() => {
+          recorded.push(input);
+        }),
+    });
+
+    mockGenerateObject.mockResolvedValueOnce({
+      object: { answer: 'ok' },
+      usage: {
+        inputTokens: 11,
+        outputTokens: 7,
+        totalTokens: 18,
+        inputTokenDetails: undefined,
+        outputTokenDetails: undefined,
+      },
+    } as never);
+
+    await Effect.runPromise(
+      Effect.gen(function* () {
+        const llm = yield* LLM;
+        return yield* llm.generate({
+          prompt: 'Return an answer',
+          schema: TestSchema,
+          model: 'gemini-3.1-pro-preview',
+        });
+      }).pipe(
+        withAIUsageScope({
+          userId: 'user-1',
+          requestId: 'req-1',
+          operation: 'test.generate',
+        }),
+        Effect.provide(
+          Layer.mergeAll(GoogleLive({ apiKey: 'test-key' }), recorderLayer),
+        ),
+      ),
+    );
+
+    expect(recorded).toHaveLength(1);
+    expect(recorded[0]).toMatchObject({
+      model: 'gemini-3.1-pro-preview',
+      estimatedCostUsdMicros: 106,
     });
   });
 });

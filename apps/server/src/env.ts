@@ -143,9 +143,6 @@ export const envSchema = Schema.Struct({
   }),
   AUTH_RATE_LIMIT_MAX: Schema.optional(PositiveIntSchema),
   AUTH_RATE_LIMIT_WINDOW_MS: Schema.optional(PositiveIntSchema),
-  AUDIO_PLAYBACK_PROXY_ENABLED: Schema.optionalWith(BooleanStringSchema, {
-    default: () => true,
-  }),
   STORAGE_ACCESS_PROXY_ENABLED: Schema.optionalWith(BooleanStringSchema, {
     default: () => true,
   }),
@@ -233,14 +230,8 @@ if (isProduction) {
     throw new Error('TRUST_PROXY must be true in production behind ingress');
   }
 
-  if (
-    (rawEnv.AUDIO_PLAYBACK_PROXY_ENABLED ||
-      rawEnv.STORAGE_ACCESS_PROXY_ENABLED) &&
-    !rawEnv.AUDIO_PLAYBACK_SIGNING_SECRET
-  ) {
-    throw new Error(
-      'AUDIO_PLAYBACK_SIGNING_SECRET is required in production when AUDIO_PLAYBACK_PROXY_ENABLED=true or STORAGE_ACCESS_PROXY_ENABLED=true',
-    );
+  if (!rawEnv.AUDIO_PLAYBACK_SIGNING_SECRET) {
+    throw new Error('AUDIO_PLAYBACK_SIGNING_SECRET is required in production');
   }
 }
 

@@ -103,6 +103,23 @@ const ensureKnownVoices = (voiceConfigs: SynthesizeOptions['voiceConfigs']) =>
     ensureKnownVoice(voiceConfig.voiceId),
   );
 
+const buildSynthesisPrompt = (options: SynthesizeOptions): string => {
+  if (options.voiceConfigs.length === 1) {
+    return options.turns.map((turn) => turn.text).join('\n');
+  }
+
+  const conversation = options.turns
+    .map((turn) => `${turn.speaker}: ${turn.text}`)
+    .join('\n');
+
+  return [
+    'Read the following conversation aloud exactly as written.',
+    'Keep the speakers in order and do not omit or paraphrase any line.',
+    '',
+    conversation,
+  ].join('\n');
+};
+
 /** Call the Gemini generateContent endpoint and return the raw response. */
 async function callGeminiTTS(
   apiKey: string,
@@ -259,11 +276,7 @@ const makeGoogleTTSService = (config: GoogleTTSConfig): TTSService => {
       Effect.gen(function* () {
         yield* ensureKnownVoices(options.voiceConfigs);
         const isSingleSpeaker = options.voiceConfigs.length === 1;
-        const contentText = isSingleSpeaker
-          ? options.turns.map((turn) => turn.text).join('\n')
-          : options.turns
-              .map((turn) => `${turn.speaker}: ${turn.text}`)
-              .join('\n');
+        const contentText = buildSynthesisPrompt(options);
 
         const speechConfig = isSingleSpeaker
           ? {

@@ -10,6 +10,7 @@ import { Effect, Schema } from 'effect';
 import { loadPersonaByIdSafe } from '../../persona';
 import { annotateUseCaseSpan, withUseCaseSpan } from '../../shared';
 import { PodcastRepo } from '../repos/podcast-repo';
+import { sanitizePodcastScriptSegments } from '../script-segments';
 
 // =============================================================================
 // Types
@@ -94,7 +95,9 @@ export const generateAudio = (input: GenerateAudioInput) =>
       );
     }
 
-    if (!podcast.segments || podcast.segments.length === 0) {
+    const segments = sanitizePodcastScriptSegments(podcast.segments);
+
+    if (segments.length === 0) {
       return yield* failInvalidAudioGeneration(
         input.podcastId,
         podcast.status,
@@ -132,12 +135,10 @@ export const generateAudio = (input: GenerateAudioInput) =>
       );
     };
 
-    const turns: SpeakerTurn[] = podcast.segments.map(
-      (segment: ScriptSegment) => ({
-        speaker: isCoHost(segment.speaker) ? 'cohost' : 'host',
-        text: segment.line,
-      }),
-    );
+    const turns: SpeakerTurn[] = segments.map((segment: ScriptSegment) => ({
+      speaker: isCoHost(segment.speaker) ? 'cohost' : 'host',
+      text: segment.line,
+    }));
 
     const voiceConfigs: SpeakerVoiceConfig[] = [
       { speakerAlias: 'host', voiceId: hostVoice },

@@ -134,6 +134,10 @@ pnpm setup:local  # 3. Copy env files, install hooks, start infra, push schema, 
 | `OTEL_SERVICE_NAME`                   | Override backend service name (`server` / `worker`)                                     | app default                                  |
 | `OTEL_SERVICE_VERSION`                | Override service version                                                                | `0.0.0`                                      |
 | `OTEL_ENV`                            | Deployment environment tag                                                              | `NODE_ENV`                                   |
+| `HTTPS_PROXY`                         | Optional outbound proxy URL for backend processes                                       | --                                           |
+| `HTTP_PROXY`                          | Optional outbound proxy URL for backend processes                                       | --                                           |
+| `NO_PROXY`                            | Comma-separated proxy bypass list                                                       | --                                           |
+| `NODE_EXTRA_CA_CERTS`                 | Required custom CA bundle path when proxying through a corporate MITM certificate       | --                                           |
 
 Telemetry settings apply to backend services (`apps/server`, `apps/worker`) only.
 

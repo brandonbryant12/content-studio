@@ -290,7 +290,6 @@ export const processResearch = (input: ProcessResearchInput) => {
           title: `Podcast: ${doc.title}`,
           format: 'conversation',
           sourceIds: [doc.id],
-          targetDurationMinutes: 5,
           hostVoice: 'Aoede',
           hostVoiceName: 'Aoede',
           coHostVoice: 'Charon',

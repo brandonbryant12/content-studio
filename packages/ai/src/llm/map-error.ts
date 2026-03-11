@@ -179,7 +179,18 @@ export function mapError(error: unknown): LLMError | LLMRateLimitError {
 
   if (error instanceof Error) {
     if (NoObjectGeneratedError.isInstance(error) && error.text) {
-      console.error('[LLM] Failed to parse model output:', error.text);
+      const finishReason =
+        typeof error.finishReason === 'string'
+          ? ` finishReason=${error.finishReason}`
+          : '';
+      const textLength =
+        typeof error.text === 'string'
+          ? ` textLength=${error.text.length}`
+          : '';
+      console.error(
+        `[LLM] Failed to parse model output:${finishReason}${textLength}`,
+        error.text,
+      );
     }
 
     return new LLMError({

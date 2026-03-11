@@ -2,7 +2,6 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { createAudioPlaybackProxy } from '../audio-playback-proxy';
 
 const SHARED_CONFIG = {
-  enabled: true,
   signingSecret: 'x'.repeat(32),
   ttlSeconds: 900,
   serverUrl: 'https://api.example.com',

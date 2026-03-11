@@ -1,5 +1,8 @@
+import {
+  recommendPodcastTargetDurationMinutes,
+  type CreatePodcast,
+} from '@repo/db/schema';
 import { Effect } from 'effect';
-import type { CreatePodcast } from '@repo/db/schema';
 import { defineAuthedUseCase } from '../../shared';
 import { PodcastRepo } from '../repos/podcast-repo';
 import { sanitizePodcastSetupInstructions } from '../setup-instructions';
@@ -29,13 +32,28 @@ export const createPodcast = defineAuthedUseCase<CreatePodcastInput>()({
         sanitizedSetupInstructions === null
           ? undefined
           : sanitizedSetupInstructions;
-
-      if (sourceIds.length > 0) {
-        yield* podcastRepo.verifySourcesExist(sourceIds, user.id);
-      }
+      const verifiedSources =
+        sourceIds.length > 0
+          ? yield* podcastRepo.verifySourcesExist(sourceIds, user.id)
+          : [];
+      const recommendedTargetDurationMinutes =
+        data.targetDurationMinutes === undefined
+          ? (recommendPodcastTargetDurationMinutes({
+              totalSourceWords: verifiedSources.reduce(
+                (sum, source) => sum + source.wordCount,
+                0,
+              ),
+              sourceCount: verifiedSources.length,
+            }) ?? undefined)
+          : data.targetDurationMinutes;
 
       const podcast = yield* podcastRepo.insert(
-        { ...data, setupInstructions, createdBy: user.id },
+        {
+          ...data,
+          setupInstructions,
+          targetDurationMinutes: recommendedTargetDurationMinutes,
+          createdBy: user.id,
+        },
         sourceIds,
       );
 

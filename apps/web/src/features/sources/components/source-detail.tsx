@@ -275,6 +275,7 @@ export function SourceDetail({
               {source.status === SourceStatus.READY && (
                 <SourceContentReader
                   content={content}
+                  sourceType={source.source}
                   paragraphs={paragraphs}
                   queryLength={search.query.length}
                   matchCount={search.matches.length}

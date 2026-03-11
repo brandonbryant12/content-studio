@@ -4,7 +4,7 @@ import { ExportDropdown } from '../components/export-dropdown';
 import { render, screen, userEvent } from '@/test-utils';
 
 const { downloadFromUrlSpy } = vi.hoisted(() => ({
-  downloadFromUrlSpy: vi.fn(),
+  downloadFromUrlSpy: vi.fn().mockResolvedValue(undefined),
 }));
 
 vi.mock('@/shared/lib/file-download', async () => {

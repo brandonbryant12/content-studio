@@ -9,6 +9,7 @@ import {
 import { Effect, Schema } from 'effect';
 import { annotateUseCaseSpan, withUseCaseSpan } from '../../shared';
 import { PodcastRepo } from '../repos/podcast-repo';
+import { sanitizePodcastScriptSegments } from '../script-segments';
 
 export interface SaveChangesInput {
   podcastId: string;
@@ -119,8 +120,9 @@ export const saveChanges = (input: SaveChangesInput) =>
     }
 
     if (hasSegmentChanges) {
+      const sanitizedSegments = sanitizePodcastScriptSegments(input.segments);
       yield* podcastRepo.updateScript(input.podcastId, {
-        segments: input.segments,
+        segments: sanitizedSegments,
       });
     }
 

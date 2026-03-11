@@ -63,6 +63,10 @@ describe('StepAudio', () => {
       <StepAudio
         format="monologue"
         duration={5}
+        recommendedDuration={4}
+        selectedSourceCount={2}
+        selectedSourceWordCount={1800}
+        pendingSourceCount={0}
         hostVoice="Puck"
         coHostVoice="Charon"
         hostPersonaId={null}
@@ -77,6 +81,10 @@ describe('StepAudio', () => {
 
     expect(
       screen.getByRole('button', { name: 'Persona: what is a persona?' }),
+    ).toBeInTheDocument();
+    expect(screen.getByText('Recommended runtime: 4 min')).toBeInTheDocument();
+    expect(
+      screen.getByRole('button', { name: 'Use 4 min' }),
     ).toBeInTheDocument();
   });
 });

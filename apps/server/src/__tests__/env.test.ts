@@ -37,15 +37,14 @@ describe('server env', () => {
     await expect(loadEnvModule({ AUTH_MODE: 'hybrid' })).rejects.toThrow();
   });
 
-  it('requires a signing secret when storage proxy protection is enabled', async () => {
+  it('requires a signing secret in production even when storage proxying is off', async () => {
     await expect(
       loadEnvModule({
-        AUDIO_PLAYBACK_PROXY_ENABLED: 'false',
-        STORAGE_ACCESS_PROXY_ENABLED: 'true',
+        STORAGE_ACCESS_PROXY_ENABLED: 'false',
         AUDIO_PLAYBACK_SIGNING_SECRET: '',
       }),
     ).rejects.toThrow(
-      'AUDIO_PLAYBACK_SIGNING_SECRET is required in production when AUDIO_PLAYBACK_PROXY_ENABLED=true or STORAGE_ACCESS_PROXY_ENABLED=true',
+      'AUDIO_PLAYBACK_SIGNING_SECRET is required in production',
     );
   });
 

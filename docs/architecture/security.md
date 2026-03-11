@@ -116,7 +116,7 @@ Storage response rewriting is intentionally narrow:
 1. Bearer-token API auth is intentional because web and API are expected to run on different origins.
 2. Cookie-based ambient auth is still avoided on `/api/*`; cookies are limited to `/api/auth/*` session rehydration.
 3. `CORS_ORIGINS=*` remains allowed for bearer-token API calls; auth routes use an explicit trusted-origin allowlist because they are credentialed.
-4. `AUDIO_PLAYBACK_PROXY_ENABLED` and `STORAGE_ACCESS_PROXY_ENABLED` are independent controls.
+4. Audio playback always proxies through `/api/audio/playback`; only `STORAGE_ACCESS_PROXY_ENABLED` remains optional.
 5. If `STORAGE_ACCESS_PROXY_ENABLED=false`, `/storage/*` serves bytes for any normalized storage key without a token; keep it enabled outside local development unless direct object reads are an explicit choice.
 6. Path-only request logging prevents signed `token=` query parameters from being written to default request logs.
 7. There is no separate service-to-service user-token flow today; the worker uses shared infrastructure directly instead of calling protected HTTP APIs.

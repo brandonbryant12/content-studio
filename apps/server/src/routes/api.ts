@@ -83,9 +83,7 @@ const rewritePayloadUrlsInResponse = async (
   requestPath: string,
   response: Response,
 ): Promise<Response> => {
-  const shouldRewriteAudio =
-    audioPlaybackProxy.enabled &&
-    audioPlaybackProxy.shouldRewritePath(requestPath);
+  const shouldRewriteAudio = audioPlaybackProxy.shouldRewritePath(requestPath);
   const shouldRewriteStorage =
     storageAccessProxy.enabled &&
     storageAccessProxy.shouldRewritePath(requestPath);
@@ -125,10 +123,6 @@ export const apiRoute = new Hono<{ Variables: { requestId: string } }>()
   .use(apiRateLimit)
   .use(apiBodyLimit)
   .get('/audio/playback', async (c) => {
-    if (!audioPlaybackProxy.enabled) {
-      return c.text('Not Found', 404);
-    }
-
     const token = c.req.query('token');
     if (!token) {
       return c.text('Not Found', 404);

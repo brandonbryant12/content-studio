@@ -126,7 +126,7 @@ Conditionally required:
 Common optional-but-important:
 
 - `S3_ENDPOINT`, `S3_PUBLIC_ENDPOINT`
-- `AUDIO_PLAYBACK_PROXY_ENABLED`, `STORAGE_ACCESS_PROXY_ENABLED`, `AUDIO_PLAYBACK_URL_TTL_SECONDS`
+- `STORAGE_ACCESS_PROXY_ENABLED`, `AUDIO_PLAYBACK_URL_TTL_SECONDS`
 - `USE_MOCK_AI`
 - `DISABLE_DEEP_RESEARCH`
 - `SERVER_RUN_DB_MIGRATIONS_ON_STARTUP` (default `true` in containerized deployment path)
@@ -142,6 +142,7 @@ Special behavior:
 - `pnpm deploy:linux` generates `.env.deploy` and starts all services, including DB migrations and MinIO bucket init.
 - Compose wires internal service URLs automatically (`db`, `redis`, `minio`).
 - Web image builds with placeholder `PUBLIC_*`; real `PUBLIC_*` values are injected at runtime.
+- If a corporate outbound proxy is configured, `pnpm deploy:linux` prompts for `NODE_EXTRA_CA_CERTS` as the host CA bundle path, stages that bundle into `docker/certs/corporate-ca.pem`, passes proxy env vars into Docker builds, and sets runtime `NODE_EXTRA_CA_CERTS=/opt/content-studio/certs/corporate-ca.pem` for backend containers.
 
 Minimal public URL alignment for same-domain deployment:
 

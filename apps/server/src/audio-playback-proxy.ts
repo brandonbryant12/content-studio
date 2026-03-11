@@ -8,7 +8,6 @@ interface AudioPlaybackTokenPayload {
 }
 
 export interface AudioPlaybackProxyConfig {
-  enabled: boolean;
   signingSecret: string;
   ttlSeconds: number;
   serverUrl: string;
@@ -17,7 +16,6 @@ export interface AudioPlaybackProxyConfig {
 }
 
 export interface AudioPlaybackProxy {
-  readonly enabled: boolean;
   readonly shouldRewritePath: (requestPath: string) => boolean;
   readonly rewriteAudioUrl: (audioUrl: string | null) => string | null;
   readonly rewritePayloadAudioUrls: <T>(payload: T) => T;
@@ -239,7 +237,7 @@ export const createAudioPlaybackProxy = (
   };
 
   const rewriteAudioUrl = (audioUrl: string | null): string | null => {
-    if (!config.enabled || audioUrl === null) return audioUrl;
+    if (audioUrl === null) return audioUrl;
 
     const key = parseStorageKey(audioUrl, config.storageConfig);
     if (!key) return audioUrl;
@@ -253,7 +251,6 @@ export const createAudioPlaybackProxy = (
   };
 
   return {
-    enabled: config.enabled,
     shouldRewritePath,
     rewriteAudioUrl,
     rewritePayloadAudioUrls: <T>(payload: T): T =>

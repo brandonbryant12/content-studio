@@ -15,6 +15,27 @@ type GoogleModelDefinition<ModelId extends string> = TokenPricedModelDefinition<
 >;
 
 export const GOOGLE_LLM_MODELS = {
+  'gemini-3.1-pro-preview': defineTokenPricedModel({
+    provider: 'google',
+    id: 'gemini-3.1-pro-preview',
+    pricing: {
+      sourceUrl: GOOGLE_GEMINI_PRICING_URL,
+      asOf: GOOGLE_PRICING_AS_OF,
+      requiredUsageFields: ['inputTokens', 'outputTokens'],
+      strategy: {
+        kind: 'tiered_by_input_tokens',
+        inputTokenThreshold: 200_000,
+        lowerOrEqual: {
+          inputUsdPerMillionTokens: 2,
+          outputUsdPerMillionTokens: 12,
+        },
+        above: {
+          inputUsdPerMillionTokens: 4,
+          outputUsdPerMillionTokens: 18,
+        },
+      },
+    },
+  }),
   'gemini-3.1-flash-lite-preview': defineTokenPricedModel({
     provider: 'google',
     id: 'gemini-3.1-flash-lite-preview',

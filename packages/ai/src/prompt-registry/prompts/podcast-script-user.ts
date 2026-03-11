@@ -1,17 +1,48 @@
+import type { PodcastFormat } from '@repo/db/schema';
 import { definePrompt } from '../types';
 import { buildCompliance, PROMPT_OWNER } from './shared';
 
 export interface PodcastScriptUserPromptInput {
   readonly title?: string | null;
   readonly description?: string | null;
+  readonly format?: PodcastFormat | null;
   readonly targetDurationMinutes?: number | null;
   readonly sourceContent: string;
 }
 
+const WORDS_PER_MINUTE = {
+  voice_over: 165,
+  conversation: 175,
+} as const;
+
+const roundToNearest25 = (value: number) => Math.round(value / 25) * 25;
+
+const buildWordBudgetLine = (
+  format?: PodcastFormat | null,
+  targetDurationMinutes?: number | null,
+) => {
+  if (
+    (format !== 'conversation' && format !== 'voice_over') ||
+    typeof targetDurationMinutes !== 'number'
+  ) {
+    return null;
+  }
+
+  const wordsPerMinute =
+    format === 'conversation'
+      ? WORDS_PER_MINUTE.conversation
+      : WORDS_PER_MINUTE.voice_over;
+  const targetWords = roundToNearest25(wordsPerMinute * targetDurationMinutes);
+  const minWords = roundToNearest25(targetWords * 0.9);
+  const maxWords = roundToNearest25(targetWords * 1.1);
+
+  return `For this ${format === 'conversation' ? 'conversation' : 'voice-over'} episode, deliver about ${targetWords} spoken words overall after excluding TTS annotations, and keep the script inside the ${minWords}-${maxWords} word range.\n\n`;
+};
+
 export const podcastScriptUserPrompt =
   definePrompt<PodcastScriptUserPromptInput>({
     id: 'podcast.script.user',
-    version: 2,
+    version: 3,
     owner: PROMPT_OWNER,
     domain: 'podcast',
     role: 'user',
@@ -30,9 +61,13 @@ export const podcastScriptUserPrompt =
       const existingContext = input.title
         ? `Working title: "${input.title}"${input.description ? `\nWorking description: ${input.description}` : ''}\n\n`
         : '';
+      const wordBudgetLine = buildWordBudgetLine(
+        input.format,
+        input.targetDurationMinutes,
+      );
       const runtimeContext =
         typeof input.targetDurationMinutes === 'number'
-          ? `Target spoken runtime: about ${input.targetDurationMinutes} minutes. Write enough detailed dialogue or narration to fill that runtime, and do not compress the material into a brief recap.\n\n`
+          ? `Target spoken runtime: about ${input.targetDurationMinutes} minutes. Write enough detailed dialogue or narration to fill that runtime, and do not compress the material into a brief recap.\n\n${wordBudgetLine ?? ''}Build a complete episode with an opening, developed middle sections, and a closing takeaway.\n\n`
           : '';
 
       return `Create a podcast episode based on the following source material.

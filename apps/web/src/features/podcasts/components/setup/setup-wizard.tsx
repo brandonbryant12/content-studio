@@ -7,6 +7,7 @@ import type { PodcastFullOutput } from '@repo/api/contracts';
 import { useCreatePodcast } from '../../hooks/use-create-podcast';
 import { useOptimisticGeneration } from '../../hooks/use-optimistic-generation';
 import { getPodcastQueryKey } from '../../hooks/use-podcast';
+import { recommendPodcastTargetDurationMinutes } from '../../lib/duration-recommendation';
 import {
   cloneEpisodePlan,
   isEpisodePlanReady,
@@ -48,6 +49,7 @@ type SelectedSourceSummary = {
   id: string;
   title: string;
   status: string;
+  wordCount: number;
 };
 
 type AsyncMutation = {
@@ -100,6 +102,7 @@ function buildSelectedSources(
       id: source.id,
       title: source.title,
       status: source.status,
+      wordCount: source.wordCount,
     }),
   );
   allSources.forEach((source) =>
@@ -107,6 +110,7 @@ function buildSelectedSources(
       id: source.id,
       title: source.title,
       status: source.status,
+      wordCount: source.wordCount,
     }),
   );
 
@@ -211,6 +215,10 @@ function SetupWizardStepContent({
   format,
   selectedDocIds,
   duration,
+  recommendedDuration,
+  selectedSourceCount,
+  selectedSourceWordCount,
+  pendingSourceCount,
   hostVoice,
   coHostVoice,
   hostPersonaId,
@@ -222,7 +230,6 @@ function SetupWizardStepContent({
   selectedSources,
   canGeneratePlan,
   isGeneratingPlan,
-  pendingSourceCount,
   onSelectionChange,
   onDurationChange,
   onHostVoiceChange,
@@ -236,6 +243,10 @@ function SetupWizardStepContent({
   format: PodcastFullOutput['format'] | 'conversation';
   selectedDocIds: string[];
   duration: number;
+  recommendedDuration: number | null;
+  selectedSourceCount: number;
+  selectedSourceWordCount: number;
+  pendingSourceCount: number;
   hostVoice: string;
   coHostVoice: string;
   hostPersonaId: string | null;
@@ -247,7 +258,6 @@ function SetupWizardStepContent({
   selectedSources: SelectedSourceSummary[];
   canGeneratePlan: boolean;
   isGeneratingPlan: boolean;
-  pendingSourceCount: number;
   onSelectionChange: (ids: string[]) => void;
   onDurationChange: (value: number) => void;
   onHostVoiceChange: (value: string) => void;
@@ -277,6 +287,10 @@ function SetupWizardStepContent({
       <StepAudio
         format={format}
         duration={duration}
+        recommendedDuration={recommendedDuration}
+        selectedSourceCount={selectedSourceCount}
+        selectedSourceWordCount={selectedSourceWordCount}
+        pendingSourceCount={pendingSourceCount}
         hostVoice={hostVoice}
         coHostVoice={coHostVoice}
         hostPersonaId={hostPersonaId}
@@ -320,6 +334,8 @@ function useSetupWizardState({ podcast, initialSourceIds }: SetupWizardProps) {
     getInitialSelectedDocIds(podcast, initialSourceIds),
   );
   const [duration, setDuration] = useState(podcast?.targetDurationMinutes ?? 5);
+  const [hasManualDurationOverride, setHasManualDurationOverride] =
+    useState(false);
   const [hostVoice, setHostVoice] = useState(podcast?.hostVoice ?? 'Aoede');
   const [coHostVoice, setCoHostVoice] = useState(
     podcast?.coHostVoice ?? 'Charon',
@@ -345,6 +361,11 @@ function useSetupWizardState({ podcast, initialSourceIds }: SetupWizardProps) {
 
   const handleEpisodePlanChange = useCallback((nextPlan: EpisodePlan) => {
     setEpisodePlan(nextPlan);
+  }, []);
+
+  const handleDurationChange = useCallback((nextDuration: number) => {
+    setHasManualDurationOverride(true);
+    setDuration(nextDuration);
   }, []);
 
   const handleSetupInstructionsChange = useCallback((value: string) => {
@@ -380,6 +401,7 @@ function useSetupWizardState({ podcast, initialSourceIds }: SetupWizardProps) {
     setSelectedDocIds,
     duration,
     setDuration,
+    hasManualDurationOverride,
     hostVoice,
     setHostVoice,
     coHostVoice,
@@ -393,6 +415,7 @@ function useSetupWizardState({ podcast, initialSourceIds }: SetupWizardProps) {
     episodePlan,
     setEpisodePlan,
     handleEpisodePlanChange,
+    handleDurationChange,
     handleSetupInstructionsChange,
     handleHostPersonaChange,
     handleCoHostPersonaChange,
@@ -641,6 +664,160 @@ function useSetupWizardActions({
   };
 }
 
+type SetupWizardViewProps = {
+  currentStep: number;
+  format: PodcastFullOutput['format'] | 'conversation';
+  selectedDocIds: string[];
+  duration: number;
+  recommendedDuration: number | null;
+  selectedSources: SelectedSourceSummary[];
+  selectedSourceWordCount: number;
+  pendingSourceCount: number;
+  hostVoice: string;
+  coHostVoice: string;
+  hostPersonaId: string | null;
+  coHostPersonaId: string | null;
+  hostPersonaVoiceId: string | null;
+  coHostPersonaVoiceId: string | null;
+  setupInstructions: string;
+  episodePlan: EpisodePlan | null;
+  canGeneratePlan: boolean;
+  isLoading: boolean;
+  isGeneratingPlan: boolean;
+  isGeneratingDraft: boolean;
+  podcast?: PodcastFullOutput;
+  onSelectionChange: (ids: string[]) => void;
+  onDurationChange: (value: number) => void;
+  onHostVoiceChange: (value: string) => void;
+  onCoHostVoiceChange: (value: string) => void;
+  onHostPersonaChange: (
+    personaId: string | null,
+    voiceId: string | null,
+  ) => void;
+  onCoHostPersonaChange: (
+    personaId: string | null,
+    voiceId: string | null,
+  ) => void;
+  onInstructionsChange: (value: string) => void;
+  onPlanChange: (plan: EpisodePlan) => void;
+  onBack: () => void;
+  onContinue: () => void | Promise<void>;
+  onGenerateNow: () => void | Promise<void>;
+  onGeneratePlan: () => void;
+};
+
+function SetupWizardView({
+  currentStep,
+  format,
+  selectedDocIds,
+  duration,
+  recommendedDuration,
+  selectedSources,
+  selectedSourceWordCount,
+  pendingSourceCount,
+  hostVoice,
+  coHostVoice,
+  hostPersonaId,
+  coHostPersonaId,
+  hostPersonaVoiceId,
+  coHostPersonaVoiceId,
+  setupInstructions,
+  episodePlan,
+  canGeneratePlan,
+  isLoading,
+  isGeneratingPlan,
+  isGeneratingDraft,
+  podcast,
+  onSelectionChange,
+  onDurationChange,
+  onHostVoiceChange,
+  onCoHostVoiceChange,
+  onHostPersonaChange,
+  onCoHostPersonaChange,
+  onInstructionsChange,
+  onPlanChange,
+  onBack,
+  onContinue,
+  onGenerateNow,
+  onGeneratePlan,
+}: SetupWizardViewProps) {
+  const continueDisabled =
+    !canProceedFromStep({
+      currentStep,
+      duration,
+      episodePlan,
+      hostVoice,
+      selectedDocIds,
+    }) ||
+    (currentStep === STEP_PLANNER && isGeneratingPlan);
+
+  const secondaryAction = getSecondaryAction({
+    currentStep,
+    podcast,
+    episodePlan,
+    canGeneratePlan,
+    isLoading,
+    isGeneratingPlan,
+    isGeneratingDraft,
+    onGenerateNow: () => {
+      void onGenerateNow();
+    },
+    onGeneratePlan,
+  });
+
+  return (
+    <div className="setup-wizard">
+      <div className="setup-wizard-card">
+        <StepIndicator currentStep={currentStep} steps={SETUP_STEPS} />
+
+        <SetupWizardStepContent
+          currentStep={currentStep}
+          format={format}
+          selectedDocIds={selectedDocIds}
+          duration={duration}
+          recommendedDuration={recommendedDuration}
+          selectedSourceCount={selectedSources.length}
+          selectedSourceWordCount={selectedSourceWordCount}
+          pendingSourceCount={pendingSourceCount}
+          hostVoice={hostVoice}
+          coHostVoice={coHostVoice}
+          hostPersonaId={hostPersonaId}
+          coHostPersonaId={coHostPersonaId}
+          hostPersonaVoiceId={hostPersonaVoiceId}
+          coHostPersonaVoiceId={coHostPersonaVoiceId}
+          setupInstructions={setupInstructions}
+          episodePlan={episodePlan}
+          selectedSources={selectedSources}
+          canGeneratePlan={canGeneratePlan}
+          isGeneratingPlan={isGeneratingPlan}
+          onSelectionChange={onSelectionChange}
+          onDurationChange={onDurationChange}
+          onHostVoiceChange={onHostVoiceChange}
+          onCoHostVoiceChange={onCoHostVoiceChange}
+          onHostPersonaChange={onHostPersonaChange}
+          onCoHostPersonaChange={onCoHostPersonaChange}
+          onInstructionsChange={onInstructionsChange}
+          onPlanChange={onPlanChange}
+        />
+
+        <SetupFooter
+          currentStep={currentStep}
+          onBack={onBack}
+          onContinue={() => {
+            void onContinue();
+          }}
+          continueDisabled={continueDisabled}
+          continueLabel={getContinueLabel(currentStep)}
+          loadingLabel={getLoadingLabel(currentStep)}
+          isLoading={isLoading}
+          isFinalStep={currentStep === STEP_PLANNER}
+          secondaryAction={secondaryAction}
+        />
+      </div>
+    </div>
+  );
+}
+
 export function SetupWizard({ podcast, initialSourceIds }: SetupWizardProps) {
   const wizardKey =
     podcast?.id ?? `new:${initialSourceIds?.join(',') ?? 'no-sources'}`;
@@ -664,6 +841,7 @@ function SetupWizardContent({ podcast, initialSourceIds }: SetupWizardProps) {
     setSelectedDocIds,
     duration,
     setDuration,
+    hasManualDurationOverride,
     hostVoice,
     setHostVoice,
     coHostVoice,
@@ -677,6 +855,7 @@ function SetupWizardContent({ podcast, initialSourceIds }: SetupWizardProps) {
     episodePlan,
     setEpisodePlan,
     handleEpisodePlanChange,
+    handleDurationChange,
     handleSetupInstructionsChange,
     handleHostPersonaChange,
     handleCoHostPersonaChange,
@@ -766,7 +945,7 @@ function SetupWizardContent({ podcast, initialSourceIds }: SetupWizardProps) {
     generateMutation.isPending;
 
   const { data: allSources = [] } = useSources({
-    enabled: currentStep >= STEP_QUICK_START,
+    enabled: currentStep >= STEP_AUDIO,
   });
 
   const selectedSources = useMemo(
@@ -778,9 +957,21 @@ function SetupWizardContent({ podcast, initialSourceIds }: SetupWizardProps) {
     0,
     selectedDocIds.length - selectedSources.length,
   );
+  const selectedSourceWordCount = selectedSources.reduce(
+    (sum, source) => sum + source.wordCount,
+    0,
+  );
   const pendingSourceCount =
     unresolvedSourceCount +
     selectedSources.filter((source) => source.status !== 'ready').length;
+  const recommendedDuration = useMemo(
+    () =>
+      recommendPodcastTargetDurationMinutes({
+        totalSourceWords: selectedSourceWordCount,
+        sourceCount: selectedSources.length,
+      }),
+    [selectedSourceWordCount, selectedSources.length],
+  );
   const canGeneratePlan =
     selectedDocIds.length > 0 &&
     pendingSourceCount === 0 &&
@@ -826,6 +1017,26 @@ function SetupWizardContent({ podcast, initialSourceIds }: SetupWizardProps) {
     podcast,
   ]);
 
+  useEffect(() => {
+    if (
+      recommendedDuration === null ||
+      hasManualDurationOverride ||
+      (podcast && (podcast.hostVoice !== null || podcast.coHostVoice !== null))
+    ) {
+      return;
+    }
+
+    if (duration !== recommendedDuration) {
+      setDuration(recommendedDuration);
+    }
+  }, [
+    duration,
+    hasManualDurationOverride,
+    podcast,
+    recommendedDuration,
+    setDuration,
+  ]);
+
   const actions = useSetupWizardActions({
     navigate,
     podcast,
@@ -850,76 +1061,41 @@ function SetupWizardContent({ podcast, initialSourceIds }: SetupWizardProps) {
     generateMutation,
   });
 
-  const continueDisabled =
-    !canProceedFromStep({
-      currentStep,
-      duration,
-      episodePlan,
-      hostVoice,
-      selectedDocIds,
-    }) ||
-    (currentStep === STEP_PLANNER && generatePlanMutation.isPending);
-
-  const secondaryAction = getSecondaryAction({
-    currentStep,
-    podcast,
-    episodePlan,
-    canGeneratePlan,
-    isLoading,
-    isGeneratingPlan: generatePlanMutation.isPending,
-    isGeneratingDraft: generateMutation.isPending,
-    onGenerateNow: () => {
-      void actions.handleGenerateNow();
-    },
-    onGeneratePlan: actions.handleGeneratePlan,
-  });
-
   return (
-    <div className="setup-wizard">
-      <div className="setup-wizard-card">
-        <StepIndicator currentStep={currentStep} steps={SETUP_STEPS} />
-
-        <SetupWizardStepContent
-          currentStep={currentStep}
-          format={format}
-          selectedDocIds={selectedDocIds}
-          duration={duration}
-          hostVoice={hostVoice}
-          coHostVoice={coHostVoice}
-          hostPersonaId={hostPersonaId}
-          coHostPersonaId={coHostPersonaId}
-          hostPersonaVoiceId={hostPersonaVoiceId}
-          coHostPersonaVoiceId={coHostPersonaVoiceId}
-          setupInstructions={setupInstructions}
-          episodePlan={episodePlan}
-          selectedSources={selectedSources}
-          canGeneratePlan={canGeneratePlan}
-          isGeneratingPlan={generatePlanMutation.isPending}
-          pendingSourceCount={pendingSourceCount}
-          onSelectionChange={setSelectedDocIds}
-          onDurationChange={setDuration}
-          onHostVoiceChange={setHostVoice}
-          onCoHostVoiceChange={setCoHostVoice}
-          onHostPersonaChange={handleHostPersonaChange}
-          onCoHostPersonaChange={handleCoHostPersonaChange}
-          onInstructionsChange={handleSetupInstructionsChange}
-          onPlanChange={handleEpisodePlanChange}
-        />
-
-        <SetupFooter
-          currentStep={currentStep}
-          onBack={actions.handleBack}
-          onContinue={() => {
-            void actions.handleContinue();
-          }}
-          continueDisabled={continueDisabled}
-          continueLabel={getContinueLabel(currentStep)}
-          loadingLabel={getLoadingLabel(currentStep)}
-          isLoading={isLoading}
-          isFinalStep={currentStep === STEP_PLANNER}
-          secondaryAction={secondaryAction}
-        />
-      </div>
-    </div>
+    <SetupWizardView
+      currentStep={currentStep}
+      format={format}
+      selectedDocIds={selectedDocIds}
+      duration={duration}
+      recommendedDuration={recommendedDuration}
+      selectedSources={selectedSources}
+      selectedSourceWordCount={selectedSourceWordCount}
+      pendingSourceCount={pendingSourceCount}
+      hostVoice={hostVoice}
+      coHostVoice={coHostVoice}
+      hostPersonaId={hostPersonaId}
+      coHostPersonaId={coHostPersonaId}
+      hostPersonaVoiceId={hostPersonaVoiceId}
+      coHostPersonaVoiceId={coHostPersonaVoiceId}
+      setupInstructions={setupInstructions}
+      episodePlan={episodePlan}
+      canGeneratePlan={canGeneratePlan}
+      isLoading={isLoading}
+      isGeneratingPlan={generatePlanMutation.isPending}
+      isGeneratingDraft={generateMutation.isPending}
+      podcast={podcast}
+      onSelectionChange={setSelectedDocIds}
+      onDurationChange={handleDurationChange}
+      onHostVoiceChange={setHostVoice}
+      onCoHostVoiceChange={setCoHostVoice}
+      onHostPersonaChange={handleHostPersonaChange}
+      onCoHostPersonaChange={handleCoHostPersonaChange}
+      onInstructionsChange={handleSetupInstructionsChange}
+      onPlanChange={handleEpisodePlanChange}
+      onBack={actions.handleBack}
+      onContinue={actions.handleContinue}
+      onGenerateNow={actions.handleGenerateNow}
+      onGeneratePlan={actions.handleGeneratePlan}
+    />
   );
 }

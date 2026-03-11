@@ -1,6 +1,7 @@
 const FILE_SLUG_FALLBACK = 'export';
 const FILE_EXTENSION_REGEX = /\.([a-z0-9]{2,5})$/i;
 const FILE_DATE_REGEX = /^\d{4}-\d{2}-\d{2}/;
+const DIRECT_DOWNLOAD_PROTOCOLS = new Set(['blob:', 'data:']);
 
 export function toFileSlug(
   value: string,
@@ -94,7 +95,7 @@ export function buildDownloadFileName({
   return `${fileNameParts.join('-')}.${normalizedExtension}`;
 }
 
-export function downloadFromUrl(url: string, fileName: string): void {
+function triggerBrowserDownload(url: string, fileName: string): void {
   const link = document.createElement('a');
   link.href = url;
   link.download = fileName;
@@ -104,6 +105,41 @@ export function downloadFromUrl(url: string, fileName: string): void {
   document.body.removeChild(link);
 }
 
+function canDownloadDirectly(url: string): boolean {
+  try {
+    const parsedUrl = new URL(url, window.location.href);
+    return (
+      parsedUrl.origin === window.location.origin ||
+      DIRECT_DOWNLOAD_PROTOCOLS.has(parsedUrl.protocol)
+    );
+  } catch {
+    return true;
+  }
+}
+
+export async function downloadFromUrl(
+  url: string,
+  fileName: string,
+): Promise<void> {
+  if (canDownloadDirectly(url)) {
+    triggerBrowserDownload(url, fileName);
+    return;
+  }
+
+  const response = await fetch(url);
+  if (!response.ok) {
+    throw new Error(`Download failed with status ${response.status}`);
+  }
+
+  const blob = await response.blob();
+  const objectUrl = URL.createObjectURL(blob);
+  try {
+    triggerBrowserDownload(objectUrl, fileName);
+  } finally {
+    setTimeout(() => URL.revokeObjectURL(objectUrl), 0);
+  }
+}
+
 export function downloadTextFile(
   content: string,
   fileName: string,
@@ -111,6 +147,6 @@ export function downloadTextFile(
 ): void {
   const blob = new Blob([content], { type: mimeType });
   const objectUrl = URL.createObjectURL(blob);
-  downloadFromUrl(objectUrl, fileName);
+  triggerBrowserDownload(objectUrl, fileName);
   setTimeout(() => URL.revokeObjectURL(objectUrl), 0);
 }

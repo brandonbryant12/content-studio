@@ -11,14 +11,24 @@ export const buildComposeRuntimeEnv = (
   SERVER_AUTH_SECRET:
     baseEnv.SERVER_AUTH_SECRET ??
     ['content', 'studio', 'compose', 'auth'].join('_'),
-  CONTENT_STUDIO_POSTGRES_USER:
-    baseEnv.CONTENT_STUDIO_POSTGRES_USER ?? defaultPostgresToken,
-  CONTENT_STUDIO_POSTGRES_PASSWORD:
-    baseEnv.CONTENT_STUDIO_POSTGRES_PASSWORD ?? defaultPostgresToken,
-  CONTENT_STUDIO_POSTGRES_DB:
-    baseEnv.CONTENT_STUDIO_POSTGRES_DB ?? defaultStudioName,
-  CONTENT_STUDIO_S3_ACCESS_KEY_ID:
-    baseEnv.CONTENT_STUDIO_S3_ACCESS_KEY_ID ?? defaultMinioToken,
-  CONTENT_STUDIO_S3_SECRET_ACCESS_KEY:
-    baseEnv.CONTENT_STUDIO_S3_SECRET_ACCESS_KEY ?? defaultMinioToken,
+  POSTGRES_USER:
+    baseEnv.POSTGRES_USER ??
+    baseEnv.CONTENT_STUDIO_POSTGRES_USER ??
+    defaultPostgresToken,
+  POSTGRES_PASSWORD:
+    baseEnv.POSTGRES_PASSWORD ??
+    baseEnv.CONTENT_STUDIO_POSTGRES_PASSWORD ??
+    defaultPostgresToken,
+  POSTGRES_DB:
+    baseEnv.POSTGRES_DB ??
+    baseEnv.CONTENT_STUDIO_POSTGRES_DB ??
+    defaultStudioName,
+  S3_ACCESS_KEY_ID:
+    baseEnv.S3_ACCESS_KEY_ID ??
+    baseEnv.CONTENT_STUDIO_S3_ACCESS_KEY_ID ??
+    defaultMinioToken,
+  S3_SECRET_ACCESS_KEY:
+    baseEnv.S3_SECRET_ACCESS_KEY ??
+    baseEnv.CONTENT_STUDIO_S3_SECRET_ACCESS_KEY ??
+    defaultMinioToken,
 });

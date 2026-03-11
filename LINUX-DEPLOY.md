@@ -9,6 +9,8 @@ Running `pnpm deploy:linux` (or `./deploy`) will:
 - prompt for domain/host, runtime mode, ports, auth, AI, CORS, telemetry
 - prompt for browser-visible public URLs separately from internal bind ports
 - normalize CORS and always include the configured web origin
+- normalize `NO_PROXY` so Compose-internal hosts bypass a corporate proxy
+- stage a corporate CA bundle into `docker/certs/corporate-ca.pem` when proxying is enabled
 - generate `.env.deploy` at repo root (mode `600`)
 - run in an isolated Compose project by default so deploy state does not reuse local-dev volumes
 - build and start `web`, `server`, `worker`, `db`, `redis`, `minio`
@@ -68,18 +70,30 @@ For required env variables across Linux and EKS deployment patterns, see:
 
 Important generated keys include:
 
+- `DOCKER_REGISTRY` for all deploy-time image pulls, including Compose service images and Dockerfile base images
 - `COMPOSE_PROJECT_NAME` (defaults to `content-studio-deploy`)
 - `DEPLOY_NODE_ENV`
 - `PUBLIC_URL_SCHEME`
 - `PUBLIC_WEB_URL`
 - `PUBLIC_SERVER_URL`
-- `CONTENT_STUDIO_POSTGRES_*` for internal PostgreSQL auth used by Compose
-- `CONTENT_STUDIO_S3_*` for internal MinIO auth used by Compose
+- `POSTGRES_USER`, `POSTGRES_PASSWORD`, `POSTGRES_DB` for internal PostgreSQL auth used by Compose
+- `S3_ACCESS_KEY_ID`, `S3_SECRET_ACCESS_KEY` for internal MinIO auth used by Compose
 - `TRUST_PROXY`
 - `WEB_PORT`, `SERVER_PORT`, `POSTGRES_PORT`, `REDIS_PORT`, `MINIO_API_PORT`, `MINIO_UI_PORT`
 - `WEB_BIND_IP`, `SERVER_BIND_IP`
 - `POSTGRES_BIND_IP`, `REDIS_BIND_IP`
 - `HTTPS_PROXY`, `HTTP_PROXY`, `NO_PROXY`, `NODE_EXTRA_CA_CERTS`
+
+## Corporate Proxy Notes
+
+When `HTTPS_PROXY` or `HTTP_PROXY` is configured:
+
+- `./deploy` prompts for `NODE_EXTRA_CA_CERTS` as the host path to a PEM/CRT bundle
+- the script copies that bundle to `docker/certs/corporate-ca.pem` and writes `NODE_EXTRA_CA_CERTS=/opt/content-studio/certs/corporate-ca.pem` into `.env.deploy`
+- Docker builds receive the proxy env vars and trust the staged CA during `pnpm install` / image build steps
+- `server` and `worker` receive `NODE_EXTRA_CA_CERTS=/opt/content-studio/certs/corporate-ca.pem` at runtime
+
+Image pulls performed by the Docker daemon still need daemon-level proxy/certificate trust, or an internal registry mirror via `DOCKER_REGISTRY`.
 
 Defaults for data services are local-only binds:
 

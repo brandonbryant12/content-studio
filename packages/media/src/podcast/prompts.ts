@@ -53,6 +53,7 @@ export const buildUserPrompt = (
   podcast: {
     title?: string | null;
     description?: string | null;
+    format?: PodcastFormat | null;
     targetDurationMinutes?: number | null;
   },
   sourceContent: string,
@@ -60,6 +61,7 @@ export const buildUserPrompt = (
   renderPrompt(podcastScriptUserPrompt, {
     title: podcast.title,
     description: podcast.description,
+    format: podcast.format ?? undefined,
     targetDurationMinutes: podcast.targetDurationMinutes,
     sourceContent,
   });

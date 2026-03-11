@@ -26,7 +26,6 @@ import {
   buildDownloadFileName,
   downloadFromUrl,
   downloadTextFile,
-  getFileExtensionFromUrl,
 } from '@/shared/lib/file-download';
 
 interface PodcastDetailContainerProps {
@@ -102,15 +101,19 @@ export function PodcastDetailContainer({
 
   const handleExportAudio = useCallback(() => {
     if (!podcast.audioUrl) return;
-    const extension = getFileExtensionFromUrl(podcast.audioUrl, 'mp3');
     const fileName = buildDownloadFileName({
       title: podcast.title,
-      extension,
+      extension: 'wav',
       fallbackSlug: 'podcast',
       labels: ['audio'],
       date: podcast.updatedAt,
     });
-    downloadFromUrl(podcast.audioUrl, fileName);
+    const downloadTask = Promise.resolve(
+      downloadFromUrl(podcast.audioUrl, fileName),
+    );
+    void downloadTask.catch(() => {
+      toast.error('Failed to download audio');
+    });
   }, [podcast.audioUrl, podcast.title, podcast.updatedAt]);
 
   const handleExportScript = useCallback(() => {

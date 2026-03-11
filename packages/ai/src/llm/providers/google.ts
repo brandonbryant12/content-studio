@@ -125,19 +125,31 @@ const buildStreamMetadata = <TOOLS extends ToolSet>(
     }).filter(([, value]) => value !== undefined),
   ) as Record<string, number>;
 
+const resolveModelSelection = (
+  google: ReturnType<typeof createGoogleGenerativeAI>,
+  requestedModel?: GoogleLLMModelId,
+) => {
+  const modelId = requestedModel ?? LLM_MODEL;
+  return {
+    modelId,
+    modelDefinition: getGoogleLLMModel(modelId),
+    model: google(modelId),
+  };
+};
+
 /**
  * Create Google AI service implementation via AI SDK.
  */
 const makeGoogleService = (config: GoogleConfig): LLMService => {
-  const modelId = config.model ?? LLM_MODEL;
-  const modelDefinition = getGoogleLLMModel(modelId);
-
   const google = createGoogleGenerativeAI({
     apiKey: config.apiKey,
   });
-  const model = google(modelId);
+  const defaultModelId = config.model ?? LLM_MODEL;
 
-  const estimateCostUsdMicros = (usage: LanguageModelUsage | undefined) =>
+  const estimateCostUsdMicros = (
+    modelDefinition: ReturnType<typeof getGoogleLLMModel>,
+    usage: LanguageModelUsage | undefined,
+  ) =>
     usage
       ? estimateTokenPricedModelCostUsdMicros(modelDefinition, {
           inputTokens: usage.inputTokens,
@@ -147,6 +159,10 @@ const makeGoogleService = (config: GoogleConfig): LLMService => {
 
   return {
     generate: <T>(options: GenerateOptions<T>) => {
+      const { modelId, modelDefinition, model } = resolveModelSelection(
+        google,
+        options.model ?? config.model,
+      );
       const metadata = buildGenerateMetadata(options);
       const attempt = Effect.tryPromise({
         try: async () => {
@@ -184,7 +200,10 @@ const makeGoogleService = (config: GoogleConfig): LLMService => {
             usage: toLLMUsageMetrics(result.usage),
             metadata,
             rawUsage: getRawUsage(result.usage),
-            estimatedCostUsdMicros: estimateCostUsdMicros(result.usage),
+            estimatedCostUsdMicros: estimateCostUsdMicros(
+              modelDefinition,
+              result.usage,
+            ),
           }),
         ),
         Effect.tapError((error) =>
@@ -224,6 +243,10 @@ const makeGoogleService = (config: GoogleConfig): LLMService => {
       options: StreamTextOptions<TOOLS>,
     ) =>
       Effect.gen(function* () {
+        const { modelId, modelDefinition, model } = resolveModelSelection(
+          google,
+          defaultModelId,
+        );
         const metadata = buildStreamMetadata(options);
         const scope = yield* getAIUsageScope;
         const recorderOption = yield* Effect.serviceOption(AIUsageRecorder);
@@ -257,7 +280,10 @@ const makeGoogleService = (config: GoogleConfig): LLMService => {
             usage: toLLMUsageMetrics(input.usage),
             metadata,
             rawUsage: input.rawUsage,
-            estimatedCostUsdMicros: estimateCostUsdMicros(input.usage),
+            estimatedCostUsdMicros: estimateCostUsdMicros(
+              modelDefinition,
+              input.usage,
+            ),
           });
         };
 
@@ -301,14 +327,17 @@ const makeGoogleService = (config: GoogleConfig): LLMService => {
             modality: 'llm',
             provider: 'google',
             providerOperation: 'streamText',
-            model: modelId,
+            model: defaultModelId,
             status: 'failed',
             errorTag: error._tag,
             metadata: buildStreamMetadata(options),
           }),
         ),
         Effect.withSpan('llm.streamText', {
-          attributes: { 'llm.provider': 'google', 'llm.model': modelId },
+          attributes: {
+            'llm.provider': 'google',
+            'llm.model': defaultModelId,
+          },
         }),
       ),
   };

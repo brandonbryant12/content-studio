@@ -1,5 +1,6 @@
 import { Context } from 'effect';
 import type { LLMError, LLMRateLimitError } from '../errors';
+import type { LLMModelId } from '../models';
 import type { ToolChoice, ToolSet, UIMessage, UIMessageChunk } from 'ai';
 import type { Schema, Effect } from 'effect';
 
@@ -10,6 +11,7 @@ export interface GenerateOptions<T> {
   readonly system?: string;
   readonly prompt: string;
   readonly schema: Schema.Schema<T>;
+  readonly model?: LLMModelId;
   readonly maxTokens?: number;
   readonly temperature?: number;
 }

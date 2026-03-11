@@ -537,7 +537,7 @@ describe('podcast router', () => {
           description: 'Updated description',
           setupInstructions: 'Focus on payment options',
           promptInstructions: 'Updated instructions',
-          targetDurationMinutes: 15,
+          targetDurationMinutes: 10,
         },
         errors,
       });
@@ -547,7 +547,7 @@ describe('podcast router', () => {
       expect(result.description).toBe('Updated description');
       expect(result.setupInstructions).toBe('Focus on payment options');
       expect(result.promptInstructions).toBe('Updated instructions');
-      expect(result.targetDurationMinutes).toBe(15);
+      expect(result.targetDurationMinutes).toBe(10);
       expectIsoTimestamp(result.createdAt);
       expectIsoTimestamp(result.updatedAt);
 

@@ -1,3 +1,5 @@
+import { LLMError } from '@repo/ai';
+import { LLM, type LLMService } from '@repo/ai/llm';
 import { createMockLLM } from '@repo/ai/testing';
 import { createMockStorage } from '@repo/storage/testing';
 import {
@@ -18,6 +20,7 @@ import {
   createMockActivityLogRepo,
   MockDbLive,
 } from '../../../test-utils/mock-repos';
+import { PODCAST_LLM_MODEL, PODCAST_SCRIPT_MAX_TOKENS } from '../../constants';
 import { generateScript } from '../generate-script';
 
 vi.mock('../../../source', () => ({
@@ -290,6 +293,14 @@ describe('generateScript', () => {
       podcast.id,
       expect.objectContaining({
         generationPrompt: expect.stringContaining(
+          'Target about 2100 spoken words overall after excluding TTS annotations',
+        ),
+      }),
+    );
+    expect(updateScriptSpy).toHaveBeenCalledWith(
+      podcast.id,
+      expect.objectContaining({
+        generationPrompt: expect.stringContaining(
           '## Host Character: "Avery Stone"',
         ),
       }),
@@ -300,6 +311,169 @@ describe('generateScript', () => {
         generationPrompt: expect.stringContaining(
           '## Co-Host Character: "Jordan Vale"',
         ),
+      }),
+    );
+  });
+
+  it('passes the static podcast model and duration-based maxTokens to the llm call', async () => {
+    const user = createTestUser();
+    const doc = createTestSource({ createdBy: user.id });
+    const podcast = {
+      ...createTestPodcast({
+        createdBy: user.id,
+        targetDurationMinutes: 12,
+      }),
+      sources: [doc],
+    } as unknown as PodcastWithSources;
+
+    const generateSpy = vi.fn(() =>
+      Effect.succeed({
+        object: {
+          title: 'Generated Title',
+          description: 'Generated Description',
+          summary: 'Generated Summary',
+          tags: ['tag-a'],
+          segments: [{ speaker: 'host', line: 'Hello world' }],
+        },
+        usage: { inputTokens: 10, outputTokens: 10, totalTokens: 20 },
+      }),
+    );
+
+    const llmService: LLMService = {
+      generate: generateSpy as LLMService['generate'],
+      streamText: () => Effect.die('not implemented'),
+    };
+
+    const layers = Layer.mergeAll(
+      MockDbLive,
+      createMockPodcastRepo({
+        findByIdForUser: () => Effect.succeed(podcast),
+        updateStatus: (_id, status) =>
+          Effect.succeed({ ...podcast, status } as unknown as Podcast),
+        updateScript: (_id, data) =>
+          Effect.succeed({ ...podcast, ...data } as unknown as Podcast),
+        update: (_id, data) =>
+          Effect.succeed({ ...podcast, ...data } as unknown as Podcast),
+      }),
+      createMockPersonaRepo(),
+      createMockSourceRepo(),
+      createMockActivityLogRepo({
+        insert: () => Effect.succeed(undefined as never),
+      }),
+      createMockStorage({ baseUrl: 'https://storage.example/' }),
+      Layer.succeed(LLM, llmService),
+    );
+
+    await Effect.runPromise(
+      withTestUser(user)(
+        generateScript({ podcastId: podcast.id }).pipe(Effect.provide(layers)),
+      ),
+    );
+
+    expect(generateSpy).toHaveBeenCalledWith(
+      expect.objectContaining({
+        model: PODCAST_LLM_MODEL,
+        maxTokens: PODCAST_SCRIPT_MAX_TOKENS,
+      }),
+    );
+  });
+
+  it('uses the same static maxTokens budget on retries for structured-output failures', async () => {
+    const user = createTestUser();
+    const doc = createTestSource({ createdBy: user.id });
+    const podcast = {
+      ...createTestPodcast({
+        createdBy: user.id,
+        targetDurationMinutes: 12,
+      }),
+      sources: [doc],
+    } as unknown as PodcastWithSources;
+
+    const generateSpy = vi
+      .fn()
+      .mockImplementationOnce(() =>
+        Effect.fail(
+          new LLMError({
+            message: 'No object generated',
+            errorCode: 'NO_OBJECT_GENERATED',
+            isRetryable: true,
+            cause: { finishReason: 'length' },
+          }),
+        ),
+      )
+      .mockImplementationOnce(() =>
+        Effect.fail(
+          new LLMError({
+            message: 'No object generated',
+            errorCode: 'NO_OBJECT_GENERATED',
+            isRetryable: true,
+            cause: { finishReason: 'length' },
+          }),
+        ),
+      )
+      .mockImplementationOnce(() =>
+        Effect.succeed({
+          object: {
+            title: 'Generated Title',
+            description: 'Generated Description',
+            summary: 'Generated Summary',
+            tags: ['tag-a'],
+            segments: [{ speaker: 'host', line: 'Hello world' }],
+          },
+          usage: { inputTokens: 10, outputTokens: 10, totalTokens: 20 },
+        }),
+      );
+
+    const llmService: LLMService = {
+      generate: generateSpy as LLMService['generate'],
+      streamText: () => Effect.die('not implemented'),
+    };
+
+    const layers = Layer.mergeAll(
+      MockDbLive,
+      createMockPodcastRepo({
+        findByIdForUser: () => Effect.succeed(podcast),
+        updateStatus: (_id, status) =>
+          Effect.succeed({ ...podcast, status } as unknown as Podcast),
+        updateScript: (_id, data) =>
+          Effect.succeed({ ...podcast, ...data } as unknown as Podcast),
+        update: (_id, data) =>
+          Effect.succeed({ ...podcast, ...data } as unknown as Podcast),
+      }),
+      createMockPersonaRepo(),
+      createMockSourceRepo(),
+      createMockActivityLogRepo({
+        insert: () => Effect.succeed(undefined as never),
+      }),
+      createMockStorage({ baseUrl: 'https://storage.example/' }),
+      Layer.succeed(LLM, llmService),
+    );
+
+    await Effect.runPromise(
+      withTestUser(user)(
+        generateScript({ podcastId: podcast.id }).pipe(Effect.provide(layers)),
+      ),
+    );
+
+    expect(generateSpy).toHaveBeenNthCalledWith(
+      1,
+      expect.objectContaining({
+        model: PODCAST_LLM_MODEL,
+        maxTokens: PODCAST_SCRIPT_MAX_TOKENS,
+      }),
+    );
+    expect(generateSpy).toHaveBeenNthCalledWith(
+      2,
+      expect.objectContaining({
+        model: PODCAST_LLM_MODEL,
+        maxTokens: PODCAST_SCRIPT_MAX_TOKENS,
+      }),
+    );
+    expect(generateSpy).toHaveBeenNthCalledWith(
+      3,
+      expect.objectContaining({
+        model: PODCAST_LLM_MODEL,
+        maxTokens: PODCAST_SCRIPT_MAX_TOKENS,
       }),
     );
   });
@@ -374,6 +548,14 @@ describe('generateScript', () => {
       expect.objectContaining({
         generationPrompt: expect.not.stringContaining(
           '# Approved Episode Plan',
+        ),
+      }),
+    );
+    expect(updateScriptSpy).toHaveBeenCalledWith(
+      podcast.id,
+      expect.objectContaining({
+        generationPrompt: expect.stringContaining(
+          'Build a complete episode arc even without a saved plan.',
         ),
       }),
     );

@@ -1,6 +1,7 @@
 import { Button } from '@repo/ui/components/button';
 import { Spinner } from '@repo/ui/components/spinner';
 import type { ReactNode } from 'react';
+import { Markdown } from '@/components/markdown';
 import { getGenerationFailureMessage } from '@/shared/lib/errors';
 
 interface SearchMatch {
@@ -69,6 +70,7 @@ function highlightParagraph(
 
 interface SourceContentReaderProps {
   content: string | null;
+  sourceType: string;
   paragraphs: string[];
   queryLength: number;
   matchCount: number;
@@ -78,29 +80,36 @@ interface SourceContentReaderProps {
 
 export function SourceContentReader({
   content,
+  sourceType,
   paragraphs,
   queryLength,
   matchCount,
   currentMatchIndex,
   matchesByParagraph,
 }: SourceContentReaderProps) {
+  const shouldRenderMarkdown = sourceType === 'research' && queryLength < 2;
+
   return (
     <article className="document-content-reader">
       {content ? (
-        paragraphs.map((paragraph, i) =>
-          paragraph.trim() === '' ? (
-            <br key={i} />
-          ) : (
-            <p key={i}>
-              {queryLength >= 2 && matchCount > 0
-                ? highlightParagraph(
-                    paragraph,
-                    matchesByParagraph.get(i),
-                    currentMatchIndex,
-                  )
-                : paragraph}
-            </p>
-          ),
+        shouldRenderMarkdown ? (
+          <Markdown>{content}</Markdown>
+        ) : (
+          paragraphs.map((paragraph, i) =>
+            paragraph.trim() === '' ? (
+              <br key={i} />
+            ) : (
+              <p key={i}>
+                {queryLength >= 2 && matchCount > 0
+                  ? highlightParagraph(
+                      paragraph,
+                      matchesByParagraph.get(i),
+                      currentMatchIndex,
+                    )
+                  : paragraph}
+              </p>
+            ),
+          )
         )
       ) : (
         <p className="text-muted-foreground italic">

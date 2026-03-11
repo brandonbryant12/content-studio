@@ -33,6 +33,30 @@ const runPreviewVoiceExit = () =>
     ),
   );
 
+const createAudioPayload = () => {
+  const audioContent = Buffer.from('RIFFmock-audio');
+  return {
+    audioContent,
+    payload: {
+      responseId: 'tts-response-1',
+      candidates: [
+        {
+          content: {
+            parts: [
+              {
+                inlineData: {
+                  mimeType: 'audio/wav',
+                  data: audioContent.toString('base64'),
+                },
+              },
+            ],
+          },
+        },
+      ],
+    },
+  };
+};
+
 describe('GoogleTTSLive', () => {
   beforeEach(() => {
     fetchMock.mockReset();
@@ -101,30 +125,16 @@ describe('GoogleTTSLive', () => {
         }),
     });
 
-    const audioContent = Buffer.from('RIFFmock-audio');
+    const { audioContent, payload } = createAudioPayload();
     fetchMock.mockResolvedValueOnce(
       new Response(
         JSON.stringify({
-          responseId: 'tts-response-1',
+          ...payload,
           usageMetadata: {
             promptTokenCount: 9,
             candidatesTokenCount: 4,
             totalTokenCount: 13,
           },
-          candidates: [
-            {
-              content: {
-                parts: [
-                  {
-                    inlineData: {
-                      mimeType: 'audio/wav',
-                      data: audioContent.toString('base64'),
-                    },
-                  },
-                ],
-              },
-            },
-          ],
         }),
         { status: 200 },
       ),
@@ -168,5 +178,72 @@ describe('GoogleTTSLive', () => {
       },
       estimatedCostUsdMicros: 45,
     });
+  });
+
+  it('builds an explicit ordered conversation prompt for multi-speaker synthesis', async () => {
+    const { payload } = createAudioPayload();
+    fetchMock.mockResolvedValueOnce(
+      new Response(JSON.stringify(payload), { status: 200 }),
+    );
+
+    await Effect.runPromise(
+      Effect.gen(function* () {
+        const tts = yield* TTS;
+        return yield* tts.synthesize({
+          turns: [
+            { speaker: 'host', text: 'First line.' },
+            { speaker: 'cohost', text: 'Second line.' },
+          ],
+          voiceConfigs: [
+            { speakerAlias: 'host', voiceId: 'Charon' },
+            { speakerAlias: 'cohost', voiceId: 'Kore' },
+          ],
+        });
+      }).pipe(
+        Effect.provide(
+          GoogleTTSLive({
+            apiKey: 'test-key',
+          }),
+        ),
+      ),
+    );
+
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    const [, init] = fetchMock.mock.calls[0] ?? [];
+    const body = JSON.parse(String(init?.body)) as {
+      contents: Array<{ parts: Array<{ text: string }> }>;
+      generationConfig: {
+        speechConfig: {
+          multiSpeakerVoiceConfig: {
+            speakerVoiceConfigs: Array<{
+              speaker: string;
+              voiceConfig: { prebuiltVoiceConfig: { voiceName: string } };
+            }>;
+          };
+        };
+      };
+    };
+
+    expect(body.contents[0]?.parts[0]?.text).toContain(
+      'Read the following conversation aloud exactly as written.',
+    );
+    expect(body.contents[0]?.parts[0]?.text).toContain(
+      'Keep the speakers in order and do not omit or paraphrase any line.',
+    );
+    expect(body.contents[0]?.parts[0]?.text).toContain('host: First line.');
+    expect(body.contents[0]?.parts[0]?.text).toContain('cohost: Second line.');
+    expect(
+      body.generationConfig.speechConfig.multiSpeakerVoiceConfig
+        .speakerVoiceConfigs,
+    ).toEqual([
+      {
+        speaker: 'host',
+        voiceConfig: { prebuiltVoiceConfig: { voiceName: 'Charon' } },
+      },
+      {
+        speaker: 'cohost',
+        voiceConfig: { prebuiltVoiceConfig: { voiceName: 'Kore' } },
+      },
+    ]);
   });
 });

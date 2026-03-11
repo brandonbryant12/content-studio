@@ -11,6 +11,7 @@ import {
   withUseCaseSpan,
 } from '../../shared';
 import { getSourceContent } from '../../source';
+import { PODCAST_LLM_MODEL, PODCAST_SCRIPT_MAX_TOKENS } from '../constants';
 import {
   buildSystemPrompt,
   buildUserPrompt,
@@ -18,6 +19,7 @@ import {
   type ScriptPromptContext,
 } from '../prompts';
 import { PodcastRepo } from '../repos/podcast-repo';
+import { sanitizePodcastScriptSegments } from '../script-segments';
 
 // =============================================================================
 // Types
@@ -79,6 +81,27 @@ const getErrorTag = (error: unknown) =>
   typeof error._tag === 'string'
     ? error._tag
     : 'UnknownError';
+const getErrorStringField = (error: unknown, field: string) =>
+  typeof error === 'object' &&
+  error !== null &&
+  field in error &&
+  typeof (error as Record<string, unknown>)[field] === 'string'
+    ? ((error as Record<string, unknown>)[field] as string)
+    : undefined;
+const getErrorCause = (error: unknown) =>
+  typeof error === 'object' && error !== null && 'cause' in error
+    ? (error as { cause?: unknown }).cause
+    : undefined;
+const getErrorCode = (error: unknown) =>
+  getErrorStringField(error, 'errorCode') ??
+  getErrorStringField(getErrorCause(error), 'code');
+const getErrorFinishReason = (error: unknown) =>
+  getErrorStringField(error, 'finishReason') ??
+  getErrorStringField(getErrorCause(error), 'finishReason');
+const getErrorMessage = (error: unknown) =>
+  error instanceof Error
+    ? error.message
+    : getErrorStringField(error, 'message');
 const loadPersonaContext = (personaId: string | null | undefined) =>
   personaId
     ? loadPersonaByIdSafe(personaId).pipe(
@@ -147,6 +170,7 @@ export const generateScript = (input: GenerateScriptInput) =>
       {
         title: podcast.title,
         description: podcast.description,
+        format: podcast.format,
         targetDurationMinutes: podcast.targetDurationMinutes,
       },
       combinedContent,
@@ -159,10 +183,16 @@ export const generateScript = (input: GenerateScriptInput) =>
           system: systemPrompt,
           prompt: userPrompt,
           schema: ScriptOutputSchema,
+          model: PODCAST_LLM_MODEL,
+          maxTokens: PODCAST_SCRIPT_MAX_TOKENS,
           temperature: 0.7,
         }),
-      onAttemptError: ({ attempt, maxAttempts, error, willRetry }) =>
-        runBestEffortSideEffect(
+      onAttemptError: ({ attempt, maxAttempts, error, willRetry }) => {
+        const errorCode = getErrorCode(error);
+        const finishReason = getErrorFinishReason(error);
+        const errorMessage = getErrorMessage(error);
+
+        return runBestEffortSideEffect(
           logActivity({
             userId: user.id,
             action: willRetry
@@ -176,6 +206,10 @@ export const generateScript = (input: GenerateScriptInput) =>
               attempt,
               maxAttempts,
               errorTag: getErrorTag(error),
+              ...(errorCode === undefined ? {} : { errorCode }),
+              ...(finishReason === undefined ? {} : { finishReason }),
+              ...(errorMessage === undefined ? {} : { errorMessage }),
+              maxTokens: PODCAST_SCRIPT_MAX_TOKENS,
             },
           }),
           {
@@ -184,16 +218,19 @@ export const generateScript = (input: GenerateScriptInput) =>
               'podcast.id': podcast.id,
             },
           },
-        ),
+        );
+      },
     });
 
-    const segments = llmResult.object.segments.map((s, i) => ({
-      speaker: s.speaker,
-      line: s.line,
-      index: i,
-      startTimeMs: s.startTimeMs,
-      endTimeMs: s.endTimeMs,
-    }));
+    const segments = sanitizePodcastScriptSegments(
+      llmResult.object.segments.map((segment, index) => ({
+        speaker: segment.speaker,
+        line: segment.line,
+        index,
+        startTimeMs: segment.startTimeMs,
+        endTimeMs: segment.endTimeMs,
+      })),
+    );
 
     yield* podcastRepo.updateScript(input.podcastId, {
       segments,

@@ -42,9 +42,40 @@ export interface PodcastScriptSystemPromptInput {
 }
 
 const WORDS_PER_MINUTE = {
-  voice_over: { min: 125, max: 150 },
-  conversation: { min: 130, max: 160 },
+  voice_over: 165,
+  conversation: 175,
 } as const;
+
+const roundToNearest25 = (value: number) => Math.round(value / 25) * 25;
+
+interface WordBudget {
+  readonly wordsPerMinute: number;
+  readonly targetWords: number;
+  readonly minWords: number;
+  readonly maxWords: number;
+}
+
+function getWordBudget(
+  format: PodcastFormat,
+  targetDurationMinutes?: number | null,
+): WordBudget | null {
+  if (typeof targetDurationMinutes !== 'number') {
+    return null;
+  }
+
+  const wordsPerMinute =
+    format === 'conversation'
+      ? WORDS_PER_MINUTE.conversation
+      : WORDS_PER_MINUTE.voice_over;
+  const targetWords = roundToNearest25(wordsPerMinute * targetDurationMinutes);
+
+  return {
+    wordsPerMinute,
+    targetWords,
+    minWords: roundToNearest25(targetWords * 0.9),
+    maxWords: roundToNearest25(targetWords * 1.1),
+  };
+}
 
 function buildPersonaSection(
   persona: PersonaPromptContext,
@@ -87,7 +118,10 @@ function buildSegmentSection(segment: SegmentPromptContext): string {
   return lines.join('\n');
 }
 
-function buildEpisodePlanSection(plan: EpisodePlanPromptContext): string {
+function buildEpisodePlanSection(
+  plan: EpisodePlanPromptContext,
+  format: PodcastFormat,
+): string {
   const lines: string[] = [];
 
   lines.push(`Angle: ${plan.angle}`);
@@ -110,6 +144,13 @@ function buildEpisodePlanSection(plan: EpisodePlanPromptContext): string {
 
     if (typeof section.estimatedMinutes === 'number') {
       lines.push(`Estimated minutes: ${section.estimatedMinutes}`);
+      lines.push(
+        `Target words: about ${roundToNearest25(
+          (format === 'conversation'
+            ? WORDS_PER_MINUTE.conversation
+            : WORDS_PER_MINUTE.voice_over) * section.estimatedMinutes,
+        )}`,
+      );
     }
   });
 
@@ -122,25 +163,22 @@ function buildWordBudgetGuidance(
   format: PodcastFormat,
   targetDurationMinutes?: number | null,
 ): string | null {
-  if (typeof targetDurationMinutes !== 'number') {
+  const budget = getWordBudget(format, targetDurationMinutes);
+
+  if (!budget) {
     return null;
   }
 
-  const budget =
-    format === 'conversation'
-      ? WORDS_PER_MINUTE.conversation
-      : WORDS_PER_MINUTE.voice_over;
+  const episodeLabel =
+    format === 'conversation' ? 'conversation episodes' : 'voice-over episodes';
 
-  const minWords = budget.min * targetDurationMinutes;
-  const maxWords = budget.max * targetDurationMinutes;
-
-  return `Aim for roughly ${minWords}-${maxWords} spoken words overall after excluding TTS annotations. That range is a pacing guide, not a reason to pad with filler.`;
+  return `This TTS setup reads ${episodeLabel} at about ${budget.wordsPerMinute} spoken words per minute. Target about ${budget.targetWords} spoken words overall after excluding TTS annotations, and keep the full script inside the ${budget.minWords}-${budget.maxWords} word range. Before returning the final answer, silently verify the spoken-word total and expand underwritten sections until the draft lands in range.`;
 }
 
 export const podcastScriptSystemPrompt =
   definePrompt<PodcastScriptSystemPromptInput>({
     id: 'podcast.script.system',
-    version: 5,
+    version: 6,
     owner: PROMPT_OWNER,
     domain: 'podcast',
     role: 'system',
@@ -216,7 +254,8 @@ Break complex topics into digestible segments with natural transitions.`;
 - Deliver a full episode draft, not a short recap or outline.
 - Use enough segments, line length, and transitions to satisfy the runtime target naturally.
 - If the source material is dense research or a long article, unpack it with explanation, examples, and comparisons instead of compressing it into headlines.
-- Keep each approved section distinct in the final script rather than collapsing multiple sections into one quick exchange.`);
+- Keep each approved section distinct in the final script rather than collapsing multiple sections into one quick exchange.
+- For conversation episodes longer than 3 minutes, most turns should contain developed explanation, reaction, or examples rather than one short sentence passed back and forth.`);
 
       if (characterSections.length > 0) {
         parts.push('\n\n# Character & Audience Context\n');
@@ -232,13 +271,19 @@ Break complex topics into digestible segments with natural transitions.`;
 
       if (episodePlan) {
         parts.push('\n\n# Approved Episode Plan\n');
-        parts.push(buildEpisodePlanSection(episodePlan));
+        parts.push(buildEpisodePlanSection(episodePlan, format));
         parts.push(
           '\n\nTreat this plan as the required episode structure, but not as a source of factual authority. Source materials remain the ground truth. If the plan or extra instructions conflict with the sources, follow the sources and adapt the structure accordingly.',
         );
         parts.push(
-          '\nExpand each approved section to match its estimatedMinutes. A 2-minute section should usually contain multiple developed exchanges or a fully developed narrated subsection, not a single quick pass.',
+          '\nExpand each approved section to match both its estimatedMinutes and its target word budget. A 2-minute section should usually contain multiple developed exchanges or a fully developed narrated subsection, not a single quick pass.',
         );
+      } else {
+        parts.push(`\n\n# Episode Structure
+- Build a complete episode arc even without a saved plan.
+- Start with a listener-facing opening hook.
+- Cover 3 to 5 developed body beats with real explanation, examples, and transitions.
+- End with a concrete closing takeaway rather than stopping abruptly.`);
       }
 
       if (instructions) {

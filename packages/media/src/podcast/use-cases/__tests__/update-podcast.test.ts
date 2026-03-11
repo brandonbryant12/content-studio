@@ -10,7 +10,7 @@ import {
 import { Effect, Layer } from 'effect';
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import type { Podcast, Source, UpdatePodcast } from '@repo/db/schema';
-import { PodcastNotFound } from '../../../errors';
+import { PodcastNotFound, SourceNotFound } from '../../../errors';
 import {
   PodcastRepo,
   type PodcastRepoService,
@@ -34,6 +34,7 @@ const createMockPodcastRepo = (
   state: MockRepoState,
   options?: {
     onUpdate?: (id: string, data: UpdatePodcast) => void;
+    verifySourcesError?: SourceNotFound;
   },
 ): Layer.Layer<PodcastRepo> => {
   const service: PodcastRepoService = {
@@ -41,7 +42,33 @@ const createMockPodcastRepo = (
     list: () => Effect.die('not implemented'),
     delete: () => Effect.die('not implemented'),
     count: () => Effect.die('not implemented'),
-    verifySourcesExist: () => Effect.die('not implemented'),
+    verifySourcesExist: (sourceIds, userId) =>
+      Effect.suspend(() => {
+        if (options?.verifySourcesError) {
+          return Effect.fail(options.verifySourcesError);
+        }
+
+        const docs = state.sources.filter((d) => sourceIds.includes(d.id));
+        const foundIds = new Set(docs.map((doc) => doc.id));
+        const missingId = sourceIds.find(
+          (sourceId) => !foundIds.has(sourceId as Source['id']),
+        );
+        if (missingId) {
+          return Effect.fail(new SourceNotFound({ id: missingId }));
+        }
+
+        const notOwned = docs.find((doc) => doc.createdBy !== userId);
+        if (notOwned) {
+          return Effect.fail(
+            new SourceNotFound({
+              id: notOwned.id,
+              message: 'Source not found or access denied',
+            }),
+          );
+        }
+
+        return Effect.succeed(docs);
+      }),
     updateGenerationContext: () => Effect.die('not implemented'),
     updateStatus: () => Effect.die('not implemented'),
     updateScript: () => Effect.die('not implemented'),
@@ -301,12 +328,12 @@ describe('updatePodcast', () => {
         withTestUser(user)(
           updatePodcast({
             podcastId: podcast.id,
-            data: { targetDurationMinutes: 15 },
+            data: { targetDurationMinutes: 10 },
           }).pipe(Effect.provide(layers)),
         ),
       );
 
-      expect(result.targetDurationMinutes).toBe(15);
+      expect(result.targetDurationMinutes).toBe(10);
     });
 
     it('sanitizes episode plans before persistence', async () => {
@@ -400,9 +427,46 @@ describe('updatePodcast', () => {
     it('updates source IDs', async () => {
       const user = createTestUser();
       const doc1 = createTestSource({ createdBy: user.id });
-      const doc2 = createTestSource({ createdBy: user.id });
+      const doc2 = createTestSource({ createdBy: user.id, wordCount: 2400 });
+      const podcast = {
+        ...createTestPodcast({
+          sourceIds: [doc1.id],
+          createdBy: user.id,
+        }),
+        hostVoice: null,
+        hostVoiceName: null,
+        coHostVoice: null,
+        coHostVoiceName: null,
+      };
+      const podcasts = new Map<string, Podcast>([[podcast.id, podcast]]);
+
+      const mockRepo = createMockPodcastRepo({
+        podcasts,
+        sources: [doc1, doc2],
+      });
+      const layers = Layer.mergeAll(MockDbLive, mockRepo);
+
+      const result = await Effect.runPromise(
+        withTestUser(user)(
+          updatePodcast({
+            podcastId: podcast.id,
+            data: { sourceIds: [doc2.id] },
+          }).pipe(Effect.provide(layers)),
+        ),
+      );
+
+      expect(result.sourceIds).toEqual([doc2.id]);
+      expect(result.targetDurationMinutes).toBe(4);
+    });
+
+    it('keeps an explicit target duration when sources change', async () => {
+      const user = createTestUser();
+      const doc1 = createTestSource({ createdBy: user.id, wordCount: 400 });
+      const doc2 = createTestSource({ createdBy: user.id, wordCount: 4200 });
       const podcast = createTestPodcast({
         sourceIds: [doc1.id],
+        targetDurationMinutes: 8,
+        hostVoice: 'Aoede',
         createdBy: user.id,
       });
       const podcasts = new Map<string, Podcast>([[podcast.id, podcast]]);
@@ -422,7 +486,43 @@ describe('updatePodcast', () => {
         ),
       );
 
-      expect(result.sourceIds).toEqual([doc2.id]);
+      expect(result.targetDurationMinutes).toBe(8);
+    });
+
+    it('fails when updated source IDs are not owned by the current user', async () => {
+      const owner = createTestUser();
+      const otherUser = createTestUser();
+      const ownedDoc = createTestSource({ createdBy: owner.id });
+      const foreignDoc = createTestSource({ createdBy: otherUser.id });
+      const podcast = createTestPodcast({
+        sourceIds: [ownedDoc.id],
+        createdBy: owner.id,
+      });
+      const podcasts = new Map<string, Podcast>([[podcast.id, podcast]]);
+
+      const mockRepo = createMockPodcastRepo({
+        podcasts,
+        sources: [ownedDoc, foreignDoc],
+      });
+      const layers = Layer.mergeAll(MockDbLive, mockRepo);
+
+      const result = await Effect.runPromiseExit(
+        withTestUser(owner)(
+          updatePodcast({
+            podcastId: podcast.id,
+            data: { sourceIds: [foreignDoc.id] },
+          }).pipe(Effect.provide(layers)),
+        ),
+      );
+
+      expect(result._tag).toBe('Failure');
+      if (result._tag === 'Failure' && result.cause._tag === 'Fail') {
+        const error = result.cause.error;
+        expect(error._tag).toBe('SourceNotFound');
+        if (error._tag === 'SourceNotFound') {
+          expect(error.id).toBe(foreignDoc.id);
+        }
+      }
     });
   });
 

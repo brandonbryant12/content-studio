@@ -6,6 +6,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@repo/ui/components/dropdown-menu';
+import { toast } from 'sonner';
 import {
   buildDownloadFileName,
   downloadFromUrl,
@@ -38,7 +39,10 @@ export function ExportDropdown({
       labels: [format, versionNumber ? `v${versionNumber}` : undefined],
       date: updatedAt,
     });
-    downloadFromUrl(imageUrl, fileName);
+    const downloadTask = Promise.resolve(downloadFromUrl(imageUrl, fileName));
+    void downloadTask.catch(() => {
+      toast.error('Failed to download image');
+    });
   };
 
   return (
