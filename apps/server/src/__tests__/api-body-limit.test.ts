@@ -1,9 +1,11 @@
 import { Hono } from 'hono';
 import { describe, expect, it } from 'vitest';
+import { requestIdMiddleware } from '../middleware/request-id';
 import { apiBodyLimit, API_BODY_LIMIT_BYTES } from '../routes/api-body-limit';
 
 const createApp = () => {
-  const app = new Hono();
+  const app = new Hono<{ Variables: { requestId: string } }>();
+  app.use(requestIdMiddleware);
   app.use('/api/*', apiBodyLimit);
   app.post('/api/sources/upload', async (c) => {
     await c.req.json();
@@ -26,13 +28,23 @@ describe('api body limit', () => {
       headers: {
         'content-type': 'application/json',
         'content-length': String(Buffer.byteLength(body)),
+        'x-request-id': 'req-payload-too-large',
       },
       body,
     });
     const res = await app.request(request);
 
     expect(res.status).toBe(413);
-    await expect(res.json()).resolves.toEqual({ error: 'Payload too large' });
+    expect(res.headers.get('content-type')).toContain('application/problem+json');
+    expect(res.headers.get('X-Request-Id')).toBe('req-payload-too-large');
+    await expect(res.json()).resolves.toEqual({
+      type: 'https://content-studio.dev/problems/payload-too-large',
+      title: 'Payload Too Large',
+      status: 413,
+      detail: 'Request body exceeds the 16 MB limit.',
+      code: 'PAYLOAD_TOO_LARGE',
+      requestId: 'req-payload-too-large',
+    });
   });
 
   it('allows non-oversized payloads to reach normal handler flow', async () => {

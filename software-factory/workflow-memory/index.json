@@ -56,6 +56,25 @@
     "eventFile": "events/2026-03.jsonl"
   },
   {
+    "id": "2026-03-11-feature-delivery-standardized-server-boundary-problem-responses-with-request-corr",
+    "date": "2026-03-11",
+    "month": "2026-03",
+    "workflow": "Feature Delivery",
+    "title": "Standardized server boundary problem responses with request correlation",
+    "severity": "medium",
+    "status": "done",
+    "tags": [
+      "backend",
+      "error-handling",
+      "request-id",
+      "skill:feature-delivery",
+      "skill:intake-triage"
+    ],
+    "importance": 0.71,
+    "confidence": 0.94,
+    "eventFile": "events/2026-03.jsonl"
+  },
+  {
     "id": "2026-03-10-feature-delivery-audio-playback-proxy-is-now-always-on",
     "date": "2026-03-10",
     "month": "2026-03",
