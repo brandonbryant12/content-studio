@@ -57,25 +57,6 @@
     "eventFile": "events/2026-03.jsonl"
   },
   {
-    "id": "2026-03-11-feature-delivery-docker-deploy-no-longer-depends-on-external-syntax-frontend-or-d",
-    "date": "2026-03-11",
-    "month": "2026-03",
-    "workflow": "Feature Delivery",
-    "title": "Docker deploy no longer depends on external syntax frontend or duplicate CA arg",
-    "severity": "medium",
-    "status": "completed",
-    "tags": [
-      "skill:feature-delivery",
-      "docker-compose",
-      "deploy",
-      "docker-registry",
-      "proxy",
-      "env-vars"
-    ],
-    "confidence": 0.97,
-    "eventFile": "events/2026-03.jsonl"
-  },
-  {
     "id": "2026-03-11-feature-delivery-issues-311-and-322-aligned-test-mock-guidance-with-a-docs-backed",
     "date": "2026-03-11",
     "month": "2026-03",
@@ -151,6 +132,43 @@
     ],
     "importance": 0.71,
     "confidence": 0.94,
+    "eventFile": "events/2026-03.jsonl"
+  },
+  {
+    "id": "2026-03-11-periodic-scans-best-practice-researcher-backend-patterns-effect-use-case-repository-source-list-create-source-authz-drift",
+    "date": "2026-03-11",
+    "month": "2026-03",
+    "workflow": "Periodic Scans",
+    "title": "Best Practice Researcher: backend-patterns-effect-use-case-repository — sources.list count-waste drift + createSource caller-owned identity override",
+    "severity": "high",
+    "status": "open",
+    "tags": [
+      "automation",
+      "periodic-scans",
+      "best-practice-researcher",
+      "memory",
+      "workflow-memory",
+      "skill:periodic-scans",
+      "trajectory:scope:meso",
+      "trajectory:domain:backend-patterns-effect-use-case-repository",
+      "signal:4",
+      "tool:gh",
+      "tool:rg",
+      "tool:sed",
+      "tool:jq",
+      "tool:web-search",
+      "tool:web-fetch",
+      "tool:workflow-memory:preflight",
+      "tool:workflow-memory:add-entry",
+      "tool:workflow-memory:sync",
+      "memory-form:external",
+      "memory-function:episodic",
+      "memory-function:semantic",
+      "memory-dynamics:retrieve",
+      "memory-dynamics:write"
+    ],
+    "importance": 0.9,
+    "confidence": 0.9,
     "eventFile": "events/2026-03.jsonl"
   },
   {
