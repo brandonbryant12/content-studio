@@ -30,7 +30,10 @@ ENV TURBO_TELEMETRY_DISABLED=1 \
 
 COPY docker/certs/ /opt/content-studio/certs/
 
-RUN apk add --no-cache ca-certificates \
+RUN if [ -n "$NODE_EXTRA_CA_CERTS" ] && [ -s "$NODE_EXTRA_CA_CERTS" ]; then \
+      cat "$NODE_EXTRA_CA_CERTS" >> /etc/ssl/certs/ca-certificates.crt; \
+    fi \
+    && apk add --no-cache ca-certificates \
     && if [ -n "$NODE_EXTRA_CA_CERTS" ] && [ -s "$NODE_EXTRA_CA_CERTS" ]; then \
          cat "$NODE_EXTRA_CA_CERTS" >> /etc/ssl/certs/ca-certificates.crt; \
        fi

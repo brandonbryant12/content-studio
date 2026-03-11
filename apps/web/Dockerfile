@@ -97,7 +97,10 @@ ENV HTTP_PROXY="${HTTP_PROXY}" \
 
 COPY docker/certs/ /opt/content-studio/certs/
 
-RUN apk add --no-cache ca-certificates tini \
+RUN if [ -n "$NODE_EXTRA_CA_CERTS" ] && [ -s "$NODE_EXTRA_CA_CERTS" ]; then \
+      cat "$NODE_EXTRA_CA_CERTS" >> /etc/ssl/certs/ca-certificates.crt; \
+    fi \
+    && apk add --no-cache ca-certificates tini \
     && if [ -n "$NODE_EXTRA_CA_CERTS" ] && [ -s "$NODE_EXTRA_CA_CERTS" ]; then \
          cat "$NODE_EXTRA_CA_CERTS" >> /etc/ssl/certs/ca-certificates.crt; \
        fi
