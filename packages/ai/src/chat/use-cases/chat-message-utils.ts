@@ -18,6 +18,18 @@ export interface SynthesisFormatOptions {
   readonly maxTotalChars: number;
 }
 
+export const PRIMARY_SYNTHESIS_FORMAT_OPTIONS: SynthesisFormatOptions = {
+  maxMessages: 24,
+  maxCharsPerMessage: 700,
+  maxTotalChars: 12_000,
+};
+
+export const FALLBACK_SYNTHESIS_FORMAT_OPTIONS: SynthesisFormatOptions = {
+  maxMessages: 10,
+  maxCharsPerMessage: 300,
+  maxTotalChars: 4_000,
+};
+
 export function normalizeStringWithFallback(value: string, fallback: string) {
   const normalized = value.trim();
   return normalized.length > 0 ? normalized : fallback;
@@ -100,4 +112,17 @@ export function formatMessagesForSynthesis(
 
   if (formatted.length <= config.maxTotalChars) return formatted;
   return formatted.slice(-config.maxTotalChars);
+}
+
+export function buildSynthesisPrompts(messages: readonly UIMessage[]) {
+  return {
+    primary: formatMessagesForSynthesis(
+      messages,
+      PRIMARY_SYNTHESIS_FORMAT_OPTIONS,
+    ),
+    fallback: formatMessagesForSynthesis(
+      messages,
+      FALLBACK_SYNTHESIS_FORMAT_OPTIONS,
+    ),
+  };
 }

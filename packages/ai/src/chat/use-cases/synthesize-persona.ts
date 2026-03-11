@@ -7,7 +7,7 @@ import {
 } from '../../prompt-registry';
 import { withAIUsageScope } from '../../usage';
 import {
-  formatMessagesForSynthesis,
+  buildSynthesisPrompts,
   normalizeStringWithFallback,
 } from './chat-message-utils';
 
@@ -20,18 +20,6 @@ const SynthesisResult = Schema.Struct({
   voiceId: Schema.String,
   voiceName: Schema.String,
 });
-
-const PRIMARY_FORMAT_OPTIONS = {
-  maxMessages: 24,
-  maxCharsPerMessage: 700,
-  maxTotalChars: 12_000,
-} as const;
-
-const FALLBACK_FORMAT_OPTIONS = {
-  maxMessages: 10,
-  maxCharsPerMessage: 300,
-  maxTotalChars: 4_000,
-} as const;
 
 const FALLBACK_QUOTE = 'Let us unpack this topic with clarity and curiosity.';
 const FALLBACK_VOICE = 'Puck';
@@ -83,14 +71,8 @@ export const synthesizePersona = (input: SynthesizePersonaInput) =>
         maxTokens,
       });
 
-    const primaryPrompt = formatMessagesForSynthesis(
-      input.messages,
-      PRIMARY_FORMAT_OPTIONS,
-    );
-    const fallbackPrompt = formatMessagesForSynthesis(
-      input.messages,
-      FALLBACK_FORMAT_OPTIONS,
-    );
+    const { primary: primaryPrompt, fallback: fallbackPrompt } =
+      buildSynthesisPrompts(input.messages);
 
     const primaryResult = yield* generate(primaryPrompt, 0.3, 1024).pipe(
       // Lengthy conversations can degrade structured output reliability.
