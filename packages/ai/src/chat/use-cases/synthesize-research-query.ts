@@ -49,17 +49,14 @@ function buildFallbackResearchBrief(topic: string) {
 }
 
 function getFallbackTopic(messages: readonly UIMessage[]) {
-  let fallback = '';
-  for (let index = messages.length - 1; index >= 0; index -= 1) {
-    const message = messages[index];
-    if (message?.role === 'user') {
-      fallback = getMessageText(message);
-      break;
-    }
-  }
+  const fallback = messages.reduceRight<UIMessage | undefined>(
+    (lastUserMessage, message) =>
+      lastUserMessage ?? (message.role === 'user' ? message : undefined),
+    undefined,
+  );
 
   return normalizeStringWithFallback(
-    fallback,
+    fallback ? getMessageText(fallback) : '',
     'Research this topic using the latest conversation context.',
   );
 }
