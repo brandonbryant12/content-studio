@@ -101,8 +101,8 @@ export function ResearchChatDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-2xl p-0 flex flex-col h-[70vh] max-h-[700px]">
-        <DialogHeader className="px-6 pt-6 pb-2">
+      <DialogContent className="sm:max-w-3xl p-0 flex flex-col h-[90vh] max-h-[1000px]">
+        <DialogHeader className="px-6 pt-6 pb-4">
           <DialogTitle className="flex items-center gap-2">
             <MagnifyingGlassIcon className="w-5 h-5" />
             {DEEP_RESEARCH_NAME}
@@ -123,19 +123,19 @@ export function ResearchChatDialog({
           messages={messages}
           isStreaming={isStreaming}
           error={error}
-          className="flex-1 overflow-y-auto px-6 space-y-3 min-h-0"
+          className="flex-1 overflow-y-auto px-6 py-4 space-y-4 min-h-0"
           emptyState={
-            <div className="flex flex-col items-center justify-center h-full text-center gap-4">
-              <p className="text-sm text-muted-foreground">
+            <div className="flex flex-col items-center justify-center h-full text-center gap-5">
+              <p className="text-sm text-muted-foreground max-w-md">
                 {SOURCE_RESEARCH_DIALOG_PROMPT}
               </p>
-              <div className="flex flex-wrap gap-2 justify-center">
+              <div className="flex flex-wrap gap-2.5 justify-center max-w-lg">
                 {suggestions.map((topic) => (
                   <button
                     key={topic}
                     type="button"
                     onClick={() => onSendMessage(topic)}
-                    className="px-3 py-1.5 text-xs rounded-full border border-border hover:bg-muted transition-colors text-muted-foreground hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                    className="px-3.5 py-2 text-sm rounded-full border border-border hover:bg-muted transition-colors text-muted-foreground hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                   >
                     {topic}
                   </button>
@@ -154,13 +154,13 @@ export function ResearchChatDialog({
                   onAutoGeneratePodcastChange(checked === true)
                 }
                 disabled={isStartingResearch}
-                aria-label="Auto-generate podcast from findings"
+                aria-label="Create a podcast when research completes"
               />
               <span className="text-sm leading-5">
-                Auto-generate podcast from findings
+                Create a podcast when research completes
                 <span className="block text-xs text-muted-foreground">
-                  Creates a podcast from this new source using defaults: 5 min,
-                  no custom instructions, Aoede + Charon.
+                  Automatically generates a podcast episode from the
+                  findings&nbsp;&mdash; 5 min, default voices (Aoede + Charon).
                 </span>
               </span>
             </label>

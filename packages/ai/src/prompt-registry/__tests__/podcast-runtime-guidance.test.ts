@@ -62,17 +62,33 @@ describe('podcast runtime guidance prompts', () => {
     );
   });
 
-  it('adds a full-episode arc requirement when no saved plan is present', () => {
+  it('uses the approved plan as the required structure', () => {
     const rendered = renderPrompt(podcastScriptSystemPrompt, {
       format: 'conversation',
       targetDurationMinutes: 7,
+      episodePlan: {
+        angle: 'Focus on the operating model, not model hype.',
+        openingHook: 'The hard part of AI is the workflow around it.',
+        closingTakeaway: 'Fix the handoff before scaling the system.',
+        sections: [
+          {
+            heading: 'Where rollouts break',
+            summary: 'The operational gaps that derail delivery.',
+            keyPoints: ['No owner', 'Weak source quality'],
+            sourceIds: ['doc_alpha'],
+            estimatedMinutes: 2,
+          },
+        ],
+      },
     });
 
+    expect(rendered).toContain('# Approved Episode Plan');
     expect(rendered).toContain(
-      'Build a complete episode arc even without a saved plan.',
+      'Angle: Focus on the operating model, not model hype.',
     );
-    expect(rendered).toContain('Cover 3 to 5 developed body beats');
-    expect(rendered).toContain('End with a concrete closing takeaway');
+    expect(rendered).toContain(
+      'Treat this plan as the required episode structure',
+    );
   });
 
   it('repeats runtime expectations in the user prompt', () => {

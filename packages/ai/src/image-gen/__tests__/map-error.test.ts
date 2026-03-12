@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import type { ImageGenError } from '../../errors';
-import { GoogleApiError } from '../../google/error-parser';
+import { GoogleApiError } from '../../providers/google/error-parser';
 import { mapError } from '../map-error';
 
 describe('ImageGen mapError', () => {

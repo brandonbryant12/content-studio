@@ -8,14 +8,13 @@ import { MockAIWithLatency } from '@repo/ai/testing';
 import { DatabasePolicyLive, type Policy } from '@repo/auth/policy';
 import { DbLive, type Db } from '@repo/db/effect';
 import { TelemetryLive, type TelemetryConfig } from '@repo/db/telemetry';
+import { MediaLive, type Media } from '@repo/media';
 import {
   DeepResearchFeatureLive,
-  MediaLive,
   UrlScraperLive,
-  type Media,
   type DeepResearchFeature,
   type UrlScraper,
-} from '@repo/media';
+} from '@repo/media/source';
 import { QueueLive, type Queue } from '@repo/queue';
 import { ManagedRuntime, Layer, Logger } from 'effect';
 import type { StorageConfig } from './orpc';

@@ -2982,6 +2982,10 @@
     @apply w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold;
   }
 
+  .mixer-voice-group-label {
+    @apply flex items-center gap-1.5 px-2 pt-2 pb-1 text-xs font-medium text-muted-foreground uppercase tracking-wider;
+  }
+
   .mixer-voice-option-name {
     @apply text-sm text-foreground;
   }
@@ -4204,11 +4208,21 @@
     @apply px-4 py-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors;
   }
 
+  .setup-secondary-btn,
   .setup-continue-btn {
-    @apply px-6 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200
-           bg-warning text-warning-foreground hover:bg-warning/90 shadow-sm;
+    @apply h-10 min-w-[9.5rem] px-5 rounded-full text-sm font-semibold transition-all duration-200
+           text-center inline-flex items-center justify-center;
   }
 
+  .setup-secondary-btn {
+    @apply bg-black text-white hover:bg-black/85;
+  }
+
+  .setup-continue-btn {
+    @apply bg-warning text-warning-foreground hover:bg-warning/90;
+  }
+
+  .setup-secondary-btn:disabled,
   .setup-continue-btn:disabled {
     @apply opacity-50 cursor-not-allowed;
   }

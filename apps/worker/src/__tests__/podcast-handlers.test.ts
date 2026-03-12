@@ -1,10 +1,11 @@
+import { syncEntityTitle } from '@repo/media/activity';
 import {
-  awaitSourcesReady,
   generateAudio,
   generateCoverImage,
   generateScript,
-  syncEntityTitle,
-} from '@repo/media';
+  type PodcastWithSources,
+} from '@repo/media/podcast';
+import { awaitSourcesReady } from '@repo/media/source';
 import { createMockPodcastRepo } from '@repo/media/test-utils';
 import {
   createTestPodcast,
@@ -14,21 +15,43 @@ import {
 import { Effect } from 'effect';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { JobId, JobStatus } from '@repo/db/schema';
-import type * as Media from '@repo/media';
-import type { PodcastWithSources } from '@repo/media';
+import type * as ActivityModule from '@repo/media/activity';
+import type * as PodcastModule from '@repo/media/podcast';
+import type * as SourceModule from '@repo/media/source';
 import type { GeneratePodcastPayload, Job } from '@repo/queue';
 import { createGeneratePodcastHandler } from '../handlers/handlers';
 
-vi.mock('@repo/media', async () => {
-  const actual = await vi.importActual<typeof Media>('@repo/media');
+vi.mock('@repo/media/activity', async () => {
+  const actual = await vi.importActual<typeof ActivityModule>(
+    '@repo/media/activity',
+  );
+
+  return {
+    ...actual,
+    syncEntityTitle: vi.fn(() => Effect.void),
+  };
+});
+
+vi.mock('@repo/media/podcast', async () => {
+  const actual = await vi.importActual<typeof PodcastModule>(
+    '@repo/media/podcast',
+  );
+
+  return {
+    ...actual,
+    generateAudio: vi.fn(),
+    generateCoverImage: vi.fn(() => Effect.void),
+    generateScript: vi.fn(),
+  };
+});
+
+vi.mock('@repo/media/source', async () => {
+  const actual =
+    await vi.importActual<typeof SourceModule>('@repo/media/source');
 
   return {
     ...actual,
     awaitSourcesReady: vi.fn(() => Effect.void),
-    generateAudio: vi.fn(),
-    generateCoverImage: vi.fn(() => Effect.void),
-    generateScript: vi.fn(),
-    syncEntityTitle: vi.fn(() => Effect.void),
   };
 });
 

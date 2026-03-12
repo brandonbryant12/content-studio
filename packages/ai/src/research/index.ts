@@ -10,4 +10,4 @@ export {
 export {
   GoogleDeepResearchLive,
   type GoogleDeepResearchConfig,
-} from './providers/google';
+} from '../providers/google/research';

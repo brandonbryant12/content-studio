@@ -1,3 +1,10 @@
+// Errors
+export {
+  VoiceoverNotFound,
+  VoiceoverError,
+  InvalidVoiceoverAudioGeneration,
+} from '../errors';
+
 // Voiceover module - Repositories
 export {
   VoiceoverRepo,

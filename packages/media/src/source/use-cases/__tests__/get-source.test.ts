@@ -7,7 +7,7 @@ import {
   resetAllFactories,
 } from '@repo/testing';
 import { Effect, Layer } from 'effect';
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
 import type { UnauthorizedError } from '@repo/db/errors';
 import { SourceNotFound } from '../../../errors';
 import { getSource } from '../get-source';
@@ -47,7 +47,7 @@ describe('getSource', () => {
       expect(result.createdBy).toBe(user.id);
     });
 
-    it('allows admin users to access a source they do not own', async () => {
+    it('fails with SourceNotFound when admin has no explicit target for another user source', async () => {
       const admin = createTestAdmin({ id: 'admin-1' });
       const source = createTestSource({
         title: 'Admin Visible Source',
@@ -57,16 +57,54 @@ describe('getSource', () => {
       const layers = Layer.mergeAll(
         MockDbLive,
         createMockSourceRepo({
-          findById: () => Effect.succeed(source),
+          findByIdForUser: (id, userId) =>
+            userId === admin.id
+              ? Effect.fail(new SourceNotFound({ id }))
+              : Effect.succeed(source),
         }),
       );
 
-      const result = await Effect.runPromise(
+      const result = await Effect.runPromiseExit(
         withTestUser(admin)(
           getSource({ id: source.id }).pipe(Effect.provide(layers)),
         ),
       );
 
+      expect(result._tag).toBe('Failure');
+      if (result._tag === 'Failure') {
+        const error = result.cause._tag === 'Fail' ? result.cause.error : null;
+        expect(error?._tag).toBe('SourceNotFound');
+      }
+    });
+
+    it('allows admin users to access another user source when userId is provided', async () => {
+      const admin = createTestAdmin({ id: 'admin-1' });
+      const source = createTestSource({
+        title: 'Admin Visible Source',
+        createdBy: 'member-1',
+      });
+
+      const findSpy = vi.fn();
+      const layers = Layer.mergeAll(
+        MockDbLive,
+        createMockSourceRepo({
+          findByIdForUser: (id, userId) =>
+            Effect.sync(() => {
+              findSpy(id, userId);
+              return source;
+            }),
+        }),
+      );
+
+      const result = await Effect.runPromise(
+        withTestUser(admin)(
+          getSource({ id: source.id, userId: source.createdBy }).pipe(
+            Effect.provide(layers),
+          ),
+        ),
+      );
+
+      expect(findSpy).toHaveBeenCalledWith(source.id, source.createdBy);
       expect(result.id).toBe(source.id);
       expect(result.createdBy).toBe(source.createdBy);
     });

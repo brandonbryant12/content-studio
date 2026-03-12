@@ -20,11 +20,11 @@ import {
   listStylePresets,
   createStylePreset,
   deleteStylePreset,
-} from '@repo/media';
+} from '@repo/media/infographic';
 import { Effect } from 'effect';
 import { bindEffectProtocol } from '../effect-handler';
 import { protectedProcedure } from '../orpc';
-import { tapLogActivity, tapSyncTitle } from './log-activity';
+import { tapLogActivity, tapSyncTitle } from './_shared/entity-activity';
 
 const infographicRouter = {
   list: protectedProcedure.infographics.list.handler(
@@ -45,7 +45,7 @@ const infographicRouter = {
   get: protectedProcedure.infographics.get.handler(
     async ({ context, input, errors }) =>
       bindEffectProtocol({ context, errors }).run(
-        getInfographic({ id: input.id }).pipe(
+        getInfographic({ id: input.id, userId: input.userId }).pipe(
           Effect.flatMap(serializeInfographicEffect),
         ),
         {
@@ -157,7 +157,10 @@ const infographicRouter = {
   listVersions: protectedProcedure.infographics.listVersions.handler(
     async ({ context, input, errors }) =>
       bindEffectProtocol({ context, errors }).run(
-        getInfographicVersions({ infographicId: input.id }).pipe(
+        getInfographicVersions({
+          infographicId: input.id,
+          userId: input.userId,
+        }).pipe(
           Effect.flatMap((result) =>
             serializeInfographicVersionsEffect([...result]),
           ),

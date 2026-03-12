@@ -21,7 +21,7 @@ import {
   VoiceoverRepoLive,
   startVoiceoverGeneration,
   generateVoiceoverAudio,
-} from '@repo/media';
+} from '@repo/media/voiceover';
 import { QueueLive } from '@repo/queue';
 import { createInMemoryStorage } from '@repo/storage/testing';
 import {

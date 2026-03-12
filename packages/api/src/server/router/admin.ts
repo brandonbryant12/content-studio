@@ -8,7 +8,11 @@ import {
   serializeUsersEffect,
   serializeVoiceoverListItemsEffect,
 } from '@repo/db/schema';
-import { getUserDetail, listUserEntities, searchUsers } from '@repo/media';
+import {
+  getUserDetail,
+  listUserEntities,
+  searchUsers,
+} from '@repo/media/admin';
 import { Effect } from 'effect';
 import { bindEffectProtocol } from '../effect-handler';
 import { protectedProcedure } from '../orpc';

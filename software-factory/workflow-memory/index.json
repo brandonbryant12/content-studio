@@ -1,5 +1,276 @@
 [
   {
+    "id": "2026-03-12-feature-delivery-admin-source-list-now-defaults-to-owned-scope",
+    "date": "2026-03-12",
+    "month": "2026-03",
+    "workflow": "Feature Delivery",
+    "title": "Admin source list now defaults to owned scope",
+    "severity": "medium",
+    "status": "completed",
+    "tags": [
+      "skill:debug-fix",
+      "skill:feature-delivery",
+      "sources",
+      "auth",
+      "ownership"
+    ],
+    "eventFile": "events/2026-03.jsonl"
+  },
+  {
+    "id": "2026-03-12-feature-delivery-align-infographic-prompts-to-nano-banana-blog-guidance",
+    "date": "2026-03-12",
+    "month": "2026-03",
+    "workflow": "Feature Delivery",
+    "title": "Align infographic prompts to Nano Banana blog guidance",
+    "severity": "medium",
+    "status": "closed",
+    "tags": [
+      "feature-delivery",
+      "infographics",
+      "prompts",
+      "nano-banana",
+      "image-generation",
+      "skill:feature-delivery",
+      "skill:codebase-nav",
+      "memory-form:external",
+      "memory-function:episodic",
+      "memory-dynamics:write"
+    ],
+    "importance": 0.82,
+    "confidence": 0.95,
+    "eventFile": "events/2026-03.jsonl"
+  },
+  {
+    "id": "2026-03-12-feature-delivery-aligned-media-and-ai-package-surfaces-with-actual-module-layout",
+    "date": "2026-03-12",
+    "month": "2026-03",
+    "workflow": "Feature Delivery",
+    "title": "Aligned media and ai package surfaces with actual module layout",
+    "severity": "medium",
+    "status": "closed",
+    "tags": [
+      "feature-delivery",
+      "skill:feature-delivery",
+      "skill:docs-knowledge-drift",
+      "media",
+      "ai",
+      "package-exports"
+    ],
+    "eventFile": "events/2026-03.jsonl"
+  },
+  {
+    "id": "2026-03-12-feature-delivery-aligned-persona-voice-selection-with-explicit-male-and-female-cu",
+    "date": "2026-03-12",
+    "month": "2026-03",
+    "workflow": "Feature Delivery",
+    "title": "Aligned persona voice selection with explicit male and female cues",
+    "severity": "medium",
+    "status": "closed",
+    "tags": [
+      "feature-delivery",
+      "personas",
+      "prompts",
+      "voices",
+      "podcasts",
+      "skill:feature-delivery",
+      "memory-form:external",
+      "memory-function:episodic",
+      "memory-dynamics:write"
+    ],
+    "importance": 0.81,
+    "confidence": 0.94,
+    "eventFile": "events/2026-03.jsonl"
+  },
+  {
+    "id": "2026-03-12-feature-delivery-consolidated-ai-provider-code-into-a-single-google-provider-tree",
+    "date": "2026-03-12",
+    "month": "2026-03",
+    "workflow": "Feature Delivery",
+    "title": "Consolidated ai provider code into a single google provider tree",
+    "severity": "medium",
+    "status": "closed",
+    "tags": [
+      "feature-delivery",
+      "skill:feature-delivery",
+      "ai",
+      "providers",
+      "code-organization"
+    ],
+    "eventFile": "events/2026-03.jsonl"
+  },
+  {
+    "id": "2026-03-12-feature-delivery-grouped-api-router-shared-helpers-and-aligned-media-testing-pack",
+    "date": "2026-03-12",
+    "month": "2026-03",
+    "workflow": "Feature Delivery",
+    "title": "Grouped API router shared helpers and aligned media/testing package surfaces",
+    "severity": "medium",
+    "status": "done",
+    "tags": [
+      "skill:feature-delivery",
+      "api",
+      "media",
+      "testing",
+      "package-structure"
+    ],
+    "eventFile": "events/2026-03.jsonl"
+  },
+  {
+    "id": "2026-03-12-feature-delivery-podcast-generation-now-auto-creates-a-plan-before-script-draftin",
+    "date": "2026-03-12",
+    "month": "2026-03",
+    "workflow": "Feature Delivery",
+    "title": "Podcast generation now auto-creates a plan before script drafting",
+    "severity": "medium",
+    "status": "applied",
+    "tags": [
+      "skill:feature-delivery",
+      "area:podcasts",
+      "area:setup-wizard",
+      "area:worker",
+      "ux:planner",
+      "ux:quick-start"
+    ],
+    "importance": 0.9,
+    "confidence": 0.97,
+    "eventFile": "events/2026-03.jsonl"
+  },
+  {
+    "id": "2026-03-12-feature-delivery-raised-persona-synthesis-temperature-to-reduce-generic-outputs",
+    "date": "2026-03-12",
+    "month": "2026-03",
+    "workflow": "Feature Delivery",
+    "title": "Raised persona synthesis temperature to reduce generic outputs",
+    "severity": "low",
+    "status": "closed",
+    "tags": [
+      "feature-delivery",
+      "personas",
+      "temperature",
+      "ai",
+      "skill:feature-delivery",
+      "memory-form:external",
+      "memory-function:episodic",
+      "memory-dynamics:write"
+    ],
+    "importance": 0.72,
+    "confidence": 0.96,
+    "eventFile": "events/2026-03.jsonl"
+  },
+  {
+    "id": "2026-03-12-feature-delivery-removed-infographic-quickstart-modal-and-sent-create-actions-str",
+    "date": "2026-03-12",
+    "month": "2026-03",
+    "workflow": "Feature Delivery",
+    "title": "Removed infographic quickstart modal and sent create actions straight to the workbench",
+    "severity": "low",
+    "status": "completed",
+    "tags": [
+      "skill:feature-delivery",
+      "skill:tanstack-vite",
+      "infographics",
+      "dashboard",
+      "workbench",
+      "frontend"
+    ],
+    "eventFile": "events/2026-03.jsonl"
+  },
+  {
+    "id": "2026-03-12-feature-delivery-removed-research-chat-effect-driven-auto-podcast-sync-to-satisfy",
+    "date": "2026-03-12",
+    "month": "2026-03",
+    "workflow": "Feature Delivery",
+    "title": "Removed research chat effect-driven auto-podcast sync to satisfy React hooks lint",
+    "severity": "low",
+    "status": "closed",
+    "tags": [
+      "feature-delivery",
+      "skill:debug-fix",
+      "skill:codebase-nav",
+      "web",
+      "sources",
+      "lint",
+      "react-hooks",
+      "memory-form:external",
+      "memory-function:episodic",
+      "memory-dynamics:write"
+    ],
+    "importance": 0.68,
+    "confidence": 0.98,
+    "eventFile": "events/2026-03.jsonl"
+  },
+  {
+    "id": "2026-03-12-feature-delivery-scoped-admin-main-app-reads-to-owned-content",
+    "date": "2026-03-12",
+    "month": "2026-03",
+    "workflow": "Feature Delivery",
+    "title": "Scoped admin main-app reads to owned content while preserving explicit Admin-tab navigation",
+    "severity": "high",
+    "status": "closed",
+    "tags": [
+      "feature-delivery",
+      "skill:feature-delivery",
+      "skill:debug-fix",
+      "admin",
+      "authorization",
+      "route-search",
+      "web",
+      "api",
+      "media",
+      "memory-form:external",
+      "memory-function:episodic",
+      "memory-dynamics:write"
+    ],
+    "importance": 0.92,
+    "confidence": 0.97,
+    "eventFile": "events/2026-03.jsonl"
+  },
+  {
+    "id": "2026-03-12-feature-delivery-tighten-infographic-prompts-for-gemini-image-generation",
+    "date": "2026-03-12",
+    "month": "2026-03",
+    "workflow": "Feature Delivery",
+    "title": "Tighten infographic prompts for Gemini image generation",
+    "severity": "medium",
+    "status": "closed",
+    "tags": [
+      "feature-delivery",
+      "infographics",
+      "prompts",
+      "image-generation",
+      "skill:feature-delivery",
+      "skill:codebase-nav",
+      "memory-form:external",
+      "memory-function:episodic",
+      "memory-dynamics:write"
+    ],
+    "importance": 0.79,
+    "confidence": 0.92,
+    "eventFile": "events/2026-03.jsonl"
+  },
+  {
+    "id": "2026-03-12-feature-delivery-tightened-podcast-persona-synthesis-for-clean-names-and-stronger",
+    "date": "2026-03-12",
+    "month": "2026-03",
+    "workflow": "Feature Delivery",
+    "title": "Tightened podcast persona synthesis for clean names and stronger host and co-host roles",
+    "severity": "medium",
+    "status": "closed",
+    "tags": [
+      "feature-delivery",
+      "personas",
+      "prompts",
+      "podcasts",
+      "skill:feature-delivery",
+      "memory-form:external",
+      "memory-function:episodic",
+      "memory-dynamics:write"
+    ],
+    "importance": 0.83,
+    "confidence": 0.95,
+    "eventFile": "events/2026-03.jsonl"
+  },
+  {
     "id": "2026-03-12-periodic-scans-best-practice-researcher-docs-and-guardrail-drift-narrowed-sourc",
     "date": "2026-03-12",
     "month": "2026-03",

@@ -1,7 +1,7 @@
 import { withCurrentUser, type User } from '@repo/auth/policy';
-import { logEntityActivity, syncEntityTitle } from '@repo/media';
+import { logEntityActivity, syncEntityTitle } from '@repo/media/activity';
 import { Effect } from 'effect';
-import type { ServerRuntime } from '../runtime';
+import type { ServerRuntime } from '../../runtime';
 
 /**
  * Fire-and-forget activity logging helper for router handlers.

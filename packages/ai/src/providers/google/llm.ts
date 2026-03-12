@@ -8,13 +8,15 @@ import {
   type ToolSet,
 } from 'ai';
 import { Effect, Layer, JSONSchema, Schedule } from 'effect';
-import { estimateTokenPricedModelCostUsdMicros } from '../../pricing/model-catalog';
-import { PROVIDER_TIMEOUTS_MS } from '../../provider-timeouts';
+import { mapError, shouldRetryLLMError } from '../../llm/map-error';
 import {
-  getGoogleLLMModel,
-  type GoogleLLMModelId,
-  LLM_MODEL,
-} from '../../providers/google/models';
+  LLM,
+  type LLMService,
+  type GenerateOptions,
+  type GenerateResult,
+  type StreamTextOptions,
+} from '../../llm/service';
+import { estimateTokenPricedModelCostUsdMicros } from '../../pricing/model-catalog';
 import {
   AIUsageRecorder,
   createAsyncAIUsageRecorder,
@@ -22,14 +24,8 @@ import {
   getAIUsageScope,
   recordAIUsageIfConfigured,
 } from '../../usage';
-import { mapError, shouldRetryLLMError } from '../map-error';
-import {
-  LLM,
-  type LLMService,
-  type GenerateOptions,
-  type GenerateResult,
-  type StreamTextOptions,
-} from '../service';
+import { PROVIDER_TIMEOUTS_MS } from '../timeouts';
+import { getGoogleLLMModel, type GoogleLLMModelId, LLM_MODEL } from './models';
 
 /**
  * Configuration for Google AI provider via AI SDK.

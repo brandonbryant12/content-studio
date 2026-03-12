@@ -1,3 +1,4 @@
+import { Role } from '@repo/auth/policy';
 import { Effect } from 'effect';
 import { defineAuthedUseCase } from '../../shared';
 import { InfographicRepo } from '../repos';
@@ -8,6 +9,7 @@ import { InfographicRepo } from '../repos';
 
 export interface GetInfographicVersionsInput {
   infographicId: string;
+  userId?: string;
 }
 
 // =============================================================================
@@ -24,8 +26,11 @@ export const getInfographicVersions =
     run: ({ input, user }) =>
       Effect.gen(function* () {
         const repo = yield* InfographicRepo;
-        // Verify infographic exists and user owns it
-        yield* repo.findByIdForUser(input.infographicId, user.id);
+        const ownerId =
+          user.role === Role.ADMIN ? (input.userId ?? user.id) : user.id;
+
+        // Verify infographic exists and the scoped user owns it.
+        yield* repo.findByIdForUser(input.infographicId, ownerId);
 
         return yield* repo.listVersions(input.infographicId);
       }),

@@ -50,13 +50,21 @@ const MockDbLive: Layer.Layer<Db> = Layer.succeed(Db, {
 /**
  * Create a mock VoiceoverRepo layer.
  */
-const createMockVoiceoverRepo = (
-  findByIdFn: VoiceoverRepoService['findById'],
-): Layer.Layer<VoiceoverRepo> =>
+const createMockVoiceoverRepo = ({
+  findById,
+  findByIdForUser,
+}: {
+  findById?: VoiceoverRepoService['findById'];
+  findByIdForUser?: VoiceoverRepoService['findByIdForUser'];
+}): Layer.Layer<VoiceoverRepo> =>
   Layer.succeed(VoiceoverRepo, {
     insert: () => Effect.die('Not implemented'),
-    findByIdForUser: (id) => findByIdFn(id),
-    findById: findByIdFn,
+    findByIdForUser:
+      findByIdForUser ??
+      ((id) => findById?.(id) ?? Effect.die('Not implemented')),
+    findById:
+      findById ??
+      ((id) => findByIdForUser?.(id, '') ?? Effect.die('Not implemented')),
     list: () => Effect.die('Not implemented'),
     update: () => Effect.die('Not implemented'),
     delete: () => Effect.die('Not implemented'),
@@ -87,7 +95,9 @@ describe('getVoiceover', () => {
         createdBy: user.id,
       });
 
-      const mockRepo = createMockVoiceoverRepo(() => Effect.succeed(voiceover));
+      const mockRepo = createMockVoiceoverRepo({
+        findByIdForUser: () => Effect.succeed(voiceover),
+      });
       const layers = Layer.mergeAll(mockRepo, MockDbLive);
 
       const result = await Effect.runPromise(
@@ -120,7 +130,9 @@ describe('getVoiceover', () => {
         createdBy: user.id,
       });
 
-      const mockRepo = createMockVoiceoverRepo(() => Effect.succeed(voiceover));
+      const mockRepo = createMockVoiceoverRepo({
+        findByIdForUser: () => Effect.succeed(voiceover),
+      });
       const layers = Layer.mergeAll(mockRepo, MockDbLive);
 
       const result = await Effect.runPromise(
@@ -157,9 +169,9 @@ describe('getVoiceover', () => {
           createdBy: user.id,
         });
 
-        const mockRepo = createMockVoiceoverRepo(() =>
-          Effect.succeed(voiceover),
-        );
+        const mockRepo = createMockVoiceoverRepo({
+          findByIdForUser: () => Effect.succeed(voiceover),
+        });
         const layers = Layer.mergeAll(mockRepo, MockDbLive);
 
         const result = await Effect.runPromise(
@@ -174,7 +186,7 @@ describe('getVoiceover', () => {
       }
     });
 
-    it('allows admins to access a voiceover they do not own', async () => {
+    it('fails when admin has no explicit target for another user voiceover', async () => {
       const admin = createTestAdmin({ id: 'admin-123' });
       const voiceover = createMockVoiceover({
         id: 'voc_adminvisible123' as VoiceoverId,
@@ -182,14 +194,51 @@ describe('getVoiceover', () => {
         createdBy: 'member-123',
       });
 
-      const mockRepo = createMockVoiceoverRepo(() => Effect.succeed(voiceover));
+      const mockRepo = createMockVoiceoverRepo({
+        findByIdForUser: (id, userId) =>
+          userId === admin.id
+            ? Effect.fail(new VoiceoverNotFound({ id }))
+            : Effect.succeed(voiceover),
+      });
       const layers = Layer.mergeAll(mockRepo, MockDbLive);
 
-      const result = await Effect.runPromise(
+      const result = await Effect.runPromiseExit(
         withTestUser(admin)(
           getVoiceover({ voiceoverId: voiceover.id }).pipe(
             Effect.provide(layers),
           ),
+        ),
+      );
+
+      expect(result._tag).toBe('Failure');
+      if (result._tag === 'Failure') {
+        const error = result.cause._tag === 'Fail' ? result.cause.error : null;
+        expect(error?._tag).toBe('VoiceoverNotFound');
+      }
+    });
+
+    it('allows admins to access another user voiceover when userId is provided', async () => {
+      const admin = createTestAdmin({ id: 'admin-123' });
+      const voiceover = createMockVoiceover({
+        id: 'voc_adminvisible123' as VoiceoverId,
+        title: 'Admin Visible Voiceover',
+        createdBy: 'member-123',
+      });
+
+      const mockRepo = createMockVoiceoverRepo({
+        findByIdForUser: (_id, userId) =>
+          userId === voiceover.createdBy
+            ? Effect.succeed(voiceover)
+            : Effect.fail(new VoiceoverNotFound({ id: voiceover.id })),
+      });
+      const layers = Layer.mergeAll(mockRepo, MockDbLive);
+
+      const result = await Effect.runPromise(
+        withTestUser(admin)(
+          getVoiceover({
+            voiceoverId: voiceover.id,
+            userId: voiceover.createdBy,
+          }).pipe(Effect.provide(layers)),
         ),
       );
 
@@ -203,9 +252,9 @@ describe('getVoiceover', () => {
       const user = createTestUser({ id: 'user_123' });
       const nonExistentId = 'voc_nonexistent1234' as VoiceoverId;
 
-      const mockRepo = createMockVoiceoverRepo((id) =>
-        Effect.fail(new VoiceoverNotFound({ id })),
-      );
+      const mockRepo = createMockVoiceoverRepo({
+        findByIdForUser: (id) => Effect.fail(new VoiceoverNotFound({ id })),
+      });
       const layers = Layer.mergeAll(mockRepo, MockDbLive);
 
       const result = await Effect.runPromiseExit(
@@ -231,14 +280,16 @@ describe('getVoiceover', () => {
       const voiceoverId = 'voc_specific123456' as VoiceoverId;
       let capturedId: string | null = null;
 
-      const mockRepo = createMockVoiceoverRepo((id) => {
-        capturedId = id;
-        return Effect.succeed(
-          createMockVoiceover({
-            id: voiceoverId,
-            createdBy: user.id,
-          }),
-        );
+      const mockRepo = createMockVoiceoverRepo({
+        findByIdForUser: (id) => {
+          capturedId = id;
+          return Effect.succeed(
+            createMockVoiceover({
+              id: voiceoverId,
+              createdBy: user.id,
+            }),
+          );
+        },
       });
       const layers = Layer.mergeAll(mockRepo, MockDbLive);
 
@@ -255,9 +306,9 @@ describe('getVoiceover', () => {
       const requestingUser = createTestUser({ id: 'requesting-user-123' });
       const voiceoverId = 'voc_otheruser12345' as VoiceoverId;
 
-      const mockRepo = createMockVoiceoverRepo((id) =>
-        Effect.fail(new VoiceoverNotFound({ id })),
-      );
+      const mockRepo = createMockVoiceoverRepo({
+        findByIdForUser: (id) => Effect.fail(new VoiceoverNotFound({ id })),
+      });
       const layers = Layer.mergeAll(mockRepo, MockDbLive);
 
       const result = await Effect.runPromiseExit(

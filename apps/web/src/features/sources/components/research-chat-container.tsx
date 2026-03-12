@@ -8,29 +8,39 @@ import { isDeepResearchEnabled } from '@/env';
 interface ResearchChatContainerProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  defaultAutoGeneratePodcast?: boolean;
 }
 
 export function ResearchChatContainer({
   open,
   onOpenChange,
+  defaultAutoGeneratePodcast,
 }: ResearchChatContainerProps) {
   if (!isDeepResearchEnabled) {
     return null;
   }
 
   return (
-    <EnabledResearchChatContainer open={open} onOpenChange={onOpenChange} />
+    <EnabledResearchChatContainer
+      open={open}
+      onOpenChange={onOpenChange}
+      defaultAutoGeneratePodcast={defaultAutoGeneratePodcast}
+    />
   );
 }
 
 function EnabledResearchChatContainer({
   open,
   onOpenChange,
+  defaultAutoGeneratePodcast = false,
 }: ResearchChatContainerProps) {
   const chat = useResearchChat();
   const synthesizeMutation = useSynthesizeResearch();
   const startResearchMutation = useStartResearch();
-  const [autoGeneratePodcast, setAutoGeneratePodcast] = useState(false);
+  const [autoGeneratePodcastOverride, setAutoGeneratePodcastOverride] =
+    useState<boolean | undefined>(undefined);
+  const autoGeneratePodcast =
+    autoGeneratePodcastOverride ?? defaultAutoGeneratePodcast;
 
   const isStartingResearch =
     synthesizeMutation.isPending || startResearchMutation.isPending;
@@ -40,7 +50,7 @@ function EnabledResearchChatContainer({
   const handleOpenChange = useCallback(
     (isOpen: boolean) => {
       if (!isOpen) {
-        setAutoGeneratePodcast(false);
+        setAutoGeneratePodcastOverride(undefined);
         chat.reset();
       }
       onOpenChange(isOpen);
@@ -84,7 +94,9 @@ function EnabledResearchChatContainer({
       onStartResearch={handleStartResearch}
       isStartingResearch={isStartingResearch}
       autoGeneratePodcast={autoGeneratePodcast}
-      onAutoGeneratePodcastChange={setAutoGeneratePodcast}
+      onAutoGeneratePodcastChange={(value) =>
+        setAutoGeneratePodcastOverride(value)
+      }
       followUpCount={chat.followUpCount}
       followUpLimit={chat.followUpLimit}
       onKeepRefining={chat.extendFollowUps}

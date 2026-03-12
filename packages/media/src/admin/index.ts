@@ -1,3 +1,5 @@
+export { AdminUserNotFound } from '../errors';
+
 export {
   AdminRepo,
   AdminRepoLive,

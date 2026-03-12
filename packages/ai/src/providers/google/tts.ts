@@ -1,21 +1,9 @@
 import { Effect, Layer } from 'effect';
 import type { JsonValue } from '@repo/db/schema';
 import { VoiceNotFoundError } from '../../errors';
-import {
-  GoogleApiError,
-  parseGoogleApiErrorBody,
-} from '../../google/error-parser';
 import { estimateTokenPricedModelCostUsdMicros } from '../../pricing/model-catalog';
-import { retryTransientProvider } from '../../provider-retry';
-import { PROVIDER_TIMEOUTS_MS } from '../../provider-timeouts';
-import {
-  getGoogleTTSModel,
-  type GoogleTTSModelId,
-  TTS_MODEL,
-} from '../../providers/google/models';
-import { recordAIUsageIfConfigured } from '../../usage';
-import { wrapPcmAsWav } from '../audio-utils';
-import { mapError } from '../map-error';
+import { wrapPcmAsWav } from '../../tts/audio-utils';
+import { mapError } from '../../tts/map-error';
 import {
   TTS,
   type TTSService,
@@ -24,13 +12,18 @@ import {
   type ListVoicesOptions,
   type PreviewVoiceOptions,
   type PreviewVoiceResult,
-} from '../service';
+} from '../../tts/service';
 import {
   DEFAULT_PREVIEW_TEXT,
   getVoiceById,
   getVoicesByGender,
   VOICES,
-} from '../voices';
+} from '../../tts/voices';
+import { recordAIUsageIfConfigured } from '../../usage';
+import { retryTransientProvider } from '../retry';
+import { PROVIDER_TIMEOUTS_MS } from '../timeouts';
+import { GoogleApiError, parseGoogleApiErrorBody } from './error-parser';
+import { getGoogleTTSModel, type GoogleTTSModelId, TTS_MODEL } from './models';
 
 /**
  * Configuration for Google Gemini TTS provider.

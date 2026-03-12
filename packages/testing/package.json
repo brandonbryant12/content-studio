@@ -14,6 +14,10 @@
     "./setup": {
       "types": "./dist/src/setup/index.d.ts",
       "default": "./src/setup/index.ts"
+    },
+    "./testcontainers": {
+      "types": "./dist/src/testcontainers/index.d.ts",
+      "default": "./src/testcontainers/index.ts"
     }
   },
   "scripts": {

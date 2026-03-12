@@ -19,6 +19,7 @@ export function DashboardContainer() {
   const [uploadOpen, setUploadOpen] = useState(false);
   const [urlDialogOpen, setUrlDialogOpen] = useState(false);
   const [researchDialogOpen, setResearchDialogOpen] = useState(false);
+  const [researchAutoGenPodcast, setResearchAutoGenPodcast] = useState(false);
 
   const {
     data: documents = [],
@@ -126,7 +127,7 @@ export function DashboardContainer() {
         onCreateVoiceover: () =>
           createVoiceover.mutate({ title: 'Untitled Voiceover' }),
         isVoiceoverPending: createVoiceover.isPending,
-        onCreateInfographic: (payload) => createInfographic.mutate(payload),
+        onCreateInfographic: () => createInfographic.mutate(),
         isInfographicPending: createInfographic.isPending,
       }}
       documentDialogs={{
@@ -135,7 +136,15 @@ export function DashboardContainer() {
         urlDialogOpen,
         onUrlDialogOpenChange: setUrlDialogOpen,
         researchDialogOpen,
-        onResearchDialogOpenChange: setResearchDialogOpen,
+        onResearchDialogOpenChange: (open: boolean) => {
+          if (!open) setResearchAutoGenPodcast(false);
+          setResearchDialogOpen(open);
+        },
+        researchAutoGenPodcast,
+        onOpenResearchWithPodcast: () => {
+          setResearchAutoGenPodcast(true);
+          setResearchDialogOpen(true);
+        },
         onCreateFromUrl: handleCreateFromUrl,
         isCreateFromUrlPending: createFromUrlMutation.isPending,
       }}

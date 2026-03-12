@@ -30,7 +30,7 @@ export {
 } from './voices';
 
 // Google provider (Gemini API)
-export { GoogleTTSLive, type GoogleTTSConfig } from './providers/google';
+export { GoogleTTSLive, type GoogleTTSConfig } from '../providers/google/tts';
 
 // Use Cases - Error types are inferred by Effect
 export {

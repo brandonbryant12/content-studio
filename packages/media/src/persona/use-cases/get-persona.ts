@@ -5,6 +5,7 @@ import { PersonaRepo } from '../repos';
 
 export interface GetPersonaInput {
   personaId: string;
+  userId?: string;
 }
 
 export const getPersona = defineAuthedUseCase<GetPersonaInput>()({
@@ -16,8 +17,9 @@ export const getPersona = defineAuthedUseCase<GetPersonaInput>()({
   run: ({ input, user }) =>
     Effect.gen(function* () {
       const personaRepo = yield* PersonaRepo;
-      return yield* user.role === Role.ADMIN
-        ? personaRepo.findById(input.personaId)
-        : personaRepo.findByIdForUser(input.personaId, user.id);
+      const ownerId =
+        user.role === Role.ADMIN ? (input.userId ?? user.id) : user.id;
+
+      return yield* personaRepo.findByIdForUser(input.personaId, ownerId);
     }),
 });

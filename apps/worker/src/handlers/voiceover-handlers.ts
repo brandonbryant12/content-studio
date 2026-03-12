@@ -1,4 +1,5 @@
-import { generateVoiceoverAudio, syncEntityTitle } from '@repo/media';
+import { syncEntityTitle } from '@repo/media/activity';
+import { generateVoiceoverAudio } from '@repo/media/voiceover';
 import { Effect } from 'effect';
 import type {
   GenerateVoiceoverPayload,

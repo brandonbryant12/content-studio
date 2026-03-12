@@ -36,7 +36,7 @@ function ControlledStepPlan() {
 }
 
 describe('StepPlan', () => {
-  it('shows the optional planning choice when no plan exists', () => {
+  it('explains that generate will auto-plan in the background when no plan exists', () => {
     render(
       <StepPlan
         plan={null}
@@ -51,7 +51,7 @@ describe('StepPlan', () => {
 
     expect(screen.getByText('Plan your episode')).toBeInTheDocument();
     expect(
-      screen.getByText(/selected source is still processing/i),
+      screen.getByText(/we will build the episode plan in the background/i),
     ).toBeInTheDocument();
   });
 

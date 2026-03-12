@@ -30,14 +30,16 @@ import {
 
 interface PodcastDetailContainerProps {
   podcastId: string;
+  userId?: string;
 }
 
 export function PodcastDetailContainer({
   podcastId,
+  userId,
 }: PodcastDetailContainerProps) {
   const { user } = useSessionGuard();
 
-  const { data: podcast } = usePodcast(podcastId);
+  const { data: podcast } = usePodcast(podcastId, { userId });
 
   const initialSegments = useMemo(
     () => [...(podcast.segments ?? [])],
@@ -187,6 +189,7 @@ export function PodcastDetailContainer({
     <>
       <PodcastDetail
         podcast={podcast}
+        userId={userId}
         scriptEditor={scriptEditor}
         settings={settings}
         sourceSelection={sourceSelection}

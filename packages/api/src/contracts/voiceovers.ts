@@ -10,7 +10,13 @@ import {
   JobIdSchema,
 } from '@repo/db/schema';
 import { Schema } from 'effect';
-import { std, PaginationFields, authErrors, jobErrors } from './shared';
+import {
+  std,
+  PaginationFields,
+  authErrors,
+  jobErrors,
+  OptionalUserScopeFields,
+} from './shared';
 
 const voiceoverErrors = {
   VOICEOVER_NOT_FOUND: {
@@ -55,7 +61,14 @@ const voiceoverContract = oc
         description: 'Retrieve a voiceover by ID',
       })
       .errors(voiceoverErrors)
-      .input(std(Schema.Struct({ id: VoiceoverIdSchema })))
+      .input(
+        std(
+          Schema.Struct({
+            id: VoiceoverIdSchema,
+            ...OptionalUserScopeFields,
+          }),
+        ),
+      )
       .output(std(VoiceoverOutputSchema)),
 
     // Create a new voiceover

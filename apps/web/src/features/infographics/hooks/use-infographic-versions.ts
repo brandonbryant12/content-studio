@@ -10,15 +10,20 @@ type InfographicVersionList = RouterOutput['infographics']['listVersions'];
 
 export type InfographicVersion = InfographicVersionList[number];
 
+interface InfographicVersionAccessOptions {
+  userId?: string;
+}
+
 /**
  * Fetch versions for an infographic.
  */
 export function useInfographicVersions(
   infographicId: string,
+  options: InfographicVersionAccessOptions = {},
 ): UseQueryResult<InfographicVersionList, Error> {
   return useQuery(
     apiClient.infographics.listVersions.queryOptions({
-      input: { id: infographicId },
+      input: { id: infographicId, userId: options.userId },
     }),
   );
 }
@@ -28,8 +33,9 @@ export function useInfographicVersions(
  */
 export function getInfographicVersionsQueryKey(
   infographicId: string,
+  options: InfographicVersionAccessOptions = {},
 ): QueryKey {
   return apiClient.infographics.listVersions.queryOptions({
-    input: { id: infographicId },
+    input: { id: infographicId, userId: options.userId },
   }).queryKey;
 }

@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { InfographicList } from '../components/infographic-list';
-import { fireEvent, render, screen, userEvent } from '@/test-utils';
+import { fireEvent, render, screen } from '@/test-utils';
 
 vi.mock('../components/infographic-item', () => ({
   InfographicItem: () => <div data-testid="infographic-item" />,
@@ -34,12 +34,12 @@ const createDefaultProps = () => ({
   onBulkDelete: vi.fn(),
 });
 
-describe('InfographicList quick start', () => {
+describe('InfographicList', () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });
 
-  it('creates a draft from quick-start dialog without prompt', () => {
+  it('creates a draft immediately from the primary action', () => {
     const onCreate = vi.fn();
     render(<InfographicList {...createDefaultProps()} onCreate={onCreate} />);
 
@@ -54,47 +54,20 @@ describe('InfographicList quick start', () => {
       name: /create infographic/i,
     });
     fireEvent.click(createButtons[createButtons.length - 1]!);
-    expect(
-      screen.getByText(/Create a draft if you want to set things up first/i),
-    ).toBeInTheDocument();
-    fireEvent.click(screen.getByRole('button', { name: /create draft/i }));
 
-    expect(onCreate).toHaveBeenCalledWith({
-      title: 'Untitled Infographic',
-      format: 'portrait',
-      prompt: undefined,
-      autoGenerate: false,
-    });
+    expect(onCreate).toHaveBeenCalledTimes(1);
+    expect(onCreate).toHaveBeenCalledWith();
   });
 
-  it('supports create and generate when prompt is provided', async () => {
-    const user = userEvent.setup();
+  it('uses the empty-state action to go straight to the workbench flow', () => {
     const onCreate = vi.fn();
     render(<InfographicList {...createDefaultProps()} onCreate={onCreate} />);
 
-    const createButtons = screen.getAllByRole('button', {
+    const createButton = screen.getAllByRole('button', {
       name: /create infographic/i,
-    });
-    fireEvent.click(createButtons[createButtons.length - 1]!);
+    })[0]!;
+    fireEvent.click(createButton);
 
-    const createAndGenerateButton = screen.getByRole('button', {
-      name: /create & generate/i,
-    });
-    expect(createAndGenerateButton).toBeDisabled();
-
-    await user.type(
-      screen.getByLabelText(/prompt/i),
-      'Launch campaign summary infographic',
-    );
-
-    expect(createAndGenerateButton).not.toBeDisabled();
-    fireEvent.click(createAndGenerateButton);
-
-    expect(onCreate).toHaveBeenCalledWith({
-      title: 'Untitled Infographic',
-      format: 'portrait',
-      prompt: 'Launch campaign summary infographic',
-      autoGenerate: true,
-    });
+    expect(onCreate).toHaveBeenCalledTimes(1);
   });
 });

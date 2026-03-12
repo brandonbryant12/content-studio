@@ -3,7 +3,7 @@ import { LLMError, LLMRateLimitError } from '../errors';
 import {
   getGoogleApiErrorDetails,
   isGoogleRateLimit,
-} from '../google/error-parser';
+} from '../providers/google/error-parser';
 
 const RETRYABLE_STATUS_CODES = new Set([
   408, 409, 425, 429, 500, 502, 503, 504,

@@ -40,17 +40,9 @@ export function InfographicListContainer() {
     entityName: 'infographic',
   });
 
-  const handleCreate = useCallback(
-    (input: {
-      title: string;
-      format: 'portrait' | 'square' | 'landscape' | 'og_card';
-      prompt?: string;
-      autoGenerate?: boolean;
-    }) => {
-      createMutation.mutate(input);
-    },
-    [createMutation],
-  );
+  const handleCreate = useCallback(() => {
+    createMutation.mutate();
+  }, [createMutation]);
 
   const handleDeleteConfirm = useCallback(() => {
     if (!pendingDeleteId) return;

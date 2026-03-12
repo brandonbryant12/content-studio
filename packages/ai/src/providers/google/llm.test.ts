@@ -1,13 +1,13 @@
 import { NoObjectGeneratedError } from 'ai';
 import { Effect, Layer, Schema } from 'effect';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { LLM } from '../../llm/service';
 import {
   AIUsageRecorder,
   type PersistAIUsageInput,
   withAIUsageScope,
 } from '../../usage';
-import { LLM } from '../service';
-import { GoogleLive } from './google';
+import { GoogleLive } from './llm';
 
 const mockGenerateObject = vi.hoisted(() => vi.fn());
 const mockGoogleModel = vi.hoisted(() =>

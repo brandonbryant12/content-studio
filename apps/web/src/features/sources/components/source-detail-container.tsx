@@ -25,18 +25,22 @@ import { downloadTextFile, toFileSlug } from '@/shared/lib/file-download';
 
 interface SourceDetailContainerProps {
   sourceId: string;
+  userId?: string;
 }
 
 export function SourceDetailContainer({
   sourceId,
+  userId,
 }: SourceDetailContainerProps) {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const { data: source } = useSource(sourceId);
+  const { data: source } = useSource(sourceId, { userId });
 
   // Only fetch content when source is ready (hook always called, `enabled` controls fetching)
   const isReady = source.status === SourceStatus.READY;
-  const { data: contentData } = useSourceContentOptional(sourceId, isReady);
+  const { data: contentData } = useSourceContentOptional(sourceId, isReady, {
+    userId,
+  });
   const sourceContent = contentData?.content ?? null;
   const sourceContentText = sourceContent ?? '';
 

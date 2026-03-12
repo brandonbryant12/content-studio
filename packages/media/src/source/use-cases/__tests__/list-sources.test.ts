@@ -215,7 +215,7 @@ describe('listSources', () => {
   });
 
   describe('admin user', () => {
-    it('admin can list all sources when no userId specified', async () => {
+    it('admin only sees their own sources when no userId is specified', async () => {
       const admin = createTestAdmin();
       const user1 = createTestUser();
       const user2 = createTestUser();
@@ -233,9 +233,9 @@ describe('listSources', () => {
 
       const result = await Effect.runPromise(withTestUser(admin)(effect));
 
-      // Admin sees all sources
-      expect(result.sources).toHaveLength(3);
-      expect(result.total).toBe(3);
+      expect(result.sources).toHaveLength(1);
+      expect(result.sources[0]!.id).toBe(adminDoc.id);
+      expect(result.total).toBe(1);
     });
 
     it('admin can filter by specific userId', async () => {

@@ -2,7 +2,7 @@
 import {
   getTestConnectionString,
   stopPostgresContainer,
-} from './testcontainers/postgres';
+} from '../testcontainers/postgres';
 
 export default async function setup() {
   if (process.env.TEST_POSTGRES_URL) {

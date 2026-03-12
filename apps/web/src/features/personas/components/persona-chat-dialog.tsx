@@ -109,8 +109,8 @@ export function PersonaChatDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-2xl p-0 flex flex-col h-[70vh] max-h-[700px]">
-        <DialogHeader className="px-6 pt-6 pb-2">
+      <DialogContent className="sm:max-w-3xl p-0 flex flex-col h-[90vh] max-h-[1000px]">
+        <DialogHeader className="px-6 pt-6 pb-4">
           <DialogTitle className="flex items-center gap-2">
             <PersonIcon className="w-5 h-5" />
             {title}
@@ -128,17 +128,19 @@ export function PersonaChatDialog({
           messages={messages}
           isStreaming={isStreaming}
           error={error}
-          className="flex-1 overflow-y-auto px-6 space-y-3 min-h-0"
+          className="flex-1 overflow-y-auto px-6 py-4 space-y-4 min-h-0"
           emptyState={
-            <div className="flex flex-col items-center justify-center h-full text-center gap-4">
-              <p className="text-sm text-muted-foreground">{promptIntro}</p>
-              <div className="flex flex-wrap gap-2 justify-center">
+            <div className="flex flex-col items-center justify-center h-full text-center gap-5">
+              <p className="text-sm text-muted-foreground max-w-md">
+                {promptIntro}
+              </p>
+              <div className="flex flex-wrap gap-2.5 justify-center max-w-lg">
                 {suggestions.map((prompt) => (
                   <button
                     key={prompt}
                     type="button"
                     onClick={() => handleExampleClick(prompt)}
-                    className="px-3 py-1.5 text-xs rounded-full border border-border hover:bg-muted transition-colors text-muted-foreground hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                    className="px-3.5 py-2 text-sm rounded-full border border-border hover:bg-muted transition-colors text-muted-foreground hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                   >
                     {prompt}
                   </button>

@@ -11,13 +11,22 @@ import { apiClient } from '@/clients/apiClient';
 type Source = RouterOutput['sources']['get'];
 type SourceContent = RouterOutput['sources']['getContent'];
 
+interface SourceAccessOptions {
+  userId?: string;
+}
+
 /**
  * Fetch a single source by ID with Suspense.
  * Use this when the source is required to render.
  */
-export function useSource(id: string): UseSuspenseQueryResult<Source, Error> {
+export function useSource(
+  id: string,
+  options: SourceAccessOptions = {},
+): UseSuspenseQueryResult<Source, Error> {
   return useSuspenseQuery(
-    apiClient.sources.get.queryOptions({ input: { id } }),
+    apiClient.sources.get.queryOptions({
+      input: { id, userId: options.userId },
+    }),
   );
 }
 
@@ -25,9 +34,13 @@ export function useSource(id: string): UseSuspenseQueryResult<Source, Error> {
  * Get the query key for a source.
  * Useful for cache operations.
  */
-export function getSourceQueryKey(sourceId: string): QueryKey {
-  return apiClient.sources.get.queryOptions({ input: { id: sourceId } })
-    .queryKey;
+export function getSourceQueryKey(
+  sourceId: string,
+  options: SourceAccessOptions = {},
+): QueryKey {
+  return apiClient.sources.get.queryOptions({
+    input: { id: sourceId, userId: options.userId },
+  }).queryKey;
 }
 
 /**
@@ -37,9 +50,12 @@ export function getSourceQueryKey(sourceId: string): QueryKey {
 export function useSourceContentOptional(
   id: string,
   enabled: boolean,
+  options: SourceAccessOptions = {},
 ): UseQueryResult<SourceContent, Error> {
   return useQuery({
-    ...apiClient.sources.getContent.queryOptions({ input: { id } }),
+    ...apiClient.sources.getContent.queryOptions({
+      input: { id, userId: options.userId },
+    }),
     enabled,
   });
 }

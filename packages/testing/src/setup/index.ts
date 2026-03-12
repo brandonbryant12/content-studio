@@ -7,3 +7,4 @@ export {
 } from './database';
 
 export { withTestUser, toUser } from './layers';
+export { default as vitestGlobalSetup } from './vitest-global-setup';

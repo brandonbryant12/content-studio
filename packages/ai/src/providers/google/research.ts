@@ -3,19 +3,19 @@ import { Effect, Layer, Schedule } from 'effect';
 import type { JsonValue } from '@repo/db/schema';
 import { ResearchError } from '../../errors';
 import {
-  GoogleApiError,
-  getGoogleApiErrorDetails,
-  isGoogleRateLimit,
-} from '../../google/error-parser';
-import { PROVIDER_TIMEOUTS_MS } from '../../provider-timeouts';
-import { DEEP_RESEARCH_MODEL } from '../../providers/google/models';
-import { recordAIUsageIfConfigured } from '../../usage';
-import {
   DeepResearch,
   type DeepResearchService,
   type ResearchResult,
   type ResearchSource,
-} from '../service';
+} from '../../research/service';
+import { recordAIUsageIfConfigured } from '../../usage';
+import { PROVIDER_TIMEOUTS_MS } from '../timeouts';
+import {
+  GoogleApiError,
+  getGoogleApiErrorDetails,
+  isGoogleRateLimit,
+} from './error-parser';
+import { DEEP_RESEARCH_MODEL } from './models';
 
 /**
  * Configuration for Google Deep Research provider.
@@ -127,8 +127,7 @@ function extractInteractionDiagnostics(interaction: unknown): {
 
   return {
     interactionId:
-      getStringField(interaction, 'id') ??
-      getStringField(interaction, 'name'),
+      getStringField(interaction, 'id') ?? getStringField(interaction, 'name'),
     status: getStringField(interaction, 'status'),
     done: getBooleanField(interaction, 'done'),
     createdAt:
@@ -295,7 +294,9 @@ const makeGoogleDeepResearchService = (
               // Per-attempt timeout budget: Effect retry starts a fresh request.
               timeout: PROVIDER_TIMEOUTS_MS.deepResearchStart,
               maxRetries: 0,
-              signal: AbortSignal.timeout(PROVIDER_TIMEOUTS_MS.deepResearchStart),
+              signal: AbortSignal.timeout(
+                PROVIDER_TIMEOUTS_MS.deepResearchStart,
+              ),
             },
           );
 
@@ -304,7 +305,9 @@ const makeGoogleDeepResearchService = (
         catch: (error) =>
           new ResearchError({
             message:
-              error instanceof Error ? error.message : 'Failed to start research',
+              error instanceof Error
+                ? error.message
+                : 'Failed to start research',
             cause: error,
           }),
       }).pipe(

@@ -1,4 +1,4 @@
-import { executeInfographicGeneration } from '@repo/media';
+import { executeInfographicGeneration } from '@repo/media/infographic';
 import type { GenerateInfographicPayload } from '@repo/queue';
 import { defineJobHandler } from './job-handler';
 

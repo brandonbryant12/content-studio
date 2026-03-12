@@ -9,6 +9,7 @@ import { SourceRepo } from '../repos';
 
 export interface GetSourceInput {
   id: string;
+  userId?: string;
 }
 
 // =============================================================================
@@ -24,8 +25,9 @@ export const getSource = defineAuthedUseCase<GetSourceInput>()({
   run: ({ input, user }) =>
     Effect.gen(function* () {
       const sourceRepo = yield* SourceRepo;
-      return yield* user.role === Role.ADMIN
-        ? sourceRepo.findById(input.id)
-        : sourceRepo.findByIdForUser(input.id, user.id);
+      const ownerId =
+        user.role === Role.ADMIN ? (input.userId ?? user.id) : user.id;
+
+      return yield* sourceRepo.findByIdForUser(input.id, ownerId);
     }),
 });

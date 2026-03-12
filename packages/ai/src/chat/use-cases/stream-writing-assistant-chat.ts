@@ -121,11 +121,15 @@ function selectWritingAssistantToolChoice(
     return undefined;
   }
 
-  if (matchesAnyPattern(latestUserMessageText, DISCUSSION_ONLY_REQUEST_PATTERNS)) {
+  if (
+    matchesAnyPattern(latestUserMessageText, DISCUSSION_ONLY_REQUEST_PATTERNS)
+  ) {
     return undefined;
   }
 
-  if (matchesAnyPattern(latestUserMessageText, DIRECT_REWRITE_REQUEST_PATTERNS)) {
+  if (
+    matchesAnyPattern(latestUserMessageText, DIRECT_REWRITE_REQUEST_PATTERNS)
+  ) {
     return {
       type: 'tool',
       toolName: 'updateVoiceoverText',

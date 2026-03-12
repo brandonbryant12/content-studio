@@ -9,12 +9,12 @@ import {
   shutdownSSEPublisher,
 } from '../../publisher';
 import { sseReplayBuffer } from '../../replay-buffer';
-import eventsRouter from '../events';
 import {
   createMockContext,
   createMockErrors,
   createTestServerRuntime,
-} from './helpers';
+} from '../_shared/test-helpers';
+import eventsRouter from '../events';
 
 type ORPCProcedure = {
   '~orpc': {

@@ -1,13 +1,13 @@
 import { Effect, Layer } from 'effect';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { PROVIDER_TIMEOUTS_MS } from '../../provider-timeouts';
+import { DeepResearch } from '../../research/service';
 import {
   AIUsageRecorder,
   type PersistAIUsageInput,
   withAIUsageScope,
 } from '../../usage';
-import { DeepResearch } from '../service';
-import { GoogleDeepResearchLive } from './google';
+import { PROVIDER_TIMEOUTS_MS } from '../timeouts';
+import { GoogleDeepResearchLive } from './research';
 
 const mockCreateInteraction = vi.hoisted(() => vi.fn());
 const mockGetInteraction = vi.hoisted(() => vi.fn());

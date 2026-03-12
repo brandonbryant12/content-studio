@@ -16,11 +16,11 @@ import {
   getJob,
   approvePodcast,
   revokeApproval,
-} from '@repo/media';
+} from '@repo/media/podcast';
 import { Effect } from 'effect';
 import { bindEffectProtocol } from '../effect-handler';
 import { protectedProcedure } from '../orpc';
-import { tapLogActivity, tapSyncTitle } from './log-activity';
+import { tapLogActivity, tapSyncTitle } from './_shared/entity-activity';
 
 const podcastRouter = {
   list: protectedProcedure.podcasts.list.handler(
@@ -43,7 +43,7 @@ const podcastRouter = {
   get: protectedProcedure.podcasts.get.handler(
     async ({ context, input, errors }) =>
       bindEffectProtocol({ context, errors }).run(
-        getPodcast({ podcastId: input.id }).pipe(
+        getPodcast({ podcastId: input.id, userId: input.userId }).pipe(
           Effect.flatMap(serializePodcastFullEffect),
         ),
         {
@@ -106,7 +106,6 @@ const podcastRouter = {
         startGeneration({
           podcastId: input.id,
           promptInstructions: input.promptInstructions,
-          ignoreEpisodePlan: input.ignoreEpisodePlan,
         }),
         {
           attributes: { 'podcast.id': input.id },

@@ -131,7 +131,7 @@ describe('getSourceContent', () => {
       expect(result.content).toBe(expectedContent);
     });
 
-    it('should allow admins to read source content they do not own', async () => {
+    it('should fail when admin has no explicit target for another user source content', async () => {
       const admin = createTestAdmin({ id: 'admin-123' });
       const doc = createTestSource({
         id: 'doc_test2' as SourceId,
@@ -142,8 +142,10 @@ describe('getSourceContent', () => {
       const expectedContent = 'Admin can access this content.';
 
       const mockRepo = createMockSourceRepo({
-        findById: () => Effect.succeed(doc),
-        findByIdForUser: (id) => Effect.fail(new SourceNotFound({ id })),
+        findByIdForUser: (id, userId) =>
+          userId === admin.id
+            ? Effect.fail(new SourceNotFound({ id }))
+            : Effect.succeed(doc),
       });
 
       const mockStorage = createMockStorage({
@@ -151,6 +153,43 @@ describe('getSourceContent', () => {
       });
 
       const effect = getSourceContent({ id: doc.id }).pipe(
+        Effect.provide(Layer.mergeAll(mockRepo, mockStorage, MockDbLive)),
+      );
+
+      const result = await Effect.runPromiseExit(withTestUser(admin)(effect));
+
+      expect(result._tag).toBe('Failure');
+      if (result._tag === 'Failure') {
+        const error = result.cause._tag === 'Fail' ? result.cause.error : null;
+        expect(error?._tag).toBe('SourceNotFound');
+      }
+    });
+
+    it('should allow admins to read source content when userId is provided', async () => {
+      const admin = createTestAdmin({ id: 'admin-123' });
+      const doc = createTestSource({
+        id: 'doc_test2' as SourceId,
+        contentKey: 'sources/admin-visible.txt',
+        mimeType: 'text/plain',
+        createdBy: 'member-123',
+      });
+      const expectedContent = 'Admin can access this content.';
+
+      const mockRepo = createMockSourceRepo({
+        findByIdForUser: (_id, userId) =>
+          userId === doc.createdBy
+            ? Effect.succeed(doc)
+            : Effect.fail(new SourceNotFound({ id: doc.id })),
+      });
+
+      const mockStorage = createMockStorage({
+        download: () => Effect.succeed(Buffer.from(expectedContent)),
+      });
+
+      const effect = getSourceContent({
+        id: doc.id,
+        userId: doc.createdBy,
+      }).pipe(
         Effect.provide(Layer.mergeAll(mockRepo, mockStorage, MockDbLive)),
       );
 

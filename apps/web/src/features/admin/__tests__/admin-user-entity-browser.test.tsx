@@ -8,17 +8,27 @@ vi.mock('@tanstack/react-router', () => ({
     children,
     to,
     params,
+    search,
     ...rest
   }: {
     children: ReactNode;
     to: string;
     params?: Record<string, string>;
+    search?: Record<string, string | undefined>;
     [key: string]: unknown;
   }) => {
-    const href = Object.entries(params ?? {}).reduce(
+    const path = Object.entries(params ?? {}).reduce(
       (path, [key, value]) => path.replace(`$${key}`, value),
       to,
     );
+    const searchParams = new URLSearchParams();
+    for (const [key, value] of Object.entries(search ?? {})) {
+      if (typeof value === 'string' && value.length > 0) {
+        searchParams.set(key, value);
+      }
+    }
+    const queryString = searchParams.toString();
+    const href = queryString.length > 0 ? `${path}?${queryString}` : path;
 
     return (
       <a href={href} {...rest}>
@@ -31,6 +41,7 @@ vi.mock('@tanstack/react-router', () => ({
 const createProps = (
   overrides: Partial<ComponentProps<typeof AdminUserEntityBrowser>> = {},
 ): ComponentProps<typeof AdminUserEntityBrowser> => ({
+  targetUserId: 'user-1',
   entityList: {
     entities: [
       {
@@ -80,7 +91,7 @@ describe('AdminUserEntityBrowser', () => {
     expect(screen.getByText('Alpha Source')).toBeInTheDocument();
     expect(
       screen.getByRole('link', { name: /Alpha Podcast/i }),
-    ).toHaveAttribute('href', '/podcasts/pod_1');
+    ).toHaveAttribute('href', '/podcasts/pod_1?userId=user-1');
     expect(screen.getByText('Showing 1 - 12 of 14')).toBeInTheDocument();
     expect(screen.getByText('Page 1 of 2')).toBeInTheDocument();
   });

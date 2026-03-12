@@ -13,7 +13,13 @@ import {
   JobIdSchema,
 } from '@repo/db/schema';
 import { Schema } from 'effect';
-import { std, PaginationFields, authErrors, jobErrors } from './shared';
+import {
+  std,
+  PaginationFields,
+  authErrors,
+  jobErrors,
+  OptionalUserScopeFields,
+} from './shared';
 
 const podcastErrors = {
   PODCAST_NOT_FOUND: {
@@ -95,7 +101,14 @@ const podcastContract = oc
         description: 'Retrieve a podcast with its sources',
       })
       .errors(podcastErrors)
-      .input(std(Schema.Struct({ id: PodcastIdSchema })))
+      .input(
+        std(
+          Schema.Struct({
+            id: PodcastIdSchema,
+            ...OptionalUserScopeFields,
+          }),
+        ),
+      )
       .output(std(PodcastFullOutputSchema)),
 
     // Create a new podcast
@@ -180,7 +193,6 @@ const podcastContract = oc
           Schema.Struct({
             id: PodcastIdSchema,
             promptInstructions: Schema.optional(Schema.String),
-            ignoreEpisodePlan: Schema.optional(Schema.Boolean),
           }),
         ),
       )

@@ -1,7 +1,7 @@
 import { ORPCError } from '@orpc/client';
 import { ManagedRuntime, type Layer } from 'effect';
 import { expect } from 'vitest';
-import type { ORPCContext, AuthenticatedORPCContext } from '../../orpc';
+import type { AuthenticatedORPCContext, ORPCContext } from '../../orpc';
 import type { ServerRuntime } from '../../runtime';
 import type { User } from '@repo/auth/policy';
 
@@ -316,24 +316,6 @@ const mapMessageToCode = (message: string): ErrorCode | null => {
  *
  * Returns factories for all error codes used by the source router.
  * Each factory creates an ORPCError that can be caught and inspected in tests.
- *
- * @example
- * ```typescript
- * const errors = createMockErrors();
- *
- * // In handler test
- * await expect(
- *   sourceRouter.get({ context, input, errors })
- * ).rejects.toThrow(ORPCError);
- *
- * // Inspecting error details
- * try {
- *   await sourceRouter.get({ context, input, errors });
- * } catch (error) {
- *   expect(error).toBeInstanceOf(ORPCError);
- *   expect((error as ORPCError).code).toBe('SOURCE_NOT_FOUND');
- * }
- * ```
  */
 export const createMockErrors = (): MockErrorFactory => {
   const createErrorFactory =
@@ -376,16 +358,6 @@ export const createMockErrors = (): MockErrorFactory => {
 
 /**
  * Helper to assert an error is an ORPCError with a specific code.
- *
- * @example
- * ```typescript
- * try {
- *   await sourceRouter.get({ context, input, errors });
- *   fail('Expected error to be thrown');
- * } catch (error) {
- *   assertORPCError(error, 'SOURCE_NOT_FOUND');
- * }
- * ```
  */
 export function assertORPCError(
   error: unknown,

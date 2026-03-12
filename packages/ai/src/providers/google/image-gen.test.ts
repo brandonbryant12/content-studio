@@ -1,15 +1,15 @@
 import { Effect, Layer } from 'effect';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { PROVIDER_TIMEOUTS_MS } from '../../provider-timeouts';
+import { ImageGen } from '../../image-gen/service';
 import {
   AIUsageRecorder,
   type PersistAIUsageInput,
   withAIUsageScope,
 } from '../../usage';
-import { ImageGen } from '../service';
-import { GoogleImageGenLive } from './google';
+import { PROVIDER_TIMEOUTS_MS } from '../timeouts';
+import { GoogleImageGenLive } from './image-gen';
 
-vi.mock('../../provider-retry', () => ({
+vi.mock('../retry', () => ({
   retryTransientProvider: <A, E, R>(
     effect: Effect.Effect<A, E, R>,
   ): Effect.Effect<A, E, R> => effect,

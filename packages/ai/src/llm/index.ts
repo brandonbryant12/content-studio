@@ -8,4 +8,4 @@ export {
 } from './service';
 
 // Google AI provider (Gemini API)
-export { GoogleLive, type GoogleConfig } from './providers/google';
+export { GoogleLive, type GoogleConfig } from '../providers/google/llm';

@@ -638,7 +638,6 @@ function useSetupWizardActions({
       await generateMutation.mutateAsync({
         id: podcast.id,
         promptInstructions: savedInstructions ?? undefined,
-        ignoreEpisodePlan: true,
       });
     } catch {
       return;

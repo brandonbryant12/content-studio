@@ -8,7 +8,7 @@ import {
   MetadataSchema,
 } from '@repo/db/schema';
 import { Schema } from 'effect';
-import { std, PaginationFields } from './shared';
+import { std, PaginationFields, OptionalUserScopeFields } from './shared';
 
 const sourceErrors = {
   SOURCE_NOT_FOUND: {
@@ -122,7 +122,14 @@ const sourceContract = oc
         description: 'Retrieve a source by ID',
       })
       .errors(sourceErrors)
-      .input(std(Schema.Struct({ id: SourceIdSchema })))
+      .input(
+        std(
+          Schema.Struct({
+            id: SourceIdSchema,
+            ...OptionalUserScopeFields,
+          }),
+        ),
+      )
       .output(std(SourceOutputSchema)),
 
     // Get source content
@@ -134,7 +141,14 @@ const sourceContract = oc
         description: 'Retrieve the parsed text content of a source',
       })
       .errors(sourceErrors)
-      .input(std(Schema.Struct({ id: SourceIdSchema })))
+      .input(
+        std(
+          Schema.Struct({
+            id: SourceIdSchema,
+            ...OptionalUserScopeFields,
+          }),
+        ),
+      )
       .output(std(Schema.Struct({ content: Schema.String }))),
 
     // Create a source from text content

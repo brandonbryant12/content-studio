@@ -81,7 +81,7 @@ export function AdminUserSearchPage({
               value={searchQuery}
               onChange={(event) => onSearchChange(event.target.value)}
               placeholder="Search by name or email"
-              className="search-input"
+              className="search-input pl-10"
               aria-label="Search users"
             />
           </div>

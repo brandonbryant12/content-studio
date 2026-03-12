@@ -1,3 +1,11 @@
+// Errors
+export {
+  InfographicNotFound,
+  NotInfographicOwner,
+  InfographicError,
+  StylePresetNotFound,
+} from '../errors';
+
 // Infographic module - Repositories
 export {
   InfographicRepo,
@@ -9,7 +17,6 @@ export {
   type ListOptions as InfographicListOptions,
   StylePresetRepo,
   StylePresetRepoLive,
-  StylePresetNotFound,
   type StylePresetRepoService,
   type InsertStylePreset,
 } from './repos';

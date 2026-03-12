@@ -24,12 +24,15 @@ interface CreateActions {
   isPodcastPending: boolean;
   onCreateVoiceover: () => void;
   isVoiceoverPending: boolean;
+  onCreateInfographic: () => void;
+  isInfographicPending: boolean;
 }
 
 interface DocumentDialogs {
   onUploadOpenChange: (open: boolean) => void;
   onUrlDialogOpenChange: (open: boolean) => void;
   onResearchDialogOpenChange: (open: boolean) => void;
+  onOpenResearchWithPodcast: () => void;
 }
 
 export interface QuickStartPanelProps {
@@ -77,7 +80,6 @@ export function QuickStartPanel({
       <SuggestionBar
         missingTypes={missingTypes}
         createActions={createActions}
-        documentDialogs={documentDialogs}
       />
     );
   }
@@ -203,7 +205,7 @@ function CreateFirstContentCard({
         <Button
           variant="outline"
           className="gap-2"
-          onClick={createActions.onCreatePodcast}
+          onClick={() => createActions.onCreatePodcast()}
           disabled={createActions.isPodcastPending}
         >
           <MixerHorizontalIcon className="w-4 h-4" aria-hidden="true" />
@@ -212,11 +214,20 @@ function CreateFirstContentCard({
         <Button
           variant="outline"
           className="gap-2"
-          onClick={createActions.onCreateVoiceover}
+          onClick={() => createActions.onCreateVoiceover()}
           disabled={createActions.isVoiceoverPending}
         >
           <SpeakerLoudIcon className="w-4 h-4" aria-hidden="true" />
           Create Voiceover
+        </Button>
+        <Button
+          variant="outline"
+          className="gap-2"
+          onClick={() => createActions.onCreateInfographic()}
+          disabled={createActions.isInfographicPending}
+        >
+          <ImageIcon className="w-4 h-4" aria-hidden="true" />
+          Create Infographic
         </Button>
       </div>
     </div>
@@ -226,11 +237,9 @@ function CreateFirstContentCard({
 function SuggestionBar({
   missingTypes,
   createActions,
-  documentDialogs,
 }: {
   missingTypes: Array<{ label: string; icon: ReactNode }>;
   createActions: CreateActions;
-  documentDialogs: DocumentDialogs;
 }) {
   return (
     <div className="flex flex-wrap items-center gap-3 rounded-xl border border-border bg-card px-4 py-3">
@@ -243,7 +252,7 @@ function SuggestionBar({
               variant="outline"
               size="sm"
               className="gap-1.5 text-xs"
-              onClick={createActions.onCreatePodcast}
+              onClick={() => createActions.onCreatePodcast()}
               disabled={createActions.isPodcastPending}
             >
               <MixerHorizontalIcon className="w-3.5 h-3.5" aria-hidden="true" />
@@ -258,7 +267,7 @@ function SuggestionBar({
               variant="outline"
               size="sm"
               className="gap-1.5 text-xs"
-              onClick={createActions.onCreateVoiceover}
+              onClick={() => createActions.onCreateVoiceover()}
               disabled={createActions.isVoiceoverPending}
             >
               <SpeakerLoudIcon className="w-3.5 h-3.5" aria-hidden="true" />
@@ -266,14 +275,14 @@ function SuggestionBar({
             </Button>
           );
         }
-        // Infographic — just link to upload since it needs a dialog
         return (
           <Button
             key={label}
             variant="outline"
             size="sm"
             className="gap-1.5 text-xs"
-            onClick={() => documentDialogs.onUploadOpenChange(true)}
+            onClick={() => createActions.onCreateInfographic()}
+            disabled={createActions.isInfographicPending}
           >
             <ImageIcon className="w-3.5 h-3.5" aria-hidden="true" />
             {label}
@@ -307,7 +316,7 @@ function QuickCreateToolbar({
         variant="ghost"
         size="sm"
         className="gap-1.5 text-xs"
-        onClick={createActions.onCreatePodcast}
+        onClick={() => createActions.onCreatePodcast()}
         disabled={createActions.isPodcastPending}
       >
         <MixerHorizontalIcon className="w-3.5 h-3.5" aria-hidden="true" />
@@ -317,7 +326,7 @@ function QuickCreateToolbar({
         variant="ghost"
         size="sm"
         className="gap-1.5 text-xs"
-        onClick={createActions.onCreateVoiceover}
+        onClick={() => createActions.onCreateVoiceover()}
         disabled={createActions.isVoiceoverPending}
       >
         <SpeakerLoudIcon className="w-3.5 h-3.5" aria-hidden="true" />
@@ -326,13 +335,29 @@ function QuickCreateToolbar({
       <Button
         variant="ghost"
         size="sm"
-        className="gap-1.5 text-xs opacity-50 cursor-not-allowed"
-        disabled
-        title="Use the infographics section below"
+        className="gap-1.5 text-xs"
+        onClick={() => createActions.onCreateInfographic()}
+        disabled={createActions.isInfographicPending}
       >
         <ImageIcon className="w-3.5 h-3.5" aria-hidden="true" />
         Infographic
       </Button>
+      {isDeepResearchEnabled && (
+        <>
+          <span className="text-border" aria-hidden="true">
+            |
+          </span>
+          <Button
+            variant="ghost"
+            size="sm"
+            className="gap-1.5 text-xs text-violet-600 dark:text-violet-400 hover:text-violet-700 dark:hover:text-violet-300"
+            onClick={() => documentDialogs.onOpenResearchWithPodcast()}
+          >
+            <MagnifyingGlassIcon className="w-3.5 h-3.5" aria-hidden="true" />
+            Research &rarr; Podcast
+          </Button>
+        </>
+      )}
     </div>
   );
 }

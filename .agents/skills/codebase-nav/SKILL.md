@@ -11,7 +11,7 @@ Use this when you need fast repo orientation before implementing, reviewing, or 
 
 Domain roots:
 
-- `packages/media/src/document`
+- `packages/media/src/source`
 - `packages/media/src/podcast`
 - `packages/media/src/voiceover`
 - `packages/media/src/infographic`
@@ -20,19 +20,19 @@ Domain roots:
 
 Per-domain backend paths:
 
-- DB schemas: `packages/db/src/schemas/{documents|podcasts|voiceovers|infographics|personas|activity-log}.ts`
+- DB schemas: `packages/db/src/schemas/{sources|podcasts|voiceovers|infographics|personas|activity-log}.ts`
 - Domain errors: `packages/media/src/errors/*-errors.ts`
 - Repos: `packages/media/src/{domain}/repos/`
 - Use cases: `packages/media/src/{domain}/use-cases/`
 - Use case tests: `packages/media/src/{domain}/use-cases/__tests__/`
-- API contracts: `packages/api/src/contracts/{documents|podcasts|voiceovers|infographics|personas|activity}.ts`
-- API routers: `packages/api/src/server/router/{document|podcast|voiceover|infographic|persona|activity}.ts`
+- API contracts: `packages/api/src/contracts/{sources|podcasts|voiceovers|infographics|personas|activity}.ts`
+- API routers: `packages/api/src/server/router/{source|podcast|voiceover|infographic|persona|activity}.ts`
 - Router tests: `packages/api/src/server/router/__tests__/`
 
 Frontend paths:
 
-- Features: `apps/web/src/features/{documents|podcasts|voiceovers|infographics|personas|admin}/`
-- Protected routes: `apps/web/src/routes/_protected/{documents|podcasts|voiceovers|infographics|personas}/`
+- Features: `apps/web/src/features/{sources|podcasts|voiceovers|infographics|personas|admin}/`
+- Protected routes: `apps/web/src/routes/_protected/{sources|podcasts|voiceovers|infographics|personas}/`
 - Activity route: `apps/web/src/routes/_protected/admin/activity.tsx`
 - Frontend tests: `apps/web/src/features/**/__tests__/`
 
@@ -70,7 +70,7 @@ Cross-cutting paths:
 Use fast path discovery before broad search:
 
 ```bash
-rg --files packages/media/src/{document,podcast,voiceover,infographic,persona,activity}
+rg --files packages/media/src/{source,podcast,voiceover,infographic,persona,activity}
 rg --files packages/api/src/{contracts,server/router}
 rg --files apps/web/src/{features,routes/_protected}
 rg -n "createFileRoute\\(|queryOptions\\(|handleEffectWithProtocol\\(" apps/web/src packages/api/src

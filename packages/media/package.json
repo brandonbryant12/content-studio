@@ -7,17 +7,37 @@
       "types": "./dist/src/index.d.ts",
       "default": "./src/index.ts"
     },
+    "./activity": {
+      "types": "./dist/src/activity/index.d.ts",
+      "default": "./src/activity/index.ts"
+    },
+    "./admin": {
+      "types": "./dist/src/admin/index.d.ts",
+      "default": "./src/admin/index.ts"
+    },
     "./errors": {
       "types": "./dist/src/errors.d.ts",
       "default": "./src/errors.ts"
     },
-    "./document": {
-      "types": "./dist/src/document/index.d.ts",
-      "default": "./src/document/index.ts"
-    },
     "./podcast": {
       "types": "./dist/src/podcast/index.d.ts",
       "default": "./src/podcast/index.ts"
+    },
+    "./persona": {
+      "types": "./dist/src/persona/index.d.ts",
+      "default": "./src/persona/index.ts"
+    },
+    "./shared": {
+      "types": "./dist/src/shared/index.d.ts",
+      "default": "./src/shared/index.ts"
+    },
+    "./source": {
+      "types": "./dist/src/source/index.d.ts",
+      "default": "./src/source/index.ts"
+    },
+    "./voiceover": {
+      "types": "./dist/src/voiceover/index.d.ts",
+      "default": "./src/voiceover/index.ts"
     },
     "./infographic": {
       "types": "./dist/src/infographic/index.d.ts",

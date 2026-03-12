@@ -9,11 +9,13 @@ import {
   type VoiceoverOutput,
   type VoiceoverListItemOutput,
 } from '@repo/db/schema';
-import { ActivityLogRepoLive, VoiceoverRepoLive } from '@repo/media';
+import { ActivityLogRepoLive } from '@repo/media/activity';
+import { VoiceoverRepoLive } from '@repo/media/voiceover';
 import { QueueLive } from '@repo/queue';
 import { createInMemoryStorage } from '@repo/storage/testing';
 import {
   createTestContext,
+  createTestAdmin,
   createTestUser,
   createTestVoiceover,
   resetAllFactories,
@@ -24,14 +26,14 @@ import { eq } from 'drizzle-orm';
 import { Layer } from 'effect';
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import type { ServerRuntime } from '../../runtime';
-import voiceoverRouter from '../voiceover';
 import {
   createMockContext,
   createMockErrors,
   assertORPCError,
   type ErrorCode,
   createTestServerRuntime,
-} from './helpers';
+} from '../_shared/test-helpers';
+import voiceoverRouter from '../voiceover';
 
 // =============================================================================
 // oRPC Handler Utilities
@@ -380,6 +382,37 @@ describe('voiceover router', () => {
       expect(result.voice).toBe('Kore');
       expectIsoTimestamp(result.createdAt);
       expectIsoTimestamp(result.updatedAt);
+    });
+
+    it('keeps admins scoped to themselves by default and allows explicit user scope', async () => {
+      const adminUser = createTestAdmin();
+      await insertTestUser(ctx, adminUser);
+      const adminContext = createMockContext(runtime, toUser(adminUser));
+
+      const otherUser = createTestUser();
+      await insertTestUser(ctx, otherUser);
+      const otherVoiceover = await insertTestVoiceover(ctx, otherUser.id, {
+        title: 'Other user narration',
+      });
+
+      await expectHandlerErrorCode(
+        () =>
+          handlers.get({
+            context: adminContext,
+            input: { id: otherVoiceover.id },
+            errors,
+          }),
+        'VOICEOVER_NOT_FOUND',
+      );
+
+      const scopedResult = await handlers.get({
+        context: adminContext,
+        input: { id: otherVoiceover.id, userId: otherUser.id },
+        errors,
+      });
+
+      expect(scopedResult.id).toBe(otherVoiceover.id);
+      expect(scopedResult.createdBy).toBe(otherUser.id);
     });
 
     it('returns VOICEOVER_NOT_FOUND for missing or non-owned resources', async () => {

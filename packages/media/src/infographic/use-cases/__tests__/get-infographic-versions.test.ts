@@ -1,4 +1,5 @@
 import {
+  createTestAdmin,
   createTestUser,
   createTestInfographic,
   createTestInfographicVersion,
@@ -100,6 +101,64 @@ describe('getInfographicVersions', () => {
         expect(error?._tag).toBe('InfographicNotFound');
         expect((error as InfographicNotFound).id).toBe(infographic.id);
       }
+    });
+
+    it('fails when admin has no explicit target for another user infographic versions', async () => {
+      const admin = createTestAdmin();
+      const owner = createTestUser();
+      const infographic = createTestInfographic({
+        createdBy: owner.id,
+      });
+
+      const repo = createMockInfographicRepo({
+        findByIdForUser: (id: string) =>
+          Effect.fail(new InfographicNotFound({ id })),
+      });
+      const layers = Layer.mergeAll(MockDbLive, repo);
+
+      const result = await Effect.runPromiseExit(
+        withTestUser(admin)(
+          getInfographicVersions({ infographicId: infographic.id }),
+        ).pipe(Effect.provide(layers)),
+      );
+
+      expect(result._tag).toBe('Failure');
+      if (result._tag === 'Failure') {
+        const error = result.cause._tag === 'Fail' ? result.cause.error : null;
+        expect(error?._tag).toBe('InfographicNotFound');
+      }
+    });
+
+    it('allows admin when explicit userId is provided', async () => {
+      const admin = createTestAdmin();
+      const owner = createTestUser();
+      const infographic = createTestInfographic({ createdBy: owner.id });
+      const v1 = createTestInfographicVersion({
+        infographicId: infographic.id,
+        versionNumber: 1,
+      });
+
+      const repo = createMockInfographicRepo({
+        findByIdForUser: (id: string, userId: string) =>
+          id === infographic.id && userId === owner.id
+            ? Effect.succeed(infographic)
+            : Effect.fail(new InfographicNotFound({ id })),
+        listVersions: () =>
+          Effect.succeed([v1] as readonly InfographicVersion[]),
+      });
+      const layers = Layer.mergeAll(MockDbLive, repo);
+
+      const result = await Effect.runPromise(
+        withTestUser(admin)(
+          getInfographicVersions({
+            infographicId: infographic.id,
+            userId: owner.id,
+          }),
+        ).pipe(Effect.provide(layers)),
+      );
+
+      expect(result).toHaveLength(1);
+      expect(result[0]?.id).toBe(v1.id);
     });
   });
 

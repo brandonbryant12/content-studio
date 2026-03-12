@@ -1,4 +1,4 @@
-import { DeepResearchFeatureLive } from '@repo/media';
+import { DeepResearchFeatureLive } from '@repo/media/source';
 import {
   createMockSourceRepo,
   createMockPodcastRepo,

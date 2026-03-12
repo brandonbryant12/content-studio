@@ -26,14 +26,16 @@ import {
 
 interface VoiceoverDetailContainerProps {
   voiceoverId: string;
+  userId?: string;
 }
 
 export function VoiceoverDetailContainer({
   voiceoverId,
+  userId,
 }: VoiceoverDetailContainerProps) {
   const { user } = useSessionGuard();
 
-  const { data: voiceover } = useVoiceover(voiceoverId);
+  const { data: voiceover } = useVoiceover(voiceoverId, { userId });
 
   const settings = useVoiceoverSettings({ voiceover });
 

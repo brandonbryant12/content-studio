@@ -8,15 +8,22 @@ import { apiClient } from '@/clients/apiClient';
 
 type Podcast = RouterOutput['podcasts']['get'];
 
+interface PodcastAccessOptions {
+  userId?: string;
+}
+
 /**
  * Fetch a single podcast by ID.
  * Uses Suspense - wrap with SuspenseBoundary.
  */
 export function usePodcast(
   podcastId: string,
+  options: PodcastAccessOptions = {},
 ): UseSuspenseQueryResult<Podcast, Error> {
   return useSuspenseQuery(
-    apiClient.podcasts.get.queryOptions({ input: { id: podcastId } }),
+    apiClient.podcasts.get.queryOptions({
+      input: { id: podcastId, userId: options.userId },
+    }),
   );
 }
 
@@ -24,7 +31,11 @@ export function usePodcast(
  * Get the query key for a podcast.
  * Useful for cache operations.
  */
-export function getPodcastQueryKey(podcastId: string): QueryKey {
-  return apiClient.podcasts.get.queryOptions({ input: { id: podcastId } })
-    .queryKey;
+export function getPodcastQueryKey(
+  podcastId: string,
+  options: PodcastAccessOptions = {},
+): QueryKey {
+  return apiClient.podcasts.get.queryOptions({
+    input: { id: podcastId, userId: options.userId },
+  }).queryKey;
 }

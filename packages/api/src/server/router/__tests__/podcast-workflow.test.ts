@@ -23,16 +23,16 @@ import {
   podcast as podcastTable,
   VersionStatus,
 } from '@repo/db/schema';
+import { ActivityLogRepoLive } from '@repo/media/activity';
+import { PersonaRepoLive } from '@repo/media/persona';
 import {
-  PodcastRepoLive,
-  SourceRepoLive,
-  ActivityLogRepoLive,
-  PersonaRepoLive,
-  startGeneration,
-  saveAndQueueAudio,
-  generateScript,
   generateAudio,
-} from '@repo/media';
+  PodcastRepoLive,
+  saveAndQueueAudio,
+  startGeneration,
+  generateScript,
+} from '@repo/media/podcast';
+import { SourceRepoLive } from '@repo/media/source';
 import { QueueLive } from '@repo/queue';
 import { createInMemoryStorage } from '@repo/storage/testing';
 import {
@@ -140,6 +140,21 @@ const insertTestPodcast = async (
   return podcast;
 };
 
+const buildEpisodePlan = (sourceId: string) => ({
+  angle: 'Focus on rollout discipline over hype.',
+  openingHook: 'The hard part of AI is the workflow around it.',
+  closingTakeaway: 'Start with one workflow and tighten feedback loops.',
+  sections: [
+    {
+      heading: 'Why launches stall',
+      summary: 'Common operational gaps that kill momentum.',
+      keyPoints: ['No owner', 'Weak source quality'],
+      sourceIds: [sourceId],
+      estimatedMinutes: 2,
+    },
+  ],
+});
+
 // =============================================================================
 // Workflow Tests
 // =============================================================================
@@ -178,6 +193,7 @@ describe('podcast job workflow', () => {
         title: 'Full Generation Test',
         status: 'drafting',
         sourceIds: [doc.id],
+        episodePlan: buildEpisodePlan(doc.id),
       });
 
       // Step 1: Call the API use case (startGeneration)
@@ -356,6 +372,7 @@ describe('podcast job workflow', () => {
       const podcast = await insertTestPodcast(ctx, testUser.id, {
         status: 'drafting',
         sourceIds: [doc.id],
+        episodePlan: buildEpisodePlan(doc.id),
       });
 
       const statusHistory: string[] = [];

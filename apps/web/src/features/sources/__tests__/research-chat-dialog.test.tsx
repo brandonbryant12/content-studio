@@ -292,7 +292,7 @@ describe('ResearchChatDialog', () => {
 
     await user.click(
       screen.getByRole('checkbox', {
-        name: 'Auto-generate podcast from findings',
+        name: 'Create a podcast when research completes',
       }),
     );
 

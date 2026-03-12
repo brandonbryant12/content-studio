@@ -51,6 +51,21 @@ const buildTestPersona = (
   updatedAt: new Date(),
 });
 
+const buildEpisodePlan = (sourceId: string) => ({
+  angle: 'Focus on rollout lessons.',
+  openingHook: 'Most launches fail in the handoff.',
+  closingTakeaway: 'Start with one workflow.',
+  sections: [
+    {
+      heading: 'Why teams stall',
+      summary: 'Operational gaps that block execution.',
+      keyPoints: ['Ownership drift', 'Weak source quality'],
+      sourceIds: [sourceId],
+      estimatedMinutes: 2,
+    },
+  ],
+});
+
 describe('generateScript', () => {
   beforeEach(() => {
     resetAllFactories();
@@ -60,7 +75,10 @@ describe('generateScript', () => {
     const user = createTestUser();
     const doc = createTestSource({ createdBy: user.id });
     const podcast = {
-      ...createTestPodcast({ createdBy: user.id }),
+      ...createTestPodcast({
+        createdBy: user.id,
+        episodePlan: buildEpisodePlan(doc.id),
+      }),
       sources: [doc],
     } as unknown as PodcastWithSources;
 
@@ -141,20 +159,7 @@ describe('generateScript', () => {
     const podcast = {
       ...createTestPodcast({
         createdBy: user.id,
-        episodePlan: {
-          angle: 'Focus on rollout lessons.',
-          openingHook: 'Most launches fail in the handoff.',
-          closingTakeaway: 'Start with one workflow.',
-          sections: [
-            {
-              heading: 'Why teams stall',
-              summary: 'Operational gaps that block execution.',
-              keyPoints: ['Ownership drift', 'Weak source quality'],
-              sourceIds: [doc.id],
-              estimatedMinutes: 2,
-            },
-          ],
-        },
+        episodePlan: buildEpisodePlan(doc.id),
       }),
       sources: [doc],
     } as unknown as PodcastWithSources;
@@ -217,6 +222,7 @@ describe('generateScript', () => {
         hostPersonaId: hostPersonaId as Podcast['hostPersonaId'],
         coHostPersonaId: coHostPersonaId as Podcast['coHostPersonaId'],
         targetDurationMinutes: 12,
+        episodePlan: buildEpisodePlan(doc.id),
       }),
       sources: [doc],
     } as unknown as PodcastWithSources;
@@ -322,6 +328,7 @@ describe('generateScript', () => {
       ...createTestPodcast({
         createdBy: user.id,
         targetDurationMinutes: 12,
+        episodePlan: buildEpisodePlan(doc.id),
       }),
       sources: [doc],
     } as unknown as PodcastWithSources;
@@ -385,6 +392,7 @@ describe('generateScript', () => {
       ...createTestPodcast({
         createdBy: user.id,
         targetDurationMinutes: 12,
+        episodePlan: buildEpisodePlan(doc.id),
       }),
       sources: [doc],
     } as unknown as PodcastWithSources;
@@ -478,31 +486,60 @@ describe('generateScript', () => {
     );
   });
 
-  it('can skip a saved episode plan for quick-start generation', async () => {
+  it('generates and persists an episode plan before drafting when one is missing', async () => {
     const user = createTestUser();
     const doc = createTestSource({ createdBy: user.id });
     const podcast = {
       ...createTestPodcast({
         createdBy: user.id,
-        episodePlan: {
-          angle: 'Focus on rollout lessons.',
-          openingHook: 'Most launches fail in the handoff.',
-          closingTakeaway: 'Start with one workflow.',
-          sections: [
-            {
-              heading: 'Why teams stall',
-              summary: 'Operational gaps that block execution.',
-              keyPoints: ['Ownership drift', 'Weak source quality'],
-              sourceIds: [doc.id],
-              estimatedMinutes: 2,
-            },
-          ],
-        },
+        setupInstructions: 'Lead with the billing basics.',
       }),
       sources: [doc],
     } as unknown as PodcastWithSources;
 
     const updateScriptSpy = vi.fn();
+    const updateSpy = vi.fn();
+    const generatedPlan = {
+      angle: 'Focus on reliable rollout habits.',
+      openingHook: 'AI projects often fail in the handoff.',
+      closingTakeaway: 'Ship one workflow, then expand.',
+      sections: [
+        {
+          heading: 'Launch blockers',
+          summary: 'The patterns that derail delivery.',
+          keyPoints: ['Ownership gaps', 'Source quality'],
+          sourceIds: [doc.id],
+          estimatedMinutes: 2,
+        },
+      ],
+    };
+
+    const generateSpy = vi
+      .fn()
+      .mockImplementationOnce(({ prompt }: { prompt: string }) => {
+        expect(prompt).toContain('Stay concise.');
+        return Effect.succeed({
+          object: generatedPlan,
+          usage: { inputTokens: 10, outputTokens: 10, totalTokens: 20 },
+        });
+      })
+      .mockImplementationOnce(() =>
+        Effect.succeed({
+          object: {
+            title: 'Generated Title',
+            description: 'Generated Description',
+            summary: 'Generated Summary',
+            tags: ['tag-a'],
+            segments: [{ speaker: 'host', line: 'Hello world' }],
+          },
+          usage: { inputTokens: 10, outputTokens: 10, totalTokens: 20 },
+        }),
+      );
+
+    const llmService: LLMService = {
+      generate: generateSpy as LLMService['generate'],
+      streamText: () => Effect.die('not implemented'),
+    };
 
     const layers = Layer.mergeAll(
       MockDbLive,
@@ -515,22 +552,17 @@ describe('generateScript', () => {
             updateScriptSpy(id, data);
             return { ...podcast, ...data } as unknown as Podcast;
           }),
-        update: (_id, data) =>
-          Effect.succeed({ ...podcast, ...data } as unknown as Podcast),
+        update: (id, data) =>
+          Effect.sync(() => {
+            updateSpy(id, data);
+            return { ...podcast, ...data } as unknown as Podcast;
+          }),
       }),
       createMockPersonaRepo(),
       createMockSourceRepo(),
       createMockActivityLogRepo(),
       createMockStorage({ baseUrl: 'https://storage.example/' }),
-      createMockLLM({
-        response: {
-          title: 'Generated Title',
-          description: 'Generated Description',
-          summary: 'Generated Summary',
-          tags: ['tag-a'],
-          segments: [{ speaker: 'host', line: 'Hello world' }],
-        },
-      }),
+      Layer.succeed(LLM, llmService),
     );
 
     await Effect.runPromise(
@@ -538,24 +570,25 @@ describe('generateScript', () => {
         generateScript({
           podcastId: podcast.id,
           promptInstructions: 'Stay concise.',
-          ignoreEpisodePlan: true,
         }).pipe(Effect.provide(layers)),
       ),
     );
 
+    expect(generateSpy).toHaveBeenCalledTimes(2);
+    expect(updateSpy).toHaveBeenNthCalledWith(1, podcast.id, {
+      episodePlan: generatedPlan,
+    });
     expect(updateScriptSpy).toHaveBeenCalledWith(
       podcast.id,
       expect.objectContaining({
-        generationPrompt: expect.not.stringContaining(
-          '# Approved Episode Plan',
-        ),
+        generationPrompt: expect.stringContaining('# Approved Episode Plan'),
       }),
     );
     expect(updateScriptSpy).toHaveBeenCalledWith(
       podcast.id,
       expect.objectContaining({
         generationPrompt: expect.stringContaining(
-          'Build a complete episode arc even without a saved plan.',
+          'Angle: Focus on reliable rollout habits.',
         ),
       }),
     );

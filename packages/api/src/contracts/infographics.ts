@@ -13,7 +13,13 @@ import {
   InfographicStylePresetIdSchema,
 } from '@repo/db/schema';
 import { Schema } from 'effect';
-import { std, PaginationFields, authErrors, jobErrors } from './shared';
+import {
+  std,
+  PaginationFields,
+  authErrors,
+  jobErrors,
+  OptionalUserScopeFields,
+} from './shared';
 
 const infographicErrors = {
   INFOGRAPHIC_NOT_FOUND: {
@@ -59,7 +65,14 @@ const infographicContract = oc
         description: 'Retrieve an infographic by ID',
       })
       .errors(infographicErrors)
-      .input(std(Schema.Struct({ id: InfographicIdSchema })))
+      .input(
+        std(
+          Schema.Struct({
+            id: InfographicIdSchema,
+            ...OptionalUserScopeFields,
+          }),
+        ),
+      )
       .output(std(InfographicOutputSchema)),
 
     create: oc
@@ -139,7 +152,14 @@ const infographicContract = oc
         description: 'List all generated versions of an infographic',
       })
       .errors(infographicErrors)
-      .input(std(Schema.Struct({ id: InfographicIdSchema })))
+      .input(
+        std(
+          Schema.Struct({
+            id: InfographicIdSchema,
+            ...OptionalUserScopeFields,
+          }),
+        ),
+      )
       .output(std(Schema.Array(InfographicVersionOutputSchema))),
 
     // Approve an infographic (admin-only)

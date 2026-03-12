@@ -125,8 +125,7 @@ describe('effect-handler fallback invariants', () => {
       .readdirSync(routerDirPath)
       .filter(
         (file) =>
-          file.endsWith('.ts') &&
-          !['events.ts', 'index.ts', 'log-activity.ts'].includes(file),
+          file.endsWith('.ts') && !['events.ts', 'index.ts'].includes(file),
       );
 
     for (const file of routerFiles) {

@@ -338,6 +338,7 @@ function ControlsSidebar({
 
 interface InfographicWorkbenchContainerProps {
   infographicId: string;
+  userId?: string;
 }
 
 function resolveVersionViewState(
@@ -371,12 +372,13 @@ function resolveVersionViewState(
 
 export function InfographicWorkbenchContainer({
   infographicId,
+  userId,
 }: InfographicWorkbenchContainerProps) {
   const { user } = useSessionGuard();
   const isAdmin = useIsAdmin();
 
   const queryClient = useQueryClient();
-  const { data: infographic } = useInfographic(infographicId);
+  const { data: infographic } = useInfographic(infographicId, { userId });
   const settings = useInfographicSettings({ infographic });
 
   const { approve, revoke } = useApproveInfographic(infographicId, user?.id);
@@ -390,7 +392,7 @@ export function InfographicWorkbenchContainer({
   });
 
   const { data: versions = [], isLoading: versionsLoading } =
-    useInfographicVersions(infographicId);
+    useInfographicVersions(infographicId, { userId });
 
   const [iterationPromptById, setIterationPromptById] = useState<
     Record<string, string>
@@ -588,7 +590,7 @@ export function InfographicWorkbenchContainer({
           />
 
           <div className="flex-1 flex flex-col min-h-0">
-            <div className="flex-1 overflow-auto p-6 flex items-center justify-center">
+            <div className="flex-1 overflow-auto p-3 flex items-center justify-center">
               <PreviewPanel
                 imageUrl={displayImageUrl}
                 title={infographic.title}

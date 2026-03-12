@@ -4,7 +4,7 @@ import {
   user as userTable,
   type ActivityLogOutput,
 } from '@repo/db/schema';
-import { ActivityLogRepoLive } from '@repo/media';
+import { ActivityLogRepoLive } from '@repo/media/activity';
 import {
   createTestAdmin,
   createTestContext,
@@ -16,12 +16,12 @@ import {
 import { Layer } from 'effect';
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import type { ServerRuntime } from '../../runtime';
-import activityRouter from '../activity';
 import {
   createMockContext,
   createMockErrors,
   createTestServerRuntime,
-} from './helpers';
+} from '../_shared/test-helpers';
+import activityRouter from '../activity';
 
 type ORPCProcedure = {
   '~orpc': { handler: (args: unknown) => Promise<unknown> };

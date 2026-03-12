@@ -22,6 +22,11 @@ export const PaginationFields = {
   offset: Schema.optional(CoerceNumber.pipe(Schema.greaterThanOrEqualTo(0))),
 };
 
+/** Optional owner scope for admin-origin detail reads */
+export const OptionalUserScopeFields = {
+  userId: Schema.optional(Schema.String),
+};
+
 /** 403 Forbidden error (used by admin-only routes) */
 export const authErrors = {
   FORBIDDEN: {

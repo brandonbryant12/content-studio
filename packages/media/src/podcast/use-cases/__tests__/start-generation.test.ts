@@ -195,7 +195,7 @@ describe('startGeneration', () => {
       );
     });
 
-    it('can request quick-start generation without a saved plan', async () => {
+    it('forwards quick-start instructions for background planning and drafting', async () => {
       const user = createTestUser();
       const podcast = createTestPodcast({ createdBy: user.id });
       const enqueueSpy = vi.fn();
@@ -211,7 +211,6 @@ describe('startGeneration', () => {
           startGeneration({
             podcastId: podcast.id,
             promptInstructions: 'Lead with the billing basics.',
-            ignoreEpisodePlan: true,
           }).pipe(Effect.provide(layers)),
         ),
       );
@@ -220,7 +219,6 @@ describe('startGeneration', () => {
         'generate-podcast',
         expect.objectContaining({
           promptInstructions: 'Lead with the billing basics.',
-          ignoreEpisodePlan: true,
         }),
         user.id,
       );

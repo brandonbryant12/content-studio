@@ -13,11 +13,11 @@ import {
   getVoiceoverJob,
   approveVoiceover,
   revokeVoiceoverApproval,
-} from '@repo/media';
+} from '@repo/media/voiceover';
 import { Effect } from 'effect';
 import { bindEffectProtocol } from '../effect-handler';
 import { protectedProcedure } from '../orpc';
-import { tapLogActivity, tapSyncTitle } from './log-activity';
+import { tapLogActivity, tapSyncTitle } from './_shared/entity-activity';
 
 const voiceoverRouter = {
   list: protectedProcedure.voiceovers.list.handler(
@@ -40,7 +40,7 @@ const voiceoverRouter = {
   get: protectedProcedure.voiceovers.get.handler(
     async ({ context, input, errors }) =>
       bindEffectProtocol({ context, errors }).run(
-        getVoiceover({ voiceoverId: input.id }).pipe(
+        getVoiceover({ voiceoverId: input.id, userId: input.userId }).pipe(
           Effect.flatMap(serializeVoiceoverEffect),
         ),
         {

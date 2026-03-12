@@ -6,6 +6,10 @@ export {
   UnsupportedSourceFormat,
   SourceParseError,
   SourceContentNotFound,
+  SourceAlreadyProcessing,
+  DeepResearchDisabled,
+  UrlFetchError,
+  InvalidUrlError,
 } from '../errors';
 
 // Repository (Context.Tag pattern)

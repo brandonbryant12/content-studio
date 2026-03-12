@@ -31,20 +31,11 @@ export type ScriptPromptContext = PodcastScriptSystemPromptInput;
 export type PlanPromptContext = PodcastPlanSystemPromptInput;
 
 /**
- * Build the system prompt for script generation based on podcast format,
- * persona characters, and target audience.
+ * Build the system prompt for script generation from the approved episode plan
+ * plus runtime and persona context.
  */
-export const buildSystemPrompt = (
-  formatOrContext: PodcastFormat | ScriptPromptContext,
-  customInstructions?: string,
-): string => {
-  const context: ScriptPromptContext =
-    typeof formatOrContext === 'string'
-      ? { format: formatOrContext, customInstructions }
-      : formatOrContext;
-
-  return renderPrompt(podcastScriptSystemPrompt, context);
-};
+export const buildSystemPrompt = (context: ScriptPromptContext): string =>
+  renderPrompt(podcastScriptSystemPrompt, context);
 
 /**
  * Build the user prompt with source content for script generation.

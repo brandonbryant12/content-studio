@@ -18,6 +18,7 @@ type PodcastFull = RouterOutput['podcasts']['get'];
 
 interface ConfigPanelProps {
   podcast: PodcastFull;
+  userId?: string;
   isGenerating: boolean;
   isPendingGeneration: boolean;
   settings: UsePodcastSettingsReturn;
@@ -26,6 +27,7 @@ interface ConfigPanelProps {
 
 export function ConfigPanel({
   podcast,
+  userId,
   isGenerating,
   isPendingGeneration,
   settings,
@@ -151,6 +153,7 @@ export function ConfigPanel({
       {showPromptViewer && podcast.generationContext && (
         <PromptViewerPanel
           generationContext={podcast.generationContext}
+          userId={userId}
           onClose={() => setShowPromptViewer(false)}
         />
       )}

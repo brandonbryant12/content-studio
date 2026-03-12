@@ -7,17 +7,19 @@ import { apiClient } from '@/clients/apiClient';
 interface SourceContentViewerProps {
   sourceId: string;
   sourceTitle: string;
+  userId?: string;
 }
 
 export function SourceContentViewer({
   sourceId,
   sourceTitle,
+  userId,
 }: SourceContentViewerProps) {
   const [isExpanded, setIsExpanded] = useState(false);
 
   const { data, isPending, isError } = useQuery({
     ...apiClient.sources.getContent.queryOptions({
-      input: { id: sourceId },
+      input: { id: sourceId, userId },
     }),
     enabled: isExpanded,
   });

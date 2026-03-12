@@ -11,15 +11,14 @@ import {
   type PodcastId,
   type JobId,
 } from '@repo/db/schema';
-import {
-  ActivityLogRepoLive,
-  PodcastRepoLive,
-  SourceRepoLive,
-} from '@repo/media';
+import { ActivityLogRepoLive } from '@repo/media/activity';
+import { PodcastRepoLive } from '@repo/media/podcast';
+import { SourceRepoLive } from '@repo/media/source';
 import { QueueLive } from '@repo/queue';
 import { createInMemoryStorage } from '@repo/storage/testing';
 import {
   createTestContext,
+  createTestAdmin,
   createTestUser,
   createTestSource,
   createTestPodcast,
@@ -32,14 +31,14 @@ import { eq } from 'drizzle-orm';
 import { Layer } from 'effect';
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import type { ServerRuntime } from '../../runtime';
-import podcastRouter from '../podcast';
 import {
   createMockContext,
   createMockErrors,
   assertORPCError,
   type ErrorCode,
   createTestServerRuntime,
-} from './helpers';
+} from '../_shared/test-helpers';
+import podcastRouter from '../podcast';
 
 // =============================================================================
 // oRPC Handler Utilities
@@ -432,6 +431,37 @@ describe('podcast router', () => {
       expectIsoTimestamp(result.updatedAt);
     });
 
+    it('keeps admins scoped to themselves by default and allows explicit user scope', async () => {
+      const adminUser = createTestAdmin();
+      await insertTestUser(ctx, adminUser);
+      const adminContext = createMockContext(runtime, toUser(adminUser));
+
+      const otherUser = createTestUser();
+      await insertTestUser(ctx, otherUser);
+      const otherPodcast = await insertTestPodcast(ctx, otherUser.id, {
+        title: 'Other user podcast',
+      });
+
+      await expectHandlerErrorCode(
+        () =>
+          handlers.get({
+            context: adminContext,
+            input: { id: otherPodcast.id },
+            errors,
+          }),
+        'PODCAST_NOT_FOUND',
+      );
+
+      const scopedResult = await handlers.get({
+        context: adminContext,
+        input: { id: otherPodcast.id, userId: otherUser.id },
+        errors,
+      });
+
+      expect(scopedResult.id).toBe(otherPodcast.id);
+      expect(scopedResult.createdBy).toBe(otherUser.id);
+    });
+
     it('returns PODCAST_NOT_FOUND for missing or non-owned resources', async () => {
       const context = createMockContext(runtime, user);
       await expectHandlerErrorCode(
@@ -634,7 +664,7 @@ describe('podcast router', () => {
   });
 
   describe('generate handler', () => {
-    it('creates a generation job and forwards quick-start overrides', async () => {
+    it('creates a generation job and forwards quick-start instructions', async () => {
       const podcast = await insertTestPodcast(ctx, testUser.id);
       const context = createMockContext(runtime, user);
 
@@ -643,7 +673,6 @@ describe('podcast router', () => {
         input: {
           id: podcast.id,
           promptInstructions: 'Make it educational',
-          ignoreEpisodePlan: true,
         },
         errors,
       });
@@ -658,19 +687,9 @@ describe('podcast router', () => {
       expect(job).toBeDefined();
       expect(job?.type).toBe('generate-podcast');
       expect(
-        (
-          job?.payload as
-            | { promptInstructions?: string; ignoreEpisodePlan?: boolean }
-            | undefined
-        )?.promptInstructions,
+        (job?.payload as { promptInstructions?: string } | undefined)
+          ?.promptInstructions,
       ).toBe('Make it educational');
-      expect(
-        (
-          job?.payload as
-            | { promptInstructions?: string; ignoreEpisodePlan?: boolean }
-            | undefined
-        )?.ignoreEpisodePlan,
-      ).toBe(true);
     });
 
     it('returns existing pending job for idempotency', async () => {

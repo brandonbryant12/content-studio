@@ -6,7 +6,7 @@ import {
   PersonaIdSchema,
 } from '@repo/db/schema';
 import { Schema } from 'effect';
-import { std, PaginationFields } from './shared';
+import { std, PaginationFields, OptionalUserScopeFields } from './shared';
 
 const personaErrors = {
   PERSONA_NOT_FOUND: {
@@ -40,7 +40,14 @@ const personaContract = oc
         description: 'Retrieve a persona by ID',
       })
       .errors(personaErrors)
-      .input(std(Schema.Struct({ id: PersonaIdSchema })))
+      .input(
+        std(
+          Schema.Struct({
+            id: PersonaIdSchema,
+            ...OptionalUserScopeFields,
+          }),
+        ),
+      )
       .output(std(PersonaOutputSchema)),
 
     create: oc

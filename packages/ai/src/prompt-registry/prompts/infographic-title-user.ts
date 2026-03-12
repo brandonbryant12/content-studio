@@ -8,7 +8,7 @@ export interface InfographicTitleUserPromptInput {
 export const infographicTitleUserPrompt =
   definePrompt<InfographicTitleUserPromptInput>({
     id: 'infographic.title.user',
-    version: 1,
+    version: 3,
     owner: PROMPT_OWNER,
     domain: 'infographic',
     role: 'user',
@@ -21,8 +21,19 @@ export const infographicTitleUserPrompt =
       userContent: 'required',
       retention: 'resource-bound',
       notes:
-        'Short-form title generation from previously provided user prompt text.',
+        'Short-form title generation from previously provided user prompt text with explicit formatting constraints suitable for later image text rendering.',
     }),
     render: (input) =>
-      `Generate a short infographic title (3-6 words) from this source query: "${input.sourcePrompt}"`,
+      [
+        'Create exactly one concise infographic title.',
+        'Requirements:',
+        '- 3 to 6 words.',
+        '- Clear, concrete, and specific to the main topic.',
+        '- Favor words that will render cleanly and legibly in an image.',
+        '- Use title case.',
+        '- No quotation marks, emojis, colons, or trailing punctuation.',
+        '- Return only the title text.',
+        '',
+        `Source query: "${input.sourcePrompt.trim()}"`,
+      ].join('\n'),
   });

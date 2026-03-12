@@ -9,6 +9,7 @@ import { InfographicRepo } from '../repos';
 
 export interface GetInfographicInput {
   id: string;
+  userId?: string;
 }
 
 // =============================================================================
@@ -24,8 +25,9 @@ export const getInfographic = defineAuthedUseCase<GetInfographicInput>()({
   run: ({ input, user }) =>
     Effect.gen(function* () {
       const repo = yield* InfographicRepo;
-      return yield* user.role === Role.ADMIN
-        ? repo.findById(input.id)
-        : repo.findByIdForUser(input.id, user.id);
+      const ownerId =
+        user.role === Role.ADMIN ? (input.userId ?? user.id) : user.id;
+
+      return yield* repo.findByIdForUser(input.id, ownerId);
     }),
 });

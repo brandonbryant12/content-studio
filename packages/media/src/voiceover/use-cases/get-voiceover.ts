@@ -9,6 +9,7 @@ import { VoiceoverRepo } from '../repos/voiceover-repo';
 
 export interface GetVoiceoverInput {
   voiceoverId: string;
+  userId?: string;
 }
 
 // =============================================================================
@@ -30,8 +31,9 @@ export const getVoiceover = defineAuthedUseCase<GetVoiceoverInput>()({
   run: ({ input, user }) =>
     Effect.gen(function* () {
       const voiceoverRepo = yield* VoiceoverRepo;
-      return yield* user.role === Role.ADMIN
-        ? voiceoverRepo.findById(input.voiceoverId)
-        : voiceoverRepo.findByIdForUser(input.voiceoverId, user.id);
+      const ownerId =
+        user.role === Role.ADMIN ? (input.userId ?? user.id) : user.id;
+
+      return yield* voiceoverRepo.findByIdForUser(input.voiceoverId, ownerId);
     }),
 });

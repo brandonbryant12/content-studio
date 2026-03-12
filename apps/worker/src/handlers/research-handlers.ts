@@ -1,4 +1,4 @@
-import { processResearch } from '@repo/media';
+import { processResearch } from '@repo/media/source';
 import type { ProcessResearchPayload } from '@repo/queue';
 import { defineJobHandler } from './job-handler';
 

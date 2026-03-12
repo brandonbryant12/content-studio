@@ -1,3 +1,5 @@
+export { PersonaNotFound, NotPersonaOwner } from '../errors';
+
 export {
   PersonaRepo,
   PersonaRepoLive,

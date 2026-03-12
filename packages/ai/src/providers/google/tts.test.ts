@@ -1,15 +1,15 @@
 import { Effect, Layer } from 'effect';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { VoiceNotFoundError } from '../../errors';
+import { TTS } from '../../tts/service';
 import {
   AIUsageRecorder,
   type PersistAIUsageInput,
   withAIUsageScope,
 } from '../../usage';
-import { TTS } from '../service';
-import { GoogleTTSLive } from './google';
+import { GoogleTTSLive } from './tts';
 
-vi.mock('../../provider-retry', () => ({
+vi.mock('../retry', () => ({
   retryTransientProvider: <A, E, R>(
     effect: Effect.Effect<A, E, R>,
   ): Effect.Effect<A, E, R> => effect,

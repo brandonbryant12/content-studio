@@ -9,7 +9,7 @@ import {
   updatePersona,
   deletePersona,
   generateAvatar,
-} from '@repo/media';
+} from '@repo/media/persona';
 import { Effect } from 'effect';
 import { bindEffectProtocol } from '../effect-handler';
 import { protectedProcedure } from '../orpc';
@@ -35,7 +35,7 @@ const personaRouter = {
   get: protectedProcedure.personas.get.handler(
     async ({ context, input, errors }) =>
       bindEffectProtocol({ context, errors }).run(
-        getPersona({ personaId: input.id }).pipe(
+        getPersona({ personaId: input.id, userId: input.userId }).pipe(
           Effect.flatMap(serializePersonaEffect),
         ),
         {

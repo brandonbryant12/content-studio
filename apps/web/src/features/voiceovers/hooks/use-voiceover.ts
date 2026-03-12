@@ -8,15 +8,22 @@ import { apiClient } from '@/clients/apiClient';
 
 type Voiceover = RouterOutput['voiceovers']['get'];
 
+interface VoiceoverAccessOptions {
+  userId?: string;
+}
+
 /**
  * Fetch a single voiceover by ID.
  * Uses Suspense - wrap with SuspenseBoundary.
  */
 export function useVoiceover(
   voiceoverId: string,
+  options: VoiceoverAccessOptions = {},
 ): UseSuspenseQueryResult<Voiceover, Error> {
   return useSuspenseQuery(
-    apiClient.voiceovers.get.queryOptions({ input: { id: voiceoverId } }),
+    apiClient.voiceovers.get.queryOptions({
+      input: { id: voiceoverId, userId: options.userId },
+    }),
   );
 }
 
@@ -24,7 +31,11 @@ export function useVoiceover(
  * Get the query key for a voiceover.
  * Useful for cache operations.
  */
-export function getVoiceoverQueryKey(voiceoverId: string): QueryKey {
-  return apiClient.voiceovers.get.queryOptions({ input: { id: voiceoverId } })
-    .queryKey;
+export function getVoiceoverQueryKey(
+  voiceoverId: string,
+  options: VoiceoverAccessOptions = {},
+): QueryKey {
+  return apiClient.voiceovers.get.queryOptions({
+    input: { id: voiceoverId, userId: options.userId },
+  }).queryKey;
 }

@@ -14,12 +14,12 @@ import { Effect, Layer } from 'effect';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import type { ServerRuntime } from '../../runtime';
 import type { AudioEncoding, VoiceInfo } from '@repo/ai';
-import voicesRouter from '../voices';
 import {
   createMockContext,
   createMockErrors,
   createTestServerRuntime,
-} from './helpers';
+} from '../_shared/test-helpers';
+import voicesRouter from '../voices';
 
 type ORPCProcedure = {
   '~orpc': { handler: (args: unknown) => Promise<unknown> };

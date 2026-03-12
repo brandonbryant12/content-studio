@@ -23,6 +23,10 @@
       "types": "./dist/src/chat/index.d.ts",
       "default": "./src/chat/index.ts"
     },
+    "./image-gen": {
+      "types": "./dist/src/image-gen/index.d.ts",
+      "default": "./src/image-gen/index.ts"
+    },
     "./usage": {
       "types": "./dist/src/usage/index.d.ts",
       "default": "./src/usage/index.ts"
@@ -30,6 +34,10 @@
     "./prompt-registry": {
       "types": "./dist/src/prompt-registry/index.d.ts",
       "default": "./src/prompt-registry/index.ts"
+    },
+    "./research": {
+      "types": "./dist/src/research/index.d.ts",
+      "default": "./src/research/index.ts"
     },
     "./testing": {
       "types": "./dist/src/testing/index.d.ts",

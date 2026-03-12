@@ -1,7 +1,7 @@
 import { createMockImageGen } from '@repo/ai/testing';
 import { DatabasePolicyLive, type User } from '@repo/auth/policy';
 import { user as userTable } from '@repo/db/schema';
-import { PersonaRepoLive } from '@repo/media';
+import { PersonaRepoLive } from '@repo/media/persona';
 import { createInMemoryStorage } from '@repo/storage/testing';
 import {
   createTestContext,
@@ -13,12 +13,12 @@ import {
 import { Layer } from 'effect';
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import type { ServerRuntime } from '../../runtime';
-import personaRouter from '../persona';
 import {
   createMockContext,
   createMockErrors,
   createTestServerRuntime,
-} from './helpers';
+} from '../_shared/test-helpers';
+import personaRouter from '../persona';
 
 type ORPCProcedure = {
   '~orpc': { handler: (args: unknown) => Promise<unknown> };

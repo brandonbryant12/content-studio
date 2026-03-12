@@ -131,35 +131,72 @@ function VoiceSelector({
             sideOffset={4}
           >
             <SelectPrimitive.Viewport>
-              {VOICES.map((voice) => {
-                const isDisabled = voice.id === disabledVoice;
-                return (
-                  <SelectPrimitive.Item
-                    key={voice.id}
-                    value={voice.id}
-                    disabled={isDisabled}
-                    className={`mixer-voice-option ${value === voice.id ? 'selected' : ''} ${isDisabled ? 'disabled' : ''}`}
-                  >
-                    <div
-                      className={`mixer-voice-option-avatar ${voice.gender === 'female' ? 'bg-warning/20 text-warning' : 'bg-info/20 text-info'}`}
+              <SelectPrimitive.Group>
+                <SelectPrimitive.Label className="mixer-voice-group-label">
+                  <span className="inline-block w-1.5 h-1.5 rounded-full bg-warning" />
+                  Female
+                </SelectPrimitive.Label>
+                {VOICES.filter((v) => v.gender === 'female').map((voice) => {
+                  const isDisabled = voice.id === disabledVoice;
+                  return (
+                    <SelectPrimitive.Item
+                      key={voice.id}
+                      value={voice.id}
+                      disabled={isDisabled}
+                      className={`mixer-voice-option ${value === voice.id ? 'selected' : ''} ${isDisabled ? 'disabled' : ''}`}
                     >
-                      {voice.name.charAt(0)}
-                    </div>
-                    <SelectPrimitive.ItemText>
-                      <span className="mixer-voice-option-name">
-                        {voice.name}
-                      </span>
-                    </SelectPrimitive.ItemText>
-                    <VoicePreviewBtn
-                      voiceId={voice.id}
-                      voiceName={voice.name}
-                      disabled={isDisabled || !previewUrls[voice.id]}
-                      isPlaying={playingVoiceId === voice.id}
-                      onPreview={onPreview}
-                    />
-                  </SelectPrimitive.Item>
-                );
-              })}
+                      <div className="mixer-voice-option-avatar bg-warning/20 text-warning">
+                        {voice.name.charAt(0)}
+                      </div>
+                      <SelectPrimitive.ItemText>
+                        <span className="mixer-voice-option-name">
+                          {voice.name}
+                        </span>
+                      </SelectPrimitive.ItemText>
+                      <VoicePreviewBtn
+                        voiceId={voice.id}
+                        voiceName={voice.name}
+                        disabled={isDisabled || !previewUrls[voice.id]}
+                        isPlaying={playingVoiceId === voice.id}
+                        onPreview={onPreview}
+                      />
+                    </SelectPrimitive.Item>
+                  );
+                })}
+              </SelectPrimitive.Group>
+              <SelectPrimitive.Group>
+                <SelectPrimitive.Label className="mixer-voice-group-label">
+                  <span className="inline-block w-1.5 h-1.5 rounded-full bg-info" />
+                  Male
+                </SelectPrimitive.Label>
+                {VOICES.filter((v) => v.gender === 'male').map((voice) => {
+                  const isDisabled = voice.id === disabledVoice;
+                  return (
+                    <SelectPrimitive.Item
+                      key={voice.id}
+                      value={voice.id}
+                      disabled={isDisabled}
+                      className={`mixer-voice-option ${value === voice.id ? 'selected' : ''} ${isDisabled ? 'disabled' : ''}`}
+                    >
+                      <div className="mixer-voice-option-avatar bg-info/20 text-info">
+                        {voice.name.charAt(0)}
+                      </div>
+                      <SelectPrimitive.ItemText>
+                        <span className="mixer-voice-option-name">
+                          {voice.name}
+                        </span>
+                      </SelectPrimitive.ItemText>
+                      <VoicePreviewBtn
+                        voiceId={voice.id}
+                        voiceName={voice.name}
+                        disabled={isDisabled || !previewUrls[voice.id]}
+                        isPlaying={playingVoiceId === voice.id}
+                        onPreview={onPreview}
+                      />
+                    </SelectPrimitive.Item>
+                  );
+                })}
+              </SelectPrimitive.Group>
             </SelectPrimitive.Viewport>
           </SelectPrimitive.Content>
         </SelectPrimitive.Portal>

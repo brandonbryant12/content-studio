@@ -26,7 +26,6 @@ export interface GeneratePodcastPayload {
   readonly podcastId: string;
   readonly userId: string;
   readonly promptInstructions?: string;
-  readonly ignoreEpisodePlan?: boolean;
 }
 
 export interface GeneratePodcastResult {
@@ -40,7 +39,6 @@ export interface GenerateScriptPayload {
   readonly podcastId: string;
   readonly userId: string;
   readonly promptInstructions?: string;
-  readonly ignoreEpisodePlan?: boolean;
 }
 
 export interface GenerateScriptResult {

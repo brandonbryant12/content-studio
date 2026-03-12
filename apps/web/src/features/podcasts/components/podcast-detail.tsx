@@ -34,6 +34,7 @@ interface PodcastApprovalState {
 
 interface PodcastDetailProps {
   podcast: Podcast;
+  userId?: string;
   scriptEditor: UseScriptEditorReturn;
   settings: UsePodcastSettingsReturn;
   sourceSelection: UseSourceSelectionReturn;
@@ -54,6 +55,7 @@ interface PodcastDetailProps {
 
 export function PodcastDetail({
   podcast,
+  userId,
   scriptEditor,
   settings,
   sourceSelection,
@@ -111,6 +113,7 @@ export function PodcastDetail({
       rightPanel={
         <ConfigPanel
           podcast={podcast}
+          userId={userId}
           isGenerating={isGenerating}
           isPendingGeneration={isPendingGeneration}
           settings={settings}

@@ -12,6 +12,7 @@ import {
 } from '../../shared';
 import { getSourceContent } from '../../source';
 import { PODCAST_LLM_MODEL, PODCAST_SCRIPT_MAX_TOKENS } from '../constants';
+import { generateEpisodePlanForPodcast } from '../episode-plan-generation';
 import {
   buildSystemPrompt,
   buildUserPrompt,
@@ -28,7 +29,6 @@ import { sanitizePodcastScriptSegments } from '../script-segments';
 export interface GenerateScriptInput {
   podcastId: string;
   promptInstructions?: string;
-  ignoreEpisodePlan?: boolean;
 }
 
 export interface GenerateScriptResult {
@@ -152,18 +152,30 @@ export const generateScript = (input: GenerateScriptInput) =>
     );
     const combinedContent = sourceContents.join('\n\n---\n\n');
 
+    const episodePlan =
+      podcast.episodePlan ??
+      (yield* Effect.gen(function* () {
+        const generatedPlan = yield* generateEpisodePlanForPodcast({
+          podcast,
+          setupInstructionsOverride: input.promptInstructions,
+        });
+
+        yield* podcastRepo.update(input.podcastId, {
+          episodePlan: generatedPlan,
+        });
+
+        return generatedPlan;
+      }));
+
     const effectivePrompt =
-      input.promptInstructions ??
-      (input.ignoreEpisodePlan ? '' : (podcast.promptInstructions ?? ''));
+      input.promptInstructions ?? podcast.promptInstructions ?? '';
     const promptContext: ScriptPromptContext = {
       format: podcast.format,
       targetDurationMinutes: podcast.targetDurationMinutes,
       customInstructions: effectivePrompt,
       hostPersona,
       coHostPersona,
-      episodePlan: input.ignoreEpisodePlan
-        ? undefined
-        : (podcast.episodePlan ?? undefined),
+      episodePlan,
     };
     const systemPrompt = buildSystemPrompt(promptContext);
     const userPrompt = buildUserPrompt(

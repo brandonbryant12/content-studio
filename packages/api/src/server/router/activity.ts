@@ -1,5 +1,5 @@
 import { serializeActivityLogsEffect } from '@repo/db/schema';
-import { listActivity, getActivityStats } from '@repo/media';
+import { getActivityStats, listActivity } from '@repo/media/activity';
 import { Effect } from 'effect';
 import { bindEffectProtocol } from '../effect-handler';
 import { protectedProcedure } from '../orpc';

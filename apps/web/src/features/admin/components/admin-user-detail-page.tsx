@@ -16,7 +16,6 @@ import {
   TabsTrigger,
 } from '@repo/ui/components/tabs';
 import { Link } from '@tanstack/react-router';
-import { useState } from 'react';
 import type {
   AIUsagePeriod,
   AdminUserDetail,
@@ -339,6 +338,9 @@ function UsageBreakdownList<Row extends UsageBreakdownRow>({
 interface EntityItemLink {
   readonly to: string;
   readonly params: Record<string, string>;
+  readonly search?: {
+    readonly userId?: string;
+  };
 }
 
 function EntityItemCard({
@@ -375,6 +377,7 @@ function EntityItemCard({
       <Link
         to={link.to}
         params={link.params}
+        search={link.search}
         className="group block rounded-2xl border border-border/50 bg-background/80 p-4 transition-colors hover:border-primary/30 hover:bg-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
         aria-label={`View ${title}`}
       >
@@ -465,37 +468,51 @@ function AdminUserSummaryHeader({
   );
 }
 
-function AdminUserSectionSelect({
+function AdminUserSectionTabs({
   tabs,
-  value,
-  onValueChange,
 }: {
   tabs: ReadonlyArray<DetailSectionDefinition>;
-  value: string;
-  onValueChange: (value: string) => void;
 }) {
   return (
-    <div className="flex items-center gap-3">
-      <label
-        htmlFor="admin-section-select"
-        className="text-sm font-medium text-muted-foreground"
-      >
-        Viewing
-      </label>
-      <select
-        id="admin-section-select"
-        value={value}
-        onChange={(e) => onValueChange(e.target.value)}
-        className="h-10 cursor-pointer appearance-none rounded-xl border border-border/60 bg-card/80 px-4 pr-8 text-sm font-semibold text-foreground shadow-sm transition-colors hover:bg-card focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
-        aria-label="Select section"
+    <section className="rounded-3xl border border-border/60 bg-card/80 p-4 shadow-sm sm:p-5">
+      <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
+        <div>
+          <p className="page-eyebrow">Sections</p>
+          <h2 className="text-2xl font-semibold tracking-tight text-foreground">
+            Jump between user detail areas
+          </h2>
+          <p className="mt-2 text-sm text-muted-foreground">
+            Open one section at a time instead of scanning a long admin page.
+          </p>
+        </div>
+        <p className="text-sm text-muted-foreground">{tabs.length} sections</p>
+      </div>
+
+      <TabsList
+        aria-label="Admin user detail sections"
+        className="mt-5 flex h-auto w-full flex-wrap justify-start gap-2 rounded-3xl bg-muted/30 p-2"
       >
         {tabs.map((tab) => (
-          <option key={tab.value} value={tab.value}>
-            {tab.label} ({tab.count})
-          </option>
+          <TabsTrigger
+            key={tab.value}
+            value={tab.value}
+            className="h-auto min-w-[160px] flex-1 justify-between gap-3 rounded-2xl border border-transparent px-4 py-3 text-left data-[state=active]:border-border/60 data-[state=active]:bg-background"
+          >
+            <span className="min-w-0">
+              <span className="block text-sm font-semibold text-foreground">
+                {tab.label}
+              </span>
+              <span className="mt-1 block truncate text-xs text-muted-foreground">
+                {tab.description}
+              </span>
+            </span>
+            <span className="rounded-full border border-border/60 bg-background/70 px-2.5 py-1 text-xs font-medium text-foreground">
+              {tab.count}
+            </span>
+          </TabsTrigger>
         ))}
-      </select>
-    </div>
+      </TabsList>
+    </section>
   );
 }
 
@@ -542,9 +559,11 @@ function RecentEntitySection<Item extends RecentEntityRecord>({
 }
 
 function AdminUserRecentEntityTabs({
+  targetUserId,
   entityCounts,
   recentEntities,
 }: {
+  targetUserId: string;
   entityCounts: EntityCounts;
   recentEntities: RecentEntities;
 }) {
@@ -563,6 +582,7 @@ function AdminUserRecentEntityTabs({
           getItemLink={(source) => ({
             to: '/sources/$sourceId',
             params: { sourceId: String(source.id) },
+            search: { userId: targetUserId },
           })}
         />
       </TabsContent>
@@ -580,6 +600,7 @@ function AdminUserRecentEntityTabs({
           getItemLink={(podcast) => ({
             to: '/podcasts/$podcastId',
             params: { podcastId: String(podcast.id) },
+            search: { userId: targetUserId },
           })}
         />
       </TabsContent>
@@ -599,6 +620,7 @@ function AdminUserRecentEntityTabs({
           getItemLink={(voiceover) => ({
             to: '/voiceovers/$voiceoverId',
             params: { voiceoverId: String(voiceover.id) },
+            search: { userId: targetUserId },
           })}
         />
       </TabsContent>
@@ -621,6 +643,7 @@ function AdminUserRecentEntityTabs({
           getItemLink={(persona) => ({
             to: '/personas/$personaId',
             params: { personaId: String(persona.id) },
+            search: { userId: targetUserId },
           })}
         />
       </TabsContent>
@@ -640,6 +663,7 @@ function AdminUserRecentEntityTabs({
           getItemLink={(infographic) => ({
             to: '/infographics/$infographicId',
             params: { infographicId: String(infographic.id) },
+            search: { userId: targetUserId },
           })}
         />
       </TabsContent>
@@ -842,9 +866,6 @@ export function AdminUserDetailPage({
     aiUsageSummary,
   });
 
-  const [activeSection, setActiveSection] =
-    useState<DetailSectionTab>('sources');
-
   return (
     <div className="page-container">
       <AdminUserSummaryHeader
@@ -854,23 +875,17 @@ export function AdminUserDetailPage({
         aiUsageSummary={aiUsageSummary}
       />
 
-      <Tabs
-        value={activeSection}
-        onValueChange={(v) => setActiveSection(v as DetailSectionTab)}
-        className="space-y-6"
-      >
-        <AdminUserSectionSelect
-          tabs={detailSectionTabs}
-          value={activeSection}
-          onValueChange={(v) => setActiveSection(v as DetailSectionTab)}
-        />
+      <Tabs defaultValue="sources" className="space-y-6">
+        <AdminUserSectionTabs tabs={detailSectionTabs} />
         <AdminUserRecentEntityTabs
+          targetUserId={detail.user.id}
           entityCounts={entityCounts}
           recentEntities={recentEntities}
         />
 
         <TabsContent value="entity-explorer" className="mt-0">
           <AdminUserEntityBrowser
+            targetUserId={detail.user.id}
             entityList={entityList}
             searchQuery={entityQuery}
             onSearchChange={onEntityQueryChange}

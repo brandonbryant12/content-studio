@@ -24,7 +24,7 @@ export function ChatMessage({ message, isStreaming }: ChatMessageProps) {
     <div className={cn('flex', isUser ? 'justify-end' : 'justify-start')}>
       <div
         className={cn(
-          'max-w-[85%] min-w-0 rounded-2xl px-4 py-2.5',
+          'max-w-[80%] min-w-0 rounded-2xl px-5 py-3',
           isUser
             ? 'bg-primary text-primary-foreground'
             : 'bg-muted text-foreground',

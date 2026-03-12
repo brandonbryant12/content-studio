@@ -1,5 +1,5 @@
 import { JobStatus, SourceStatus, JobType } from '@repo/db/schema';
-import { DeepResearchFeature, SourceRepo } from '@repo/media';
+import { DeepResearchFeature, SourceRepo } from '@repo/media/source';
 import {
   Queue,
   formatError,

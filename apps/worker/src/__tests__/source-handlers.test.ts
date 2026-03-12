@@ -2,10 +2,10 @@ import { Db, DbError } from '@repo/db/effect';
 import {
   SourceRepo,
   type SourceRepoService,
+  UrlFetchError,
   UrlScraper,
   type UrlScraperService,
-  UrlFetchError,
-} from '@repo/media';
+} from '@repo/media/source';
 import {
   Storage,
   type StorageService,

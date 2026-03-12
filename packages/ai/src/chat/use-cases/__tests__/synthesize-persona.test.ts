@@ -68,6 +68,81 @@ function makeLongConversation(): UIMessage[] {
 }
 
 describe('synthesizePersona', () => {
+  it.effect('removes honorifics and credentials from synthesized names', () => {
+    const generate = vi.fn().mockReturnValue(
+      Effect.succeed({
+        object: {
+          ...basePersona,
+          name: 'Dr. James Naismith, PhD',
+        },
+      }),
+    );
+
+    return Effect.gen(function* () {
+      const result = yield* synthesizePersona({
+        messages: [
+          {
+            id: 'u1',
+            role: 'user',
+            parts: [
+              {
+                type: 'text',
+                text: 'Create a thoughtful basketball history podcast co-host.',
+              },
+            ],
+          },
+        ],
+      }).pipe(
+        Effect.provide(
+          makeLayer(generate as unknown as LLMService['generate']),
+        ),
+      );
+
+      expect(result.name).toBe('James Naismith');
+    });
+  });
+
+  it.effect('forces voice sex to match explicit conversation cues', () => {
+    const generate = vi.fn().mockReturnValue(
+      Effect.succeed({
+        object: {
+          ...basePersona,
+          name: 'Elena Park',
+          voiceId: 'Puck',
+          voiceName: 'Puck',
+        },
+      }),
+    );
+
+    return Effect.gen(function* () {
+      const result = yield* synthesizePersona({
+        messages: [
+          {
+            id: 'u1',
+            role: 'user',
+            parts: [
+              {
+                type: 'text',
+                text: 'Create a female economics host named Elena Park with a lively style.',
+              },
+            ],
+          },
+        ],
+      }).pipe(
+        Effect.provide(
+          makeLayer(generate as unknown as LLMService['generate']),
+        ),
+      );
+
+      const firstCall = generate.mock.calls[0]?.[0];
+      expect(firstCall?.prompt).toContain(
+        'should use a female voice. Select only from the available female voices',
+      );
+      expect(result.voiceId).toBe('Aoede');
+      expect(result.voiceName).toBe('Aoede');
+    });
+  });
+
   it.effect('strips control tokens from synthesis prompt', () => {
     const generate = vi.fn().mockReturnValue(
       Effect.succeed({
@@ -103,6 +178,7 @@ describe('synthesizePersona', () => {
       const firstCall = generate.mock.calls[0]?.[0];
       expect(firstCall?.prompt).toBeDefined();
       expect(firstCall.prompt).not.toContain('[[CREATE_PERSONA]]');
+      expect(firstCall.temperature).toBe(0.5);
       expect(result.name).toBe(basePersona.name);
     });
   });
@@ -134,6 +210,8 @@ describe('synthesizePersona', () => {
       );
 
       expect(generate).toHaveBeenCalledTimes(2);
+      expect(generate.mock.calls[0]?.[0]?.temperature).toBe(0.5);
+      expect(generate.mock.calls[1]?.[0]?.temperature).toBe(0.2);
       const firstPrompt = generate.mock.calls[0]?.[0]?.prompt as string;
       const fallbackPrompt = generate.mock.calls[1]?.[0]?.prompt as string;
       expect(fallbackPrompt.length).toBeLessThan(firstPrompt.length);

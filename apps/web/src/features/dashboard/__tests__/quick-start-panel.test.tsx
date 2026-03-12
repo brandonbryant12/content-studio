@@ -24,11 +24,14 @@ function createProps(
       isPodcastPending: false,
       onCreateVoiceover: vi.fn(),
       isVoiceoverPending: false,
+      onCreateInfographic: vi.fn(),
+      isInfographicPending: false,
     },
     documentDialogs: {
       onUploadOpenChange: vi.fn(),
       onUrlDialogOpenChange: vi.fn(),
       onResearchDialogOpenChange: vi.fn(),
+      onOpenResearchWithPodcast: vi.fn(),
     },
     ...overrides,
   };
@@ -53,6 +56,7 @@ describe('QuickStartPanel', () => {
             onUploadOpenChange,
             onUrlDialogOpenChange: vi.fn(),
             onResearchDialogOpenChange: vi.fn(),
+            onOpenResearchWithPodcast: vi.fn(),
           },
         })}
       />,
@@ -82,6 +86,9 @@ describe('QuickStartPanel', () => {
     ).toBeInTheDocument();
     expect(
       screen.getByRole('button', { name: /Create Voiceover/i }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole('button', { name: /Create Infographic/i }),
     ).toBeInTheDocument();
   });
 
@@ -123,5 +130,57 @@ describe('QuickStartPanel', () => {
     );
 
     expect(screen.getByText('Quick create:')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Infographic/i })).toBeEnabled();
+  });
+
+  it('triggers infographic creation from suggestion and toolbar actions', () => {
+    const onCreateInfographic = vi.fn();
+    const { rerender } = render(
+      <QuickStartPanel
+        {...createProps({
+          counts: {
+            sources: 3,
+            podcasts: 2,
+            voiceovers: 0,
+            infographics: 0,
+          },
+          createActions: {
+            onCreatePodcast: vi.fn(),
+            isPodcastPending: false,
+            onCreateVoiceover: vi.fn(),
+            isVoiceoverPending: false,
+            onCreateInfographic,
+            isInfographicPending: false,
+          },
+        })}
+      />,
+    );
+
+    screen.getByRole('button', { name: /Infographic/i }).click();
+    expect(onCreateInfographic).toHaveBeenCalledTimes(1);
+
+    rerender(
+      <QuickStartPanel
+        {...createProps({
+          counts: {
+            sources: 3,
+            podcasts: 2,
+            voiceovers: 1,
+            infographics: 1,
+          },
+          createActions: {
+            onCreatePodcast: vi.fn(),
+            isPodcastPending: false,
+            onCreateVoiceover: vi.fn(),
+            isVoiceoverPending: false,
+            onCreateInfographic,
+            isInfographicPending: false,
+          },
+        })}
+      />,
+    );
+
+    screen.getByRole('button', { name: /Infographic/i }).click();
+    expect(onCreateInfographic).toHaveBeenCalledTimes(2);
   });
 });

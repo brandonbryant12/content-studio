@@ -7,6 +7,7 @@ import {
 import { Effect, Layer } from 'effect';
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import type { Persona } from '@repo/db/schema';
+import { PersonaNotFound } from '../../../errors';
 import {
   createMockPersonaRepo,
   MockDbLive,
@@ -61,18 +62,40 @@ describe('getPersona', () => {
     expect(result.id).toBe(persona.id);
   });
 
-  it('allows admins to access a persona they do not own', async () => {
+  it('fails when admin has no explicit target for another user persona', async () => {
     const admin = createTestAdmin({ id: 'admin-1' });
     const persona = createPersonaRecord({ createdBy: 'member-1' });
-    const findByIdSpy = vi.fn();
     const findByIdForUserSpy = vi.fn();
 
     const repo = createMockPersonaRepo({
-      findById: (id) =>
-        Effect.sync(() => {
-          findByIdSpy(id);
-          return persona;
+      findByIdForUser: (id, userId) =>
+        Effect.suspend(() => {
+          findByIdForUserSpy(id, userId);
+          if (userId === admin.id) {
+            return Effect.fail(new PersonaNotFound({ id }));
+          }
+          return Effect.succeed(persona);
         }),
+    });
+
+    const layers = Layer.mergeAll(MockDbLive, repo);
+
+    await expect(
+      Effect.runPromise(
+        withTestUser(admin)(
+          getPersona({ personaId: persona.id }).pipe(Effect.provide(layers)),
+        ),
+      ),
+    ).rejects.toThrow();
+    expect(findByIdForUserSpy).toHaveBeenCalledWith(persona.id, admin.id);
+  });
+
+  it('allows admins to access another user persona when userId is provided', async () => {
+    const admin = createTestAdmin({ id: 'admin-1' });
+    const persona = createPersonaRecord({ createdBy: 'member-1' });
+    const findByIdForUserSpy = vi.fn();
+
+    const repo = createMockPersonaRepo({
       findByIdForUser: (id, userId) =>
         Effect.sync(() => {
           findByIdForUserSpy(id, userId);
@@ -84,12 +107,17 @@ describe('getPersona', () => {
 
     const result = await Effect.runPromise(
       withTestUser(admin)(
-        getPersona({ personaId: persona.id }).pipe(Effect.provide(layers)),
+        getPersona({
+          personaId: persona.id,
+          userId: persona.createdBy,
+        }).pipe(Effect.provide(layers)),
       ),
     );
 
-    expect(findByIdSpy).toHaveBeenCalledWith(persona.id);
-    expect(findByIdForUserSpy).not.toHaveBeenCalled();
+    expect(findByIdForUserSpy).toHaveBeenCalledWith(
+      persona.id,
+      persona.createdBy,
+    );
     expect(result.id).toBe(persona.id);
   });
 });

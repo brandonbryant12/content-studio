@@ -21,6 +21,7 @@ describe('StepQuickStart', () => {
     render(<ControlledStepQuickStart />);
 
     expect(screen.getByText('Custom Instructions')).toBeInTheDocument();
+    expect(screen.getByText(/planner and script/i)).toBeInTheDocument();
     expect(screen.getByText('Conversational')).toBeInTheDocument();
     expect(screen.getByText('Deep dive')).toBeInTheDocument();
   });

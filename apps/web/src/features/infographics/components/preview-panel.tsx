@@ -49,7 +49,7 @@ export function PreviewPanel({
     <img
       src={imageUrl}
       alt={`${title} infographic`}
-      className="max-w-full max-h-full rounded-lg object-contain shadow-lg ring-1 ring-border/10"
+      className="max-w-full max-h-full rounded-md object-contain"
     />
   );
 }

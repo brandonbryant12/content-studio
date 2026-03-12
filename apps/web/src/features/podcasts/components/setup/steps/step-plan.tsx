@@ -42,7 +42,7 @@ function getWaitingCopy(pendingSourceCount: number) {
     return 'Generate a plan from your sources, then review it before the first script draft.';
   }
 
-  return `${pendingSourceCount} selected source${pendingSourceCount === 1 ? ' is' : 's are'} still processing. You can skip planning and start the draft now.`;
+  return `${pendingSourceCount} selected source${pendingSourceCount === 1 ? ' is' : 's are'} still processing. You can still generate now. Once those sources are ready, we will build the episode plan in the background and continue into the draft.`;
 }
 
 function StepPlanHeader() {
@@ -51,7 +51,8 @@ function StepPlanHeader() {
       <p className="setup-step-eyebrow">Step 4 of 4</p>
       <h2 className="setup-step-title">Episode Planner</h2>
       <p className="setup-step-description">
-        Shape the episode before script generation. Planning is optional.
+        Review the episode plan before scripting, or let Generate create it in
+        the background.
       </p>
     </div>
   );
@@ -155,7 +156,7 @@ function EmptyPlanState({
 
         <div className="rounded-xl border border-border/60 bg-card p-5">
           <p className="text-sm font-semibold text-foreground">
-            When skipping makes sense
+            If you want to generate now
           </p>
           <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
             {getWaitingCopy(pendingSourceCount)}

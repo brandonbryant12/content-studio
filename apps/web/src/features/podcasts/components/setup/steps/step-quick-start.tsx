@@ -33,7 +33,8 @@ export function StepQuickStart({
         <p className="setup-step-eyebrow">Step 3 of 4</p>
         <h2 className="setup-step-title">Custom Instructions</h2>
         <p className="setup-step-description">
-          Add any special directions for the script. This step is optional.
+          Add any special directions for the planner and script. This step is
+          optional.
         </p>
       </div>
 
@@ -67,7 +68,8 @@ export function StepQuickStart({
       </div>
 
       <p className="setup-hint mt-4 text-center">
-        You can always edit these later in the workbench.
+        Generate uses these directions for the background episode plan and the
+        final draft. You can always refine them later in the workbench.
       </p>
     </div>
   );

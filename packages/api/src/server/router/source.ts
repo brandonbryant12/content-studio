@@ -13,11 +13,11 @@ import {
   createFromUrl,
   createFromResearch,
   retryProcessing,
-} from '@repo/media';
+} from '@repo/media/source';
 import { Effect } from 'effect';
 import { bindEffectProtocol } from '../effect-handler';
 import { protectedProcedure } from '../orpc';
-import { tapLogActivity, tapSyncTitle } from './log-activity';
+import { tapLogActivity, tapSyncTitle } from './_shared/entity-activity';
 
 const sourceRouter = {
   list: protectedProcedure.sources.list.handler(
@@ -40,7 +40,9 @@ const sourceRouter = {
   get: protectedProcedure.sources.get.handler(
     async ({ context, input, errors }) =>
       bindEffectProtocol({ context, errors }).run(
-        getSource({ id: input.id }).pipe(Effect.flatMap(serializeSourceEffect)),
+        getSource({ id: input.id, userId: input.userId }).pipe(
+          Effect.flatMap(serializeSourceEffect),
+        ),
         {
           attributes: { 'source.id': input.id },
         },
@@ -50,7 +52,7 @@ const sourceRouter = {
   getContent: protectedProcedure.sources.getContent.handler(
     async ({ context, input, errors }) =>
       bindEffectProtocol({ context, errors }).run(
-        getSourceContent({ id: input.id }),
+        getSourceContent({ id: input.id, userId: input.userId }),
         {
           attributes: { 'source.id': input.id },
         },

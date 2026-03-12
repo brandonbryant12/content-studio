@@ -4,7 +4,7 @@ import {
   user as userTable,
   type InfographicOutput,
 } from '@repo/db/schema';
-import { InfographicRepoLive } from '@repo/media';
+import { InfographicRepoLive } from '@repo/media/infographic';
 import {
   createTestAdmin,
   createTestContext,
@@ -18,14 +18,14 @@ import { eq } from 'drizzle-orm';
 import { Layer } from 'effect';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import type { ServerRuntime } from '../../runtime';
-import infographicRouter from '../infographic';
 import {
   callORPCHandler,
   createMockContext,
   createMockErrors,
   createTestServerRuntime,
   expectHandlerErrorCode,
-} from './helpers';
+} from '../_shared/test-helpers';
+import infographicRouter from '../infographic';
 
 type ORPCProcedure = {
   '~orpc': { handler: (args: unknown) => Promise<unknown> };

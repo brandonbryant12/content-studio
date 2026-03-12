@@ -1,4 +1,4 @@
-import { processUrl } from '@repo/media';
+import { processUrl } from '@repo/media/source';
 import type { ProcessUrlPayload } from '@repo/queue';
 import { defineJobHandler } from './job-handler';
 

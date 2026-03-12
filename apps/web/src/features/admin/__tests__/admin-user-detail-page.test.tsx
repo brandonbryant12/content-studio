@@ -8,17 +8,27 @@ vi.mock('@tanstack/react-router', () => ({
     children,
     to,
     params,
+    search,
     ...rest
   }: {
     children: ReactNode;
     to: string;
     params?: Record<string, string>;
+    search?: Record<string, string | undefined>;
     [key: string]: unknown;
   }) => {
-    const href = Object.entries(params ?? {}).reduce(
+    const path = Object.entries(params ?? {}).reduce(
       (path, [key, value]) => path.replace(`$${key}`, value),
       to,
     );
+    const searchParams = new URLSearchParams();
+    for (const [key, value] of Object.entries(search ?? {})) {
+      if (typeof value === 'string' && value.length > 0) {
+        searchParams.set(key, value);
+      }
+    }
+    const queryString = searchParams.toString();
+    const href = queryString.length > 0 ? `${path}?${queryString}` : path;
 
     return (
       <a href={href} {...rest}>
@@ -298,11 +308,22 @@ const renderPage = (
   overrides: Partial<ComponentProps<typeof AdminUserDetailPage>> = {},
 ) => render(<AdminUserDetailPage {...createProps(overrides)} />);
 
+const SECTION_LABELS: Record<string, string> = {
+  sources: 'Sources',
+  podcasts: 'Podcasts',
+  voiceovers: 'Voiceovers',
+  personas: 'Personas',
+  infographics: 'Infographics',
+  'entity-explorer': 'All Content',
+  'ai-usage': 'AI Usage',
+};
+
 const selectSection = async (
   user: ReturnType<typeof userEvent.setup>,
   value: string,
 ) => {
-  await user.selectOptions(screen.getByLabelText('Select section'), value);
+  const label = SECTION_LABELS[value] ?? value;
+  await user.click(screen.getByRole('tab', { name: new RegExp(label) }));
 };
 
 describe('AdminUserDetailPage', () => {
@@ -314,8 +335,14 @@ describe('AdminUserDetailPage', () => {
       screen.getByRole('heading', { name: 'Alice Example' }),
     ).toBeInTheDocument();
     expect(screen.getByText('alice@example.com')).toBeInTheDocument();
-    expect(screen.getByLabelText('Select section')).toHaveValue('sources');
+    expect(screen.getByRole('tab', { name: /Sources/ })).toHaveAttribute(
+      'data-state',
+      'active',
+    );
     expect(screen.getByText('Quarterly Source')).toBeInTheDocument();
+    expect(
+      screen.getByRole('link', { name: 'View Quarterly Source' }),
+    ).toHaveAttribute('href', '/sources/src_test_admin_detail?userId=user-1');
     expect(screen.queryByText('Quarterly Podcast')).not.toBeInTheDocument();
     expect(screen.queryByText('AI Activity')).not.toBeInTheDocument();
 
@@ -344,6 +371,9 @@ describe('AdminUserDetailPage', () => {
     expect(
       screen.getByRole('heading', { name: 'All Content' }),
     ).toBeInTheDocument();
+    expect(
+      screen.getByRole('link', { name: /Quarterly Podcast/i }),
+    ).toHaveAttribute('href', '/podcasts/pod_test_admin_detail?userId=user-1');
 
     await selectSection(user, 'ai-usage');
 

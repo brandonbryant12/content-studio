@@ -18,12 +18,14 @@ import { useNavigationBlock } from '@/shared/hooks';
 
 interface PersonaDetailContainerProps {
   personaId: string;
+  userId?: string;
 }
 
 export function PersonaDetailContainer({
   personaId,
+  userId,
 }: PersonaDetailContainerProps) {
-  const { data: persona } = usePersona(personaId);
+  const { data: persona } = usePersona(personaId, { userId });
 
   const updateMutation = useUpdatePersona(personaId);
   const deleteMutation = useDeletePersona();

@@ -1,14 +1,14 @@
 import { SourceStatus } from '@repo/db/schema';
+import { syncEntityTitle } from '@repo/media/activity';
 import {
-  generateScript,
   generateAudio,
   generateCoverImage,
-  syncEntityTitle,
   PodcastRepo,
-  awaitSourcesReady,
-  type GenerateScriptResult as UseCaseScriptResult,
   type GenerateAudioResult as UseCaseAudioResult,
-} from '@repo/media';
+  generateScript,
+  type GenerateScriptResult as UseCaseScriptResult,
+} from '@repo/media/podcast';
+import { awaitSourcesReady } from '@repo/media/source';
 import { Effect } from 'effect';
 import type {
   GeneratePodcastPayload,
@@ -30,8 +30,7 @@ export const createGeneratePodcastHandler = (publishEvent: PublishEvent) =>
     }),
     run: (job) =>
       Effect.gen(function* () {
-        const { podcastId, promptInstructions, ignoreEpisodePlan } =
-          job.payload;
+        const { podcastId, promptInstructions } = job.payload;
 
         // Wait for any pending research sources before generating script
         const podcastRepo = yield* PodcastRepo;
@@ -51,7 +50,6 @@ export const createGeneratePodcastHandler = (publishEvent: PublishEvent) =>
         const scriptResult: UseCaseScriptResult = yield* generateScript({
           podcastId,
           promptInstructions,
-          ignoreEpisodePlan,
         });
 
         emitEntityChange(
@@ -88,12 +86,11 @@ export const handleGenerateScript = defineJobHandler<GenerateScriptPayload>()({
   }),
   run: (job) =>
     Effect.gen(function* () {
-      const { podcastId, promptInstructions, ignoreEpisodePlan } = job.payload;
+      const { podcastId, promptInstructions } = job.payload;
 
       const result: UseCaseScriptResult = yield* generateScript({
         podcastId,
         promptInstructions,
-        ignoreEpisodePlan,
       });
 
       yield* syncEntityTitle(result.podcast.id, result.podcast.title);

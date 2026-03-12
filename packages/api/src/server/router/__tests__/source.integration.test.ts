@@ -7,10 +7,12 @@ import {
   type SourceId,
   generateSourceId,
 } from '@repo/db/schema';
-import { ActivityLogRepoLive, SourceRepoLive } from '@repo/media';
+import { ActivityLogRepoLive } from '@repo/media/activity';
+import { SourceRepoLive } from '@repo/media/source';
 import { createInMemoryStorage } from '@repo/storage/testing';
 import {
   createTestContext,
+  createTestAdmin,
   createTestUser,
   resetAllFactories,
   toUser,
@@ -20,7 +22,6 @@ import { eq } from 'drizzle-orm';
 import { Layer } from 'effect';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import type { ServerRuntime } from '../../runtime';
-import sourceRouter from '../source';
 import {
   createMockContext,
   createMockErrors,
@@ -28,7 +29,8 @@ import {
   callORPCHandler,
   expectHandlerErrorCode,
   expectIsoTimestamp,
-} from './helpers';
+} from '../_shared/test-helpers';
+import sourceRouter from '../source';
 
 type HandlerArgs = { context: unknown; input?: unknown; errors: unknown };
 
@@ -398,6 +400,37 @@ describe('source router', () => {
       expectIsoTimestamp(result[0].createdAt);
       expectIsoTimestamp(result[0].updatedAt);
     });
+
+    it('keeps admin list scoped to the current admin by default', async () => {
+      const adminUser = createTestAdmin();
+      await insertTestUser(ctx, adminUser);
+
+      const adminContext = createMockContext(runtime, toUser(adminUser));
+      const adminSource = await handlers.create({
+        context: adminContext,
+        input: { title: 'Admin source', content: 'Admin only content' },
+        errors,
+      });
+
+      const otherTestUser = createTestUser();
+      await insertTestUser(ctx, otherTestUser);
+      const otherContext = createMockContext(runtime, toUser(otherTestUser));
+      await handlers.create({
+        context: otherContext,
+        input: { title: 'Other user source', content: 'Private content' },
+        errors,
+      });
+
+      const result = await handlers.list({
+        context: adminContext,
+        input: { limit: 10, offset: 0 },
+        errors,
+      });
+
+      expect(result).toHaveLength(1);
+      expect(result[0]?.id).toBe(adminSource.id);
+      expect(result[0]?.createdBy).toBe(adminUser.id);
+    });
   });
 
   describe('get and getContent handlers', () => {
@@ -431,6 +464,58 @@ describe('source router', () => {
       expectIsoTimestamp(result.createdAt);
       expectIsoTimestamp(result.updatedAt);
       expect(contentResult).toEqual({ content: 'This is stored content.' });
+    });
+
+    it('keeps admins scoped to themselves by default and allows explicit user scope', async () => {
+      const adminUser = createTestAdmin();
+      await insertTestUser(ctx, adminUser);
+      const adminContext = createMockContext(runtime, toUser(adminUser));
+
+      const otherTestUser = createTestUser();
+      await insertTestUser(ctx, otherTestUser);
+      const otherContext = createMockContext(runtime, toUser(otherTestUser));
+      const otherDoc = await handlers.create({
+        context: otherContext,
+        input: {
+          title: 'Other user doc',
+          content: 'Admin scoped content',
+        },
+        errors,
+      });
+
+      await expectHandlerErrorCode(
+        () =>
+          handlers.get({
+            context: adminContext,
+            input: { id: otherDoc.id },
+            errors,
+          }),
+        'SOURCE_NOT_FOUND',
+      );
+      await expectHandlerErrorCode(
+        () =>
+          handlers.getContent({
+            context: adminContext,
+            input: { id: otherDoc.id },
+            errors,
+          }),
+        'SOURCE_NOT_FOUND',
+      );
+
+      const scopedResult = await handlers.get({
+        context: adminContext,
+        input: { id: otherDoc.id, userId: otherTestUser.id },
+        errors,
+      });
+      const scopedContentResult = await handlers.getContent({
+        context: adminContext,
+        input: { id: otherDoc.id, userId: otherTestUser.id },
+        errors,
+      });
+
+      expect(scopedResult.id).toBe(otherDoc.id);
+      expect(scopedResult.createdBy).toBe(otherTestUser.id);
+      expect(scopedContentResult).toEqual({ content: 'Admin scoped content' });
     });
 
     it('returns SOURCE_NOT_FOUND for missing or non-owned sources', async () => {

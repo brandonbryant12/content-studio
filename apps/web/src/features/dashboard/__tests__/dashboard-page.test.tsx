@@ -66,6 +66,8 @@ function createProps(
       onUrlDialogOpenChange: vi.fn(),
       researchDialogOpen: false,
       onResearchDialogOpenChange: vi.fn(),
+      researchAutoGenPodcast: false,
+      onOpenResearchWithPodcast: vi.fn(),
       onCreateFromUrl: vi.fn(),
       isCreateFromUrlPending: false,
     },
@@ -119,6 +121,9 @@ describe('DashboardPage quick-start panel', () => {
     expect(
       screen.getAllByRole('button', { name: /Create Voiceover/i }).length,
     ).toBeGreaterThanOrEqual(1);
+    expect(
+      screen.getAllByRole('button', { name: /Create Infographic/i }).length,
+    ).toBeGreaterThanOrEqual(1);
   });
 
   it('shows suggestion bar for missing content types', () => {
@@ -143,6 +148,11 @@ describe('DashboardPage quick-start panel', () => {
     );
 
     expect(screen.getByText('Quick create:')).toBeInTheDocument();
+    expect(
+      screen
+        .getAllByRole('button', { name: /Infographic/i })
+        .some((button) => !button.hasAttribute('disabled')),
+    ).toBe(true);
   });
 });
 

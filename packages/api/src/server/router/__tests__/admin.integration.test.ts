@@ -14,14 +14,12 @@ import {
   type UserOutput,
   type VoiceoverId,
 } from '@repo/db/schema';
-import {
-  AdminRepoLive,
-  InfographicRepoLive,
-  PersonaRepoLive,
-  PodcastRepoLive,
-  SourceRepoLive,
-  VoiceoverRepoLive,
-} from '@repo/media';
+import { AdminRepoLive } from '@repo/media/admin';
+import { InfographicRepoLive } from '@repo/media/infographic';
+import { PersonaRepoLive } from '@repo/media/persona';
+import { PodcastRepoLive } from '@repo/media/podcast';
+import { SourceRepoLive } from '@repo/media/source';
+import { VoiceoverRepoLive } from '@repo/media/voiceover';
 import {
   createTestAdmin,
   createTestContext,
@@ -37,7 +35,6 @@ import {
 import { Layer } from 'effect';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import type { ServerRuntime } from '../../runtime';
-import adminRouter from '../admin';
 import {
   callORPCHandler,
   createMockContext,
@@ -45,7 +42,8 @@ import {
   createTestServerRuntime,
   expectHandlerErrorCode,
   expectIsoTimestamp,
-} from './helpers';
+} from '../_shared/test-helpers';
+import adminRouter from '../admin';
 
 type ORPCProcedure = {
   '~orpc': { handler: (args: unknown) => Promise<unknown> };

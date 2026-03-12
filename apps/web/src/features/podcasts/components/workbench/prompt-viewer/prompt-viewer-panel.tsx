@@ -15,6 +15,7 @@ type GenerationContext = NonNullable<
 
 interface PromptViewerPanelProps {
   generationContext: GenerationContext;
+  userId?: string;
   onClose: () => void;
 }
 
@@ -31,6 +32,7 @@ function formatDate(isoString: string): string {
 
 export function PromptViewerPanel({
   generationContext,
+  userId,
   onClose,
 }: PromptViewerPanelProps) {
   const {
@@ -135,6 +137,7 @@ export function PromptViewerPanel({
                   key={entry.id}
                   sourceId={entry.id}
                   sourceTitle={entry.title}
+                  userId={userId}
                 />
               ))}
             </div>

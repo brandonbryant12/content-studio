@@ -38,7 +38,7 @@ export interface PodcastScriptSystemPromptInput {
   readonly hostPersona?: PersonaPromptContext | null;
   readonly coHostPersona?: PersonaPromptContext | null;
   readonly targetSegment?: SegmentPromptContext | null;
-  readonly episodePlan?: EpisodePlanPromptContext | null;
+  readonly episodePlan: EpisodePlanPromptContext;
 }
 
 const WORDS_PER_MINUTE = {
@@ -178,7 +178,7 @@ function buildWordBudgetGuidance(
 export const podcastScriptSystemPrompt =
   definePrompt<PodcastScriptSystemPromptInput>({
     id: 'podcast.script.system',
-    version: 6,
+    version: 7,
     owner: PROMPT_OWNER,
     domain: 'podcast',
     role: 'system',
@@ -269,22 +269,14 @@ Break complex topics into digestible segments with natural transitions.`;
         }
       }
 
-      if (episodePlan) {
-        parts.push('\n\n# Approved Episode Plan\n');
-        parts.push(buildEpisodePlanSection(episodePlan, format));
-        parts.push(
-          '\n\nTreat this plan as the required episode structure, but not as a source of factual authority. Source materials remain the ground truth. If the plan or extra instructions conflict with the sources, follow the sources and adapt the structure accordingly.',
-        );
-        parts.push(
-          '\nExpand each approved section to match both its estimatedMinutes and its target word budget. A 2-minute section should usually contain multiple developed exchanges or a fully developed narrated subsection, not a single quick pass.',
-        );
-      } else {
-        parts.push(`\n\n# Episode Structure
-- Build a complete episode arc even without a saved plan.
-- Start with a listener-facing opening hook.
-- Cover 3 to 5 developed body beats with real explanation, examples, and transitions.
-- End with a concrete closing takeaway rather than stopping abruptly.`);
-      }
+      parts.push('\n\n# Approved Episode Plan\n');
+      parts.push(buildEpisodePlanSection(episodePlan, format));
+      parts.push(
+        '\n\nTreat this plan as the required episode structure, but not as a source of factual authority. Source materials remain the ground truth. If the plan or extra instructions conflict with the sources, follow the sources and adapt the structure accordingly.',
+      );
+      parts.push(
+        '\nExpand each approved section to match both its estimatedMinutes and its target word budget. A 2-minute section should usually contain multiple developed exchanges or a fully developed narrated subsection, not a single quick pass.',
+      );
 
       if (instructions) {
         parts.push(`\n\n# Additional Instructions\n${instructions}`);

@@ -8,6 +8,7 @@ import { SourceRepo } from '../repos';
 
 export interface GetSourceContentInput {
   id: string;
+  userId?: string;
 }
 
 export interface GetSourceContentResult {
@@ -24,10 +25,10 @@ export const getSourceContent = defineAuthedUseCase<GetSourceContentInput>()({
     Effect.gen(function* () {
       const storage = yield* Storage;
       const sourceRepo = yield* SourceRepo;
+      const ownerId =
+        user.role === Role.ADMIN ? (input.userId ?? user.id) : user.id;
 
-      const doc = yield* user.role === Role.ADMIN
-        ? sourceRepo.findById(input.id)
-        : sourceRepo.findByIdForUser(input.id, user.id);
+      const doc = yield* sourceRepo.findByIdForUser(input.id, ownerId);
 
       // Fast path: return denormalized extracted text if available
       if (doc.extractedText) {

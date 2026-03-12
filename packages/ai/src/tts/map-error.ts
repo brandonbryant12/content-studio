@@ -3,7 +3,7 @@ import {
   GoogleApiError,
   getGoogleApiErrorDetails,
   isGoogleRateLimit,
-} from '../google/error-parser';
+} from '../providers/google/error-parser';
 
 /**
  * Map TTS API errors to domain errors.

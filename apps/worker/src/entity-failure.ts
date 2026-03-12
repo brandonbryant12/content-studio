@@ -4,12 +4,10 @@ import {
   VersionStatus,
   VoiceoverStatus,
 } from '@repo/db/schema';
-import {
-  InfographicRepo,
-  PodcastRepo,
-  SourceRepo,
-  VoiceoverRepo,
-} from '@repo/media';
+import { InfographicRepo } from '@repo/media/infographic';
+import { PodcastRepo } from '@repo/media/podcast';
+import { SourceRepo } from '@repo/media/source';
+import { VoiceoverRepo } from '@repo/media/voiceover';
 import { Effect } from 'effect';
 import type { Job } from '@repo/queue';
 

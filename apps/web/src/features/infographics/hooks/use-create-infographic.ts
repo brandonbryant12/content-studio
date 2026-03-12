@@ -11,57 +11,44 @@ import { apiClient } from '@/clients/apiClient';
 import { getErrorMessage } from '@/shared/lib/errors';
 
 type CreateInfographicInput = {
-  title: string;
-  format: InfographicFormat;
+  title?: string;
+  format?: InfographicFormat;
   prompt?: string;
   styleProperties?: StyleProperty[];
   sourceId?: string;
-  autoGenerate?: boolean;
 };
+
+const DEFAULT_INFOGRAPHIC_TITLE = 'Untitled Infographic';
+const DEFAULT_INFOGRAPHIC_FORMAT: InfographicFormat = 'portrait';
 
 export function useCreateInfographic() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const generateMutation = useMutation(
-    apiClient.infographics.generate.mutationOptions(),
-  );
   const createFn = apiClient.infographics.create.mutationOptions().mutationFn!;
   type CreateInfographicOutput = Awaited<ReturnType<typeof createFn>>;
 
-  return useMutation<CreateInfographicOutput, Error, CreateInfographicInput>({
-    mutationFn: (variables, context: MutationFunctionContext) =>
-      createFn(
+  return useMutation<
+    CreateInfographicOutput,
+    Error,
+    CreateInfographicInput | void
+  >({
+    mutationFn: (variables, context: MutationFunctionContext) => {
+      const input = variables ?? {};
+      return createFn(
         {
-          title: variables.title,
-          format: variables.format,
-          prompt: variables.prompt,
-          styleProperties: variables.styleProperties,
-          sourceId: variables.sourceId,
+          title: input.title ?? DEFAULT_INFOGRAPHIC_TITLE,
+          format: input.format ?? DEFAULT_INFOGRAPHIC_FORMAT,
+          prompt: input.prompt,
+          styleProperties: input.styleProperties,
+          sourceId: input.sourceId,
         },
         context,
-      ),
-    onSuccess: async (data, variables) => {
+      );
+    },
+    onSuccess: (data) => {
       queryClient.invalidateQueries({
         queryKey: getInfographicListQueryKey(),
       });
-
-      const shouldAutoGenerate =
-        variables.autoGenerate === true &&
-        typeof variables.prompt === 'string' &&
-        variables.prompt.trim().length > 0;
-
-      if (shouldAutoGenerate) {
-        try {
-          await generateMutation.mutateAsync({ id: data.id });
-        } catch (error) {
-          toast.error(
-            getErrorMessage(
-              error,
-              'Created infographic, but failed to start generation',
-            ),
-          );
-        }
-      }
 
       navigate({
         to: '/infographics/$infographicId',

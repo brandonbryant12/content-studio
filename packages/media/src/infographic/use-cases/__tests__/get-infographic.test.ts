@@ -91,7 +91,7 @@ describe('getInfographic', () => {
     }
   });
 
-  it('allows admins to access an infographic they do not own', async () => {
+  it('fails when admin has no explicit target for another user infographic', async () => {
     const admin = createTestAdmin({ id: 'admin-1' });
     const infographic = createTestInfographic({
       title: 'Admin Visible Infographic',
@@ -99,20 +99,49 @@ describe('getInfographic', () => {
     });
 
     const repo = createMockInfographicRepo({
-      findById: (id: string) =>
-        Effect.suspend(() => {
-          if (id === infographic.id) return Effect.succeed(infographic);
-          return Effect.fail(new InfographicNotFound({ id }));
-        }),
       findByIdForUser: (id: string) =>
         Effect.fail(new InfographicNotFound({ id })),
     });
     const layers = Layer.mergeAll(MockDbLive, repo);
 
-    const result = await Effect.runPromise(
+    const result = await Effect.runPromiseExit(
       withTestUser(admin)(getInfographic({ id: infographic.id })).pipe(
         Effect.provide(layers),
       ),
+    );
+
+    expect(result._tag).toBe('Failure');
+    if (result._tag === 'Failure') {
+      const error = result.cause._tag === 'Fail' ? result.cause.error : null;
+      expect(error?._tag).toBe('InfographicNotFound');
+    }
+  });
+
+  it('allows admins to access another user infographic when userId is provided', async () => {
+    const admin = createTestAdmin({ id: 'admin-1' });
+    const infographic = createTestInfographic({
+      title: 'Admin Visible Infographic',
+      createdBy: 'member-1',
+    });
+
+    const repo = createMockInfographicRepo({
+      findByIdForUser: (id: string, userId: string) =>
+        Effect.suspend(() => {
+          if (id === infographic.id && userId === infographic.createdBy) {
+            return Effect.succeed(infographic);
+          }
+          return Effect.fail(new InfographicNotFound({ id }));
+        }),
+    });
+    const layers = Layer.mergeAll(MockDbLive, repo);
+
+    const result = await Effect.runPromise(
+      withTestUser(admin)(
+        getInfographic({
+          id: infographic.id,
+          userId: infographic.createdBy,
+        }),
+      ).pipe(Effect.provide(layers)),
     );
 
     expect(result.id).toBe(infographic.id);

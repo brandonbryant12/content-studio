@@ -113,13 +113,19 @@ function VoiceAssignment({
   return (
     <div className="space-y-4">
       <div>
-        <p className="text-xs font-medium text-muted-foreground mb-2">Female</p>
+        <p className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground mb-2">
+          <span className="inline-block w-1.5 h-1.5 rounded-full bg-warning" />
+          Female
+        </p>
         <div className="grid grid-cols-4 gap-2">
           {femaleVoices.map(renderVoiceCard)}
         </div>
       </div>
       <div>
-        <p className="text-xs font-medium text-muted-foreground mb-2">Male</p>
+        <p className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground mb-2">
+          <span className="inline-block w-1.5 h-1.5 rounded-full bg-info" />
+          Male
+        </p>
         <div className="grid grid-cols-4 gap-2">
           {maleVoices.map(renderVoiceCard)}
         </div>

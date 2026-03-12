@@ -1,22 +1,22 @@
 import { GoogleGenAI } from '@google/genai';
 import { Effect, Layer } from 'effect';
 import type { JsonValue } from '@repo/db/schema';
-import { estimateTokenPricedModelCostUsdMicros } from '../../pricing/model-catalog';
-import { retryTransientProvider } from '../../provider-retry';
-import { PROVIDER_TIMEOUTS_MS } from '../../provider-timeouts';
-import {
-  getGoogleImageGenModel,
-  type GoogleImageGenModelId,
-  IMAGE_GEN_MODEL,
-} from '../../providers/google/models';
-import { recordAIUsageIfConfigured } from '../../usage';
-import { mapError } from '../map-error';
+import { mapError } from '../../image-gen/map-error';
 import {
   ImageGen,
   type ImageGenService,
   type GenerateImageOptions,
   type GenerateImageResult,
-} from '../service';
+} from '../../image-gen/service';
+import { estimateTokenPricedModelCostUsdMicros } from '../../pricing/model-catalog';
+import { recordAIUsageIfConfigured } from '../../usage';
+import { retryTransientProvider } from '../retry';
+import { PROVIDER_TIMEOUTS_MS } from '../timeouts';
+import {
+  getGoogleImageGenModel,
+  type GoogleImageGenModelId,
+  IMAGE_GEN_MODEL,
+} from './models';
 
 /**
  * Configuration for Google Image Gen provider.

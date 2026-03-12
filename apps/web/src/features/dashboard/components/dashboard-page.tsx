@@ -1,6 +1,7 @@
 import {
   ArrowRightIcon,
   ImageIcon,
+  MagnifyingGlassIcon,
   MixerHorizontalIcon,
   PlusIcon,
   SpeakerLoudIcon,
@@ -12,10 +13,6 @@ import { QuickStartPanel } from './quick-start-panel';
 import { SourcesRecentSection, RecentSection } from './recent-section';
 import { APP_NAME } from '@/constants';
 import { isDeepResearchEnabled } from '@/env';
-import {
-  CreateInfographicDialog,
-  type CreateInfographicPayload,
-} from '@/features/infographics/components/create-infographic-dialog';
 import {
   type SourceListItem,
   AddFromUrlDialog,
@@ -64,7 +61,7 @@ interface CreateActions {
   isPodcastPending: boolean;
   onCreateVoiceover: () => void;
   isVoiceoverPending: boolean;
-  onCreateInfographic: (payload: CreateInfographicPayload) => void;
+  onCreateInfographic: () => void;
   isInfographicPending: boolean;
 }
 
@@ -75,6 +72,8 @@ interface DocumentDialogs {
   onUrlDialogOpenChange: (open: boolean) => void;
   researchDialogOpen: boolean;
   onResearchDialogOpenChange: (open: boolean) => void;
+  researchAutoGenPodcast: boolean;
+  onOpenResearchWithPodcast: () => void;
   onCreateFromUrl: (url: string, title?: string) => void;
   isCreateFromUrlPending: boolean;
 }
@@ -107,6 +106,15 @@ export function DashboardPage({
 
       {/* Workflow strip — persistent "how it works" reminder */}
       <WorkflowStrip />
+
+      {/* Featured: Research to Podcast */}
+      {isDeepResearchEnabled && (
+        <div className="mb-6 animate-fade-in-up stagger-1">
+          <ResearchToPodcastCTA
+            onStart={documentDialogs.onOpenResearchWithPodcast}
+          />
+        </div>
+      )}
 
       {/* Adaptive quick-start panel */}
       <div className="mb-8">
@@ -172,6 +180,7 @@ export function DashboardPage({
         <ResearchChatContainer
           open={documentDialogs.researchDialogOpen}
           onOpenChange={documentDialogs.onResearchDialogOpenChange}
+          defaultAutoGeneratePodcast={documentDialogs.researchAutoGenPodcast}
         />
       ) : null}
     </div>
@@ -246,6 +255,37 @@ function WorkflowStrip() {
 }
 
 /* ------------------------------------------------------------------ */
+/*  Research-to-Podcast feature CTA                                   */
+/* ------------------------------------------------------------------ */
+
+function ResearchToPodcastCTA({ onStart }: { onStart: () => void }) {
+  return (
+    <div className="relative overflow-hidden rounded-2xl border border-violet-200/60 dark:border-violet-500/20 bg-gradient-to-br from-violet-50/80 via-background to-sky-50/50 dark:from-violet-950/30 dark:via-background dark:to-sky-950/20 p-6">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div className="flex items-start gap-4">
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-violet-500/10 dark:bg-violet-500/20">
+            <MagnifyingGlassIcon className="w-5 h-5 text-violet-600 dark:text-violet-400" />
+          </div>
+          <div>
+            <h3 className="font-serif text-lg font-semibold text-foreground mb-1">
+              Research to Podcast
+            </h3>
+            <p className="text-sm text-muted-foreground leading-relaxed max-w-md">
+              Describe any topic &mdash; AI researches it in depth and creates a
+              podcast episode from the findings, all in one step.
+            </p>
+          </div>
+        </div>
+        <Button onClick={onStart} className="shrink-0 gap-2 sm:self-center">
+          <MagnifyingGlassIcon className="w-4 h-4" aria-hidden="true" />
+          Try it now
+        </Button>
+      </div>
+    </div>
+  );
+}
+
+/* ------------------------------------------------------------------ */
 /*  Private sub-presenters for each content-type recent section       */
 /* ------------------------------------------------------------------ */
 
@@ -262,7 +302,7 @@ function CreateButton({
     <Button
       variant="ghost"
       size="sm"
-      onClick={onClick}
+      onClick={() => onClick()}
       disabled={isPending}
       className="gap-1.5 text-xs"
       aria-label={label}
@@ -393,7 +433,7 @@ function InfographicsRecentSection({
   count: number;
   items: RecentItems['infographics'];
   isLoading: boolean;
-  onCreateInfographic: (payload: CreateInfographicPayload) => void;
+  onCreateInfographic: () => void;
   isPending: boolean;
 }) {
   return (
@@ -407,25 +447,11 @@ function InfographicsRecentSection({
       emptyMessage="Generate visuals from your content"
       linkTo="/infographics"
       action={
-        <CreateInfographicDialog
-          isCreating={isPending}
-          onCreate={onCreateInfographic}
-        >
-          <Button
-            variant="ghost"
-            size="sm"
-            disabled={isPending}
-            className="gap-1.5 text-xs"
-            aria-label={CREATE_ACTION_LABELS.infographic}
-          >
-            {isPending ? (
-              <Spinner className="w-3.5 h-3.5" />
-            ) : (
-              <PlusIcon className="w-3.5 h-3.5" aria-hidden="true" />
-            )}
-            {CREATE_ACTION_LABELS.infographic}
-          </Button>
-        </CreateInfographicDialog>
+        <CreateButton
+          label={CREATE_ACTION_LABELS.infographic}
+          isPending={isPending}
+          onClick={onCreateInfographic}
+        />
       }
       renderItem={(ig) => (
         <Link

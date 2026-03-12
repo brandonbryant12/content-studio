@@ -17,7 +17,6 @@ import { PodcastRepo } from '../repos/podcast-repo';
 export interface StartGenerationInput {
   podcastId: string;
   promptInstructions?: string;
-  ignoreEpisodePlan?: boolean;
 }
 
 export interface StartGenerationResult {
@@ -65,7 +64,6 @@ export const startGeneration = (input: StartGenerationInput) =>
             podcastId: podcast.id,
             userId: podcast.createdBy,
             promptInstructions: input.promptInstructions,
-            ignoreEpisodePlan: input.ignoreEpisodePlan,
           },
           userId: podcast.createdBy,
         });

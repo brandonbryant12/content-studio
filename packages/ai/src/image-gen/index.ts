@@ -11,4 +11,4 @@ export {
 export {
   GoogleImageGenLive,
   type GoogleImageGenConfig,
-} from './providers/google';
+} from '../providers/google/image-gen';

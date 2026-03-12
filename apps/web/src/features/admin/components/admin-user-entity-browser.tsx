@@ -23,6 +23,7 @@ import {
 } from '../types';
 
 interface AdminUserEntityBrowserProps {
+  readonly targetUserId: string;
   readonly entityList: AdminUserEntitiesResult;
   readonly searchQuery: string;
   readonly onSearchChange: (value: string) => void;
@@ -130,10 +131,12 @@ const getStatusVariant = (status: string | null): BadgeVariant => {
 
 function EntityResultLink({
   entity,
+  targetUserId,
   className,
   children,
 }: {
   entity: AdminUserEntity;
+  targetUserId: string;
   className: string;
   children: ReactNode;
 }) {
@@ -143,6 +146,7 @@ function EntityResultLink({
         <Link
           to="/sources/$sourceId"
           params={{ sourceId: entity.entityId }}
+          search={{ userId: targetUserId }}
           className={className}
         >
           {children}
@@ -153,6 +157,7 @@ function EntityResultLink({
         <Link
           to="/podcasts/$podcastId"
           params={{ podcastId: entity.entityId }}
+          search={{ userId: targetUserId }}
           className={className}
         >
           {children}
@@ -163,6 +168,7 @@ function EntityResultLink({
         <Link
           to="/voiceovers/$voiceoverId"
           params={{ voiceoverId: entity.entityId }}
+          search={{ userId: targetUserId }}
           className={className}
         >
           {children}
@@ -173,6 +179,7 @@ function EntityResultLink({
         <Link
           to="/personas/$personaId"
           params={{ personaId: entity.entityId }}
+          search={{ userId: targetUserId }}
           className={className}
         >
           {children}
@@ -183,6 +190,7 @@ function EntityResultLink({
         <Link
           to="/infographics/$infographicId"
           params={{ infographicId: entity.entityId }}
+          search={{ userId: targetUserId }}
           className={className}
         >
           {children}
@@ -191,13 +199,20 @@ function EntityResultLink({
   }
 }
 
-function EntityResultRow({ entity }: { entity: AdminUserEntity }) {
+function EntityResultRow({
+  entity,
+  targetUserId,
+}: {
+  entity: AdminUserEntity;
+  targetUserId: string;
+}) {
   const meta = ENTITY_META[entity.entityType];
   const Icon = meta.icon;
 
   return (
     <EntityResultLink
       entity={entity}
+      targetUserId={targetUserId}
       className="group block rounded-2xl border border-border/50 bg-background/80 p-4 transition-colors hover:border-primary/30 hover:bg-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
     >
       <div className="flex items-start gap-4">
@@ -234,6 +249,7 @@ function EntityResultRow({ entity }: { entity: AdminUserEntity }) {
 }
 
 export function AdminUserEntityBrowser({
+  targetUserId,
   entityList,
   searchQuery,
   onSearchChange,
@@ -284,7 +300,7 @@ export function AdminUserEntityBrowser({
             value={searchQuery}
             onChange={(event) => onSearchChange(event.target.value)}
             placeholder="Search by title or name"
-            className="search-input"
+            className="search-input pl-10"
             aria-label="Search content"
           />
         </div>
@@ -321,6 +337,7 @@ export function AdminUserEntityBrowser({
             <EntityResultRow
               key={`${entity.entityType}-${entity.entityId}`}
               entity={entity}
+              targetUserId={targetUserId}
             />
           ))}
 

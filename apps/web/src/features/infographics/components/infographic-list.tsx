@@ -16,10 +16,6 @@ import {
 } from 'react';
 import type { UseBulkSelectionReturn } from '@/shared/hooks';
 import { InfographicStatus } from '../lib/status';
-import {
-  CreateInfographicDialog,
-  type CreateInfographicPayload,
-} from './create-infographic-dialog';
 import { InfographicItem, type InfographicListItem } from './infographic-item';
 import { BulkActionBar } from '@/shared/components/bulk-action-bar';
 import { CollectionGuidancePanel } from '@/shared/components/collection-guidance-panel';
@@ -59,7 +55,7 @@ function EmptyState({ onCreateClick, isCreating }: EmptyStateProps) {
         Create your first visual from a prompt, then iterate on new versions as
         the design direction sharpens.
       </p>
-      <Button onClick={onCreateClick} disabled={isCreating}>
+      <Button onClick={() => onCreateClick()} disabled={isCreating}>
         {isCreating ? (
           <>
             <Spinner className="w-4 h-4 mr-2" />
@@ -104,7 +100,7 @@ interface InfographicListProps {
   isCreating: boolean;
   deletingId: string | null;
   onSearch: (query: string) => void;
-  onCreate: (payload: CreateInfographicPayload) => void;
+  onCreate: () => void;
   onDelete: (id: string) => void;
   selection: UseBulkSelectionReturn;
   isBulkDeleting: boolean;
@@ -127,7 +123,6 @@ export function InfographicList({
     'infographics',
   );
   const [isPending, startTransition] = useTransition();
-  const [dialogOpen, setDialogOpen] = useState(false);
 
   const drafts = useMemo(
     () => infographics.filter((i) => i.status === InfographicStatus.DRAFT),
@@ -177,10 +172,6 @@ export function InfographicList({
     filteredInfographics.length === 0 && (searchQuery.length > 0 || tabEmpty);
   const hasSelection = selection.selectedCount > 0;
 
-  const openDialog = useCallback(() => {
-    setDialogOpen(true);
-  }, []);
-
   return (
     <div className="page-container">
       <div className="flex items-center justify-between mb-5">
@@ -190,7 +181,7 @@ export function InfographicList({
             {INFOGRAPHIC_DEFINITION} {INFOGRAPHIC_LIST_SUPPORT}
           </p>
         </div>
-        <Button onClick={openDialog} disabled={isCreating}>
+        <Button onClick={() => onCreate()} disabled={isCreating}>
           {isCreating ? (
             <>
               <Spinner className="w-4 h-4 mr-2" />
@@ -259,7 +250,7 @@ export function InfographicList({
       )}
 
       {isEmpty ? (
-        <EmptyState onCreateClick={openDialog} isCreating={isCreating} />
+        <EmptyState onCreateClick={onCreate} isCreating={isCreating} />
       ) : hasNoResults ? (
         <NoResults
           searchQuery={searchQuery}
@@ -302,13 +293,6 @@ export function InfographicList({
         onToggleAll={handleToggleAll}
         onDeselectAll={selection.deselectAll}
         onDeleteSelected={onBulkDelete}
-      />
-
-      <CreateInfographicDialog
-        open={dialogOpen}
-        onOpenChange={setDialogOpen}
-        isCreating={isCreating}
-        onCreate={onCreate}
       />
     </div>
   );

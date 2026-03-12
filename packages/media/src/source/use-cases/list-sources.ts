@@ -32,24 +32,28 @@ const DEFAULT_LIST_SOURCES_OFFSET = 0;
 export const listSources = defineAuthedUseCase<ListSourcesInput>()({
   name: 'useCase.listSources',
   span: ({ input, user }) => {
-    const createdBy = user.role === Role.ADMIN ? input.userId : user.id;
+    const createdBy =
+      user.role === Role.ADMIN ? (input.userId ?? user.id) : user.id;
     const limit = input.limit ?? DEFAULT_LIST_SOURCES_LIMIT;
     const offset = input.offset ?? DEFAULT_LIST_SOURCES_OFFSET;
 
     return {
       collection: 'sources',
       attributes: {
-        ...(createdBy ? { 'owner.id': createdBy } : {}),
+        'owner.id': createdBy,
         'pagination.limit': limit,
         'pagination.offset': offset,
-        ...(input.userId ? { 'filter.userId': input.userId } : {}),
+        ...(user.role === Role.ADMIN && input.userId
+          ? { 'filter.userId': input.userId }
+          : {}),
       },
     };
   },
   run: ({ input, user }) =>
     Effect.gen(function* () {
       const sourceRepo = yield* SourceRepo;
-      const createdBy = user.role === Role.ADMIN ? input.userId : user.id;
+      const createdBy =
+        user.role === Role.ADMIN ? (input.userId ?? user.id) : user.id;
       const limit = input.limit ?? DEFAULT_LIST_SOURCES_LIMIT;
       const offset = input.offset ?? DEFAULT_LIST_SOURCES_OFFSET;
 

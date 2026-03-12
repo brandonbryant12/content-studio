@@ -204,7 +204,36 @@ describe('getPodcast', () => {
       expect(result.status).toBe('generating_script');
     });
 
-    it('allows admins to access a podcast they do not own', async () => {
+    it('fails with PodcastNotFound when admin has no explicit target for another user podcast', async () => {
+      const admin = createTestAdmin({ id: 'admin-1' });
+      const owner = createTestUser({ id: 'member-1' });
+      const doc = createTestSource({ createdBy: owner.id });
+      const podcast = createTestPodcast({
+        title: 'Admin Visible Podcast',
+        createdBy: owner.id,
+        sourceIds: [doc.id],
+      });
+
+      const mockRepo = createMockPodcastRepo({
+        podcasts: [podcast],
+        sources: [doc],
+      });
+      const layers = Layer.mergeAll(MockDbLive, mockRepo);
+
+      const result = await Effect.runPromiseExit(
+        withTestUser(admin)(
+          getPodcast({ podcastId: podcast.id }).pipe(Effect.provide(layers)),
+        ),
+      );
+
+      expect(result._tag).toBe('Failure');
+      if (result._tag === 'Failure') {
+        const error = result.cause._tag === 'Fail' ? result.cause.error : null;
+        expect(error?._tag).toBe('PodcastNotFound');
+      }
+    });
+
+    it('allows admins to access another user podcast when userId is provided', async () => {
       const admin = createTestAdmin({ id: 'admin-1' });
       const owner = createTestUser({ id: 'member-1' });
       const doc = createTestSource({ createdBy: owner.id });
@@ -222,7 +251,9 @@ describe('getPodcast', () => {
 
       const result = await Effect.runPromise(
         withTestUser(admin)(
-          getPodcast({ podcastId: podcast.id }).pipe(Effect.provide(layers)),
+          getPodcast({ podcastId: podcast.id, userId: owner.id }).pipe(
+            Effect.provide(layers),
+          ),
         ),
       );
 

@@ -57,8 +57,20 @@ vi.mock('../components/research-chat-dialog', () => ({
 }));
 
 describe('ResearchChatContainer', () => {
-  const renderContainer = (onOpenChange = vi.fn()) => {
-    render(<ResearchChatContainer open={true} onOpenChange={onOpenChange} />);
+  const renderContainer = ({
+    onOpenChange = vi.fn(),
+    defaultAutoGeneratePodcast,
+  }: {
+    onOpenChange?: (open: boolean) => void;
+    defaultAutoGeneratePodcast?: boolean;
+  } = {}) => {
+    render(
+      <ResearchChatContainer
+        open={true}
+        onOpenChange={onOpenChange}
+        defaultAutoGeneratePodcast={defaultAutoGeneratePodcast}
+      />,
+    );
     return { onOpenChange, user: userEvent.setup() };
   };
 
@@ -116,12 +128,37 @@ describe('ResearchChatContainer', () => {
   });
 
   it.each([
-    { autoGeneratePodcast: false, toggleBeforeStart: false },
-    { autoGeneratePodcast: true, toggleBeforeStart: true },
+    {
+      defaultAutoGeneratePodcast: false,
+      autoGeneratePodcast: false,
+      toggleBeforeStart: false,
+    },
+    {
+      defaultAutoGeneratePodcast: false,
+      autoGeneratePodcast: true,
+      toggleBeforeStart: true,
+    },
+    {
+      defaultAutoGeneratePodcast: true,
+      autoGeneratePodcast: true,
+      toggleBeforeStart: false,
+    },
+    {
+      defaultAutoGeneratePodcast: true,
+      autoGeneratePodcast: false,
+      toggleBeforeStart: true,
+    },
   ])(
     'starts research with autoGeneratePodcast=$autoGeneratePodcast',
-    async ({ autoGeneratePodcast, toggleBeforeStart }) => {
-      const { user, onOpenChange } = renderContainer();
+    async ({
+      defaultAutoGeneratePodcast,
+      autoGeneratePodcast,
+      toggleBeforeStart,
+    }) => {
+      const { user, onOpenChange } = renderContainer({
+        onOpenChange: vi.fn(),
+        defaultAutoGeneratePodcast,
+      });
 
       if (toggleBeforeStart) {
         await user.click(

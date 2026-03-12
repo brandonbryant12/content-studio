@@ -1,3 +1,11 @@
+// Errors
+export {
+  PodcastNotFound,
+  ScriptNotFound,
+  PodcastError,
+  NotPodcastOwner,
+} from '../errors';
+
 // Repositories
 export {
   PodcastRepo,
