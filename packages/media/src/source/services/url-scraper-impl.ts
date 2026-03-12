@@ -100,6 +100,8 @@ const fetchHtmlWithRedirectValidation = async (
   let currentUrl = url;
 
   for (let redirectCount = 0; redirectCount <= MAX_REDIRECTS; redirectCount++) {
+    // In Node, built-in fetch is powered by Undici and uses the process global
+    // dispatcher configured at server/worker boot.
     const response = await fetch(currentUrl, {
       method: 'GET',
       redirect: 'manual',

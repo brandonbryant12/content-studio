@@ -271,6 +271,22 @@
     "eventFile": "events/2026-03.jsonl"
   },
   {
+    "id": "2026-03-12-feature-delivery-url-scraper-relies-on-node-fetch-global-dispatcher",
+    "date": "2026-03-12",
+    "month": "2026-03",
+    "workflow": "Feature Delivery",
+    "title": "URL scraper relies on Node fetch global dispatcher",
+    "severity": "low",
+    "status": "done",
+    "tags": [
+      "skill:feature-delivery",
+      "skill:codebase-nav",
+      "networking",
+      "proxy"
+    ],
+    "eventFile": "events/2026-03.jsonl"
+  },
+  {
     "id": "2026-03-12-periodic-scans-best-practice-researcher-docs-and-guardrail-drift-narrowed-sourc",
     "date": "2026-03-12",
     "month": "2026-03",
