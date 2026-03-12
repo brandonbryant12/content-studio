@@ -10,6 +10,7 @@ import {
   buildSynthesisPrompts,
   normalizeStringWithFallback,
 } from './chat-message-utils';
+import { generateStructuredWithFallback } from './structured-generation-utils';
 
 const SynthesisResult = Schema.Struct({
   name: Schema.String,
@@ -62,23 +63,19 @@ export interface SynthesizePersonaInput {
 export const synthesizePersona = (input: SynthesizePersonaInput) =>
   Effect.gen(function* () {
     const llm = yield* LLM;
-    const generate = (prompt: string, temperature: number, maxTokens: number) =>
-      llm.generate({
-        system: renderPrompt(chatSynthesizePersonaSystemPrompt),
-        prompt,
-        schema: SynthesisResult,
-        temperature,
-        maxTokens,
-      });
 
     const { primary: primaryPrompt, fallback: fallbackPrompt } =
       buildSynthesisPrompts(input.messages);
 
-    const primaryResult = yield* generate(primaryPrompt, 0.3, 1024).pipe(
+    const primaryResult = yield* generateStructuredWithFallback({
+      llm,
+      system: renderPrompt(chatSynthesizePersonaSystemPrompt),
+      schema: SynthesisResult,
+      primary: { prompt: primaryPrompt, temperature: 0.3, maxTokens: 1024 },
       // Lengthy conversations can degrade structured output reliability.
       // Retry once with a compact context window before surfacing the error.
-      Effect.catchTag('LLMError', () => generate(fallbackPrompt, 0.2, 768)),
-    );
+      fallback: { prompt: fallbackPrompt, temperature: 0.2, maxTokens: 768 },
+    });
 
     return normalizeSynthesisResult(primaryResult.object);
   }).pipe(
