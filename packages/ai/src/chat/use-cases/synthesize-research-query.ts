@@ -11,7 +11,6 @@ import {
   getMessageText,
   normalizeStringWithFallback,
 } from './chat-message-utils';
-import { generateStructuredWithFallback } from './structured-generation-utils';
 
 const SynthesisResult = Schema.Struct({
   query: Schema.String,
@@ -66,17 +65,21 @@ export interface SynthesizeResearchQueryInput {
 export const synthesizeResearchQuery = (input: SynthesizeResearchQueryInput) =>
   Effect.gen(function* () {
     const llm = yield* LLM;
+    const generate = (prompt: string, temperature: number, maxTokens: number) =>
+      llm.generate({
+        system: renderPrompt(chatSynthesizeResearchQuerySystemPrompt),
+        prompt,
+        schema: SynthesisResult,
+        temperature,
+        maxTokens,
+      });
 
     const { primary: primaryPrompt, fallback: fallbackPrompt } =
       buildSynthesisPrompts(input.messages);
 
-    const result = yield* generateStructuredWithFallback({
-      llm,
-      system: renderPrompt(chatSynthesizeResearchQuerySystemPrompt),
-      schema: SynthesisResult,
-      primary: { prompt: primaryPrompt, temperature: 0.3, maxTokens: 2048 },
-      fallback: { prompt: fallbackPrompt, temperature: 0.2, maxTokens: 1024 },
-    });
+    const result = yield* generate(primaryPrompt, 0.3, 2048).pipe(
+      Effect.catchTag('LLMError', () => generate(fallbackPrompt, 0.2, 1024)),
+    );
 
     const fallbackTopic = getFallbackTopic(input.messages);
     return {

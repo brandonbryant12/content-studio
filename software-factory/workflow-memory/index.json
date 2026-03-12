@@ -211,6 +211,32 @@
     "eventFile": "events/2026-03.jsonl"
   },
   {
+    "id": "2026-03-12-self-improvement-reverted-two-call-site-ai-fallback-helper-in-favor-of-local-retr",
+    "date": "2026-03-12",
+    "month": "2026-03",
+    "workflow": "Self-Improvement",
+    "title": "Reverted two-call-site AI fallback helper in favor of local retry closures",
+    "severity": "low",
+    "status": "closed",
+    "tags": [
+      "self-improvement",
+      "ai",
+      "maintainability",
+      "skill:pr-risk-review",
+      "skill:code-simplifier",
+      "workflow-memory",
+      "memory",
+      "memory-form:external",
+      "memory-function:episodic",
+      "memory-function:semantic",
+      "memory-dynamics:retrieve",
+      "memory-dynamics:write"
+    ],
+    "importance": 0.68,
+    "confidence": 0.96,
+    "eventFile": "events/2026-03.jsonl"
+  },
+  {
     "id": "2026-03-11-feature-delivery-align-long-running-job-timeout-budgets-with-stale-reaper-and-cas",
     "date": "2026-03-11",
     "month": "2026-03",
