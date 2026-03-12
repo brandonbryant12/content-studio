@@ -106,6 +106,13 @@ function getCurrentTurnUserMessageText(messages: readonly UIMessage[]) {
   return getMessageText(latestMessage);
 }
 
+function matchesAnyPattern(
+  value: string,
+  patterns: readonly RegExp[],
+): boolean {
+  return patterns.some((pattern) => pattern.test(value));
+}
+
 function selectWritingAssistantToolChoice(
   messages: readonly UIMessage[],
 ): ToolChoice<typeof writingAssistantTools> | undefined {
@@ -114,19 +121,11 @@ function selectWritingAssistantToolChoice(
     return undefined;
   }
 
-  if (
-    DISCUSSION_ONLY_REQUEST_PATTERNS.some((pattern) =>
-      pattern.test(latestUserMessageText),
-    )
-  ) {
+  if (matchesAnyPattern(latestUserMessageText, DISCUSSION_ONLY_REQUEST_PATTERNS)) {
     return undefined;
   }
 
-  if (
-    DIRECT_REWRITE_REQUEST_PATTERNS.some((pattern) =>
-      pattern.test(latestUserMessageText),
-    )
-  ) {
+  if (matchesAnyPattern(latestUserMessageText, DIRECT_REWRITE_REQUEST_PATTERNS)) {
     return {
       type: 'tool',
       toolName: 'updateVoiceoverText',
