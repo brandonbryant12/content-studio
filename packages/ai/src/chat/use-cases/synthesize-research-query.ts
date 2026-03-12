@@ -19,12 +19,7 @@ const SynthesisResult = Schema.Struct({
 });
 
 function buildFallbackTitle(topic: string) {
-  const words = topic
-    .replace(/\s+/g, ' ')
-    .trim()
-    .split(' ')
-    .filter(Boolean)
-    .slice(0, 8);
+  const words = topic.match(/\S+/g)?.slice(0, 8) ?? [];
   return words.join(' ') || 'Research Brief';
 }
 
@@ -50,14 +45,16 @@ function buildFallbackResearchBrief(topic: string) {
 }
 
 function getFallbackTopic(messages: readonly UIMessage[]) {
-  const fallback = messages.reduceRight<UIMessage | undefined>(
-    (lastUserMessage, message) =>
-      lastUserMessage ?? (message.role === 'user' ? message : undefined),
-    undefined,
-  );
+  let lastUserMessage: UIMessage | undefined;
+  for (let index = messages.length - 1; index >= 0; index -= 1) {
+    const message = messages[index];
+    if (message?.role !== 'user') continue;
+    lastUserMessage = message;
+    break;
+  }
 
   return normalizeStringWithFallback(
-    fallback ? getMessageText(fallback) : '',
+    lastUserMessage ? getMessageText(lastUserMessage) : '',
     'Research this topic using the latest conversation context.',
   );
 }

@@ -25,6 +25,15 @@ const SynthesisResult = Schema.Struct({
 const FALLBACK_QUOTE = 'Let us unpack this topic with clarity and curiosity.';
 const FALLBACK_VOICE = 'Puck';
 
+function normalizeExampleQuotes(quotes: readonly string[]) {
+  const normalized = quotes
+    .map((quote) => quote.trim())
+    .filter((quote) => quote.length > 0)
+    .slice(0, 3);
+
+  return normalized.length > 0 ? normalized : [FALLBACK_QUOTE];
+}
+
 function normalizeSynthesisResult(result: {
   readonly name: string;
   readonly role: string;
@@ -34,11 +43,6 @@ function normalizeSynthesisResult(result: {
   readonly voiceId: string;
   readonly voiceName: string;
 }) {
-  const exampleQuotes = result.exampleQuotes
-    .map((quote) => quote.trim())
-    .filter((quote) => quote.length > 0)
-    .slice(0, 3);
-
   return {
     name: normalizeStringWithFallback(result.name, 'Podcast Persona'),
     role: normalizeStringWithFallback(result.role, 'Podcast Co-Host'),
@@ -50,7 +54,7 @@ function normalizeSynthesisResult(result: {
       result.speakingStyle,
       'Conversational, concise, and audience-focused.',
     ),
-    exampleQuotes: exampleQuotes.length > 0 ? exampleQuotes : [FALLBACK_QUOTE],
+    exampleQuotes: normalizeExampleQuotes(result.exampleQuotes),
     voiceId: normalizeStringWithFallback(result.voiceId, FALLBACK_VOICE),
     voiceName: normalizeStringWithFallback(result.voiceName, FALLBACK_VOICE),
   };
