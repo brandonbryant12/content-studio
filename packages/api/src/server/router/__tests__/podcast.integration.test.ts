@@ -28,7 +28,7 @@ import {
   type TestContext,
 } from '@repo/testing';
 import { eq } from 'drizzle-orm';
-import { Layer } from 'effect';
+import { Effect, Layer } from 'effect';
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import type { ServerRuntime } from '../../runtime';
 import {

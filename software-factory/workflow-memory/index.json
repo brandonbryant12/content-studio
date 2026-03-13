@@ -1,5 +1,39 @@
 [
   {
+    "id": "2026-03-13-feature-delivery-dashboard-quick-create-toolbar-persistence",
+    "date": "2026-03-13",
+    "month": "2026-03",
+    "workflow": "Feature Delivery",
+    "title": "Dashboard quick create toolbar persistence",
+    "severity": "medium",
+    "status": "done",
+    "tags": [
+      "frontend",
+      "dashboard",
+      "skill:feature-delivery",
+      "skill:frontend-design"
+    ],
+    "eventFile": "events/2026-03.jsonl"
+  },
+  {
+    "id": "2026-03-13-feature-delivery-removed-episode-planner-from-podcast-workbench-ui",
+    "date": "2026-03-13",
+    "month": "2026-03",
+    "workflow": "Feature Delivery",
+    "title": "Removed episode planner from podcast workbench UI",
+    "severity": "low",
+    "status": "completed",
+    "tags": [
+      "skill:feature-delivery",
+      "skill:code-simplifier",
+      "podcasts",
+      "workbench",
+      "planner",
+      "ui"
+    ],
+    "eventFile": "events/2026-03.jsonl"
+  },
+  {
     "id": "2026-03-12-feature-delivery-admin-source-list-now-defaults-to-owned-scope",
     "date": "2026-03-12",
     "month": "2026-03",
@@ -136,6 +170,81 @@
     "eventFile": "events/2026-03.jsonl"
   },
   {
+    "id": "2026-03-12-feature-delivery-podcast-workbench-flattened-top-level-tabs-replace-generic-setti",
+    "date": "2026-03-12",
+    "month": "2026-03",
+    "workflow": "Feature Delivery",
+    "title": "Podcast workbench flattened top-level tabs replace generic settings tab",
+    "severity": "low",
+    "status": "applied",
+    "tags": [
+      "feature:podcast-workbench",
+      "skill:feature-delivery",
+      "skill:frontend-design",
+      "area:workbench-tabs"
+    ],
+    "importance": 0.7,
+    "recency": 1,
+    "confidence": 0.96,
+    "eventFile": "events/2026-03.jsonl"
+  },
+  {
+    "id": "2026-03-12-feature-delivery-podcast-workbench-hides-duration-controls-and-source-add-afforda",
+    "date": "2026-03-12",
+    "month": "2026-03",
+    "workflow": "Feature Delivery",
+    "title": "Podcast workbench hides duration controls and source-add affordance",
+    "severity": "low",
+    "status": "applied",
+    "tags": [
+      "feature:podcast-workbench",
+      "skill:feature-delivery",
+      "skill:frontend-design",
+      "area:workbench-simplification"
+    ],
+    "importance": 0.69,
+    "recency": 1,
+    "confidence": 0.96,
+    "eventFile": "events/2026-03.jsonl"
+  },
+  {
+    "id": "2026-03-12-feature-delivery-podcast-workbench-planner-editing-now-uses-unified-plan-first-ge",
+    "date": "2026-03-12",
+    "month": "2026-03",
+    "workflow": "Feature Delivery",
+    "title": "Podcast workbench planner editing now uses unified plan-first generation",
+    "severity": "medium",
+    "status": "applied",
+    "tags": [
+      "feature:podcast-planner",
+      "skill:feature-delivery",
+      "area:podcast-workbench"
+    ],
+    "importance": 0.76,
+    "recency": 1,
+    "confidence": 0.93,
+    "eventFile": "events/2026-03.jsonl"
+  },
+  {
+    "id": "2026-03-12-feature-delivery-podcast-workbench-settings-moved-to-section-tabs",
+    "date": "2026-03-12",
+    "month": "2026-03",
+    "workflow": "Feature Delivery",
+    "title": "Podcast workbench settings moved to section tabs",
+    "severity": "low",
+    "status": "applied",
+    "tags": [
+      "feature:podcast-workbench",
+      "skill:feature-delivery",
+      "skill:frontend-design",
+      "area:settings-tabs"
+    ],
+    "importance": 0.67,
+    "recency": 1,
+    "confidence": 0.95,
+    "eventFile": "events/2026-03.jsonl"
+  },
+  {
     "id": "2026-03-12-feature-delivery-raised-persona-synthesis-temperature-to-reduce-generic-outputs",
     "date": "2026-03-12",
     "month": "2026-03",
@@ -172,6 +281,23 @@
       "dashboard",
       "workbench",
       "frontend"
+    ],
+    "eventFile": "events/2026-03.jsonl"
+  },
+  {
+    "id": "2026-03-12-feature-delivery-removed-podcast-workbench-ai-plan-rebuild-path",
+    "date": "2026-03-12",
+    "month": "2026-03",
+    "workflow": "Feature Delivery",
+    "title": "Removed podcast workbench AI plan rebuild path",
+    "severity": "low",
+    "status": "completed",
+    "tags": [
+      "skill:feature-delivery",
+      "skill:code-simplifier",
+      "podcasts",
+      "workbench",
+      "planner"
     ],
     "eventFile": "events/2026-03.jsonl"
   },

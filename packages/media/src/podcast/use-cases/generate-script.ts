@@ -157,7 +157,9 @@ export const generateScript = (input: GenerateScriptInput) =>
       (yield* Effect.gen(function* () {
         const generatedPlan = yield* generateEpisodePlanForPodcast({
           podcast,
-          setupInstructionsOverride: input.promptInstructions,
+          instructionsOverride: input.promptInstructions,
+          fallbackInstructions:
+            podcast.promptInstructions ?? podcast.setupInstructions,
         });
 
         yield* podcastRepo.update(input.podcastId, {

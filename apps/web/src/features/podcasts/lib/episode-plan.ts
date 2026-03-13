@@ -31,6 +31,13 @@ export function cloneEpisodePlan(
   };
 }
 
+export function areEpisodePlansEqual(
+  left: EpisodePlan | null | undefined,
+  right: EpisodePlan | null | undefined,
+): boolean {
+  return JSON.stringify(left ?? null) === JSON.stringify(right ?? null);
+}
+
 export function createEmptyEpisodePlanSection(): EpisodePlanSection {
   return {
     heading: '',

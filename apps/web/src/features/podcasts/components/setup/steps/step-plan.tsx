@@ -1,35 +1,18 @@
-import {
-  ChevronDownIcon,
-  MagicWandIcon,
-  PlusIcon,
-  ReloadIcon,
-  TrashIcon,
-} from '@radix-ui/react-icons';
-import { Input } from '@repo/ui/components/input';
+import { MagicWandIcon, ReloadIcon } from '@radix-ui/react-icons';
 import { Spinner } from '@repo/ui/components/spinner';
-import { useCallback, useState } from 'react';
-import {
-  createEmptyEpisodePlanSection,
-  type EpisodePlan,
-} from '@/features/podcasts/lib/episode-plan';
-
-interface SelectedSourceSummary {
-  id: string;
-  title: string;
-  status: string;
-}
+import type { EpisodePlanSourceSummary } from '../../episode-plan-editor';
+import type { EpisodePlan } from '@/features/podcasts/lib/episode-plan';
+import { EpisodePlanEditor } from '../../episode-plan-editor';
 
 interface StepPlanProps {
   plan: EpisodePlan | null;
   setupInstructions: string;
-  selectedSources: readonly SelectedSourceSummary[];
+  selectedSources: readonly (EpisodePlanSourceSummary & { status: string })[];
   canGeneratePlan: boolean;
   isGeneratingPlan: boolean;
   pendingSourceCount: number;
   onPlanChange: (plan: EpisodePlan) => void;
 }
-
-type EpisodePlanSection = EpisodePlan['sections'][number];
 
 const plannerBenefits = [
   'A clearer opening hook',
@@ -167,295 +150,6 @@ function EmptyPlanState({
   );
 }
 
-function SourceChips({ labels }: { labels: string[] }) {
-  if (labels.length === 0) {
-    return null;
-  }
-
-  return (
-    <div className="border-t border-border/50 pt-3">
-      <p className="mb-2 text-xs font-medium text-muted-foreground">Sources</p>
-      <div className="flex flex-wrap gap-1.5">
-        {labels.map((label) => (
-          <span
-            key={label}
-            className="inline-flex items-center rounded-full border border-warning/20 bg-warning/10 px-2.5 py-0.5 text-xs text-warning"
-          >
-            {label}
-          </span>
-        ))}
-      </div>
-    </div>
-  );
-}
-
-function PlanSectionCard({
-  plan,
-  section,
-  index,
-  isExpanded,
-  sourceLabels,
-  onToggle,
-  onPlanChange,
-}: {
-  plan: EpisodePlan;
-  section: EpisodePlanSection;
-  index: number;
-  isExpanded: boolean;
-  sourceLabels: string[];
-  onToggle: (index: number) => void;
-  onPlanChange: (plan: EpisodePlan) => void;
-}) {
-  const updateSection = useCallback(
-    (recipe: (currentSection: EpisodePlanSection) => EpisodePlanSection) => {
-      onPlanChange({
-        ...plan,
-        sections: plan.sections.map((currentSection, sectionIndex) =>
-          sectionIndex === index ? recipe(currentSection) : currentSection,
-        ),
-      });
-    },
-    [index, onPlanChange, plan],
-  );
-
-  const removeSection = useCallback(() => {
-    onPlanChange({
-      ...plan,
-      sections: plan.sections.filter(
-        (_currentSection, sectionIndex) => sectionIndex !== index,
-      ),
-    });
-  }, [index, onPlanChange, plan]);
-
-  return (
-    <div className="rounded-xl border border-border bg-card">
-      <div className="flex items-center gap-3 p-4">
-        <button
-          type="button"
-          onClick={() => onToggle(index)}
-          className="flex flex-1 items-center gap-3 text-left"
-          aria-expanded={isExpanded}
-          aria-label={`Toggle section ${index + 1}`}
-        >
-          <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-warning/15 text-xs font-bold text-warning">
-            {index + 1}
-          </span>
-          <div className="min-w-0 flex-1">
-            <p className="truncate text-sm font-medium text-foreground">
-              {section.heading || 'Untitled section'}
-            </p>
-            {typeof section.estimatedMinutes === 'number' && (
-              <p className="text-xs text-muted-foreground">
-                ~{section.estimatedMinutes} min
-              </p>
-            )}
-          </div>
-          <ChevronDownIcon
-            className={`h-4 w-4 shrink-0 text-muted-foreground transition-transform duration-200 ${isExpanded ? 'rotate-180' : ''}`}
-          />
-        </button>
-        <button
-          type="button"
-          onClick={removeSection}
-          disabled={plan.sections.length === 1}
-          className="shrink-0 rounded-lg p-1.5 text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive disabled:pointer-events-none disabled:opacity-30"
-          aria-label={`Remove section ${index + 1}`}
-        >
-          <TrashIcon className="h-4 w-4" />
-        </button>
-      </div>
-
-      {isExpanded && (
-        <div className="space-y-4 border-t border-border/50 px-4 pb-5 pt-4">
-          <div className="setup-field">
-            <label className="setup-label">Heading</label>
-            <Input
-              value={section.heading}
-              onChange={(event) =>
-                updateSection((currentSection) => ({
-                  ...currentSection,
-                  heading: event.target.value,
-                }))
-              }
-              aria-label={`Section ${index + 1} heading`}
-            />
-          </div>
-
-          <div className="setup-field">
-            <label className="setup-label">Summary</label>
-            <textarea
-              value={section.summary}
-              onChange={(event) =>
-                updateSection((currentSection) => ({
-                  ...currentSection,
-                  summary: event.target.value,
-                }))
-              }
-              rows={3}
-              className="setup-textarea"
-              aria-label={`Section ${index + 1} summary`}
-            />
-          </div>
-
-          <div className="setup-field">
-            <label className="setup-label">Key points</label>
-            <textarea
-              value={section.keyPoints.join('\n')}
-              onChange={(event) =>
-                updateSection((currentSection) => ({
-                  ...currentSection,
-                  keyPoints: event.target.value.split('\n'),
-                }))
-              }
-              rows={3}
-              className="setup-textarea"
-              aria-label={`Section ${index + 1} key points`}
-            />
-            <p className="setup-hint">One point per line</p>
-          </div>
-
-          <SourceChips labels={sourceLabels} />
-        </div>
-      )}
-    </div>
-  );
-}
-
-function PlanEditor({
-  plan,
-  selectedSources,
-  onPlanChange,
-}: {
-  plan: EpisodePlan;
-  selectedSources: readonly SelectedSourceSummary[];
-  onPlanChange: (plan: EpisodePlan) => void;
-}) {
-  const sourceTitleMap = new Map(
-    selectedSources.map((source) => [source.id, source.title]),
-  );
-  const [expandedSections, setExpandedSections] = useState<Set<number>>(
-    () => new Set(plan.sections.map((_, index) => index)),
-  );
-
-  const toggleSection = useCallback((index: number) => {
-    setExpandedSections((prev) => {
-      const next = new Set(prev);
-      if (next.has(index)) {
-        next.delete(index);
-      } else {
-        next.add(index);
-      }
-      return next;
-    });
-  }, []);
-
-  const updatePlanField = useCallback(
-    (field: 'angle' | 'openingHook' | 'closingTakeaway', value: string) => {
-      onPlanChange({
-        ...plan,
-        [field]: value,
-      });
-    },
-    [onPlanChange, plan],
-  );
-
-  const addSection = useCallback(() => {
-    const newIndex = plan.sections.length;
-    onPlanChange({
-      ...plan,
-      sections: [...plan.sections, createEmptyEpisodePlanSection()],
-    });
-    setExpandedSections((prev) => new Set([...prev, newIndex]));
-  }, [onPlanChange, plan]);
-
-  return (
-    <div className="space-y-6">
-      <div className="rounded-xl border border-success/30 bg-success/5 px-4 py-3">
-        <p className="text-sm text-muted-foreground">
-          <span className="font-medium text-foreground">Plan generated.</span>{' '}
-          Review and edit below, then approve to start the script draft.
-        </p>
-      </div>
-
-      <div className="setup-field">
-        <label className="setup-label">Editorial angle</label>
-        <textarea
-          value={plan.angle}
-          onChange={(event) => updatePlanField('angle', event.target.value)}
-          rows={3}
-          className="setup-textarea"
-          aria-label="Episode plan angle"
-        />
-      </div>
-
-      <div className="grid gap-4 md:grid-cols-2">
-        <div className="setup-field">
-          <label className="setup-label">Opening hook</label>
-          <textarea
-            value={plan.openingHook}
-            onChange={(event) =>
-              updatePlanField('openingHook', event.target.value)
-            }
-            rows={4}
-            className="setup-textarea"
-            aria-label="Episode plan opening hook"
-          />
-        </div>
-
-        <div className="setup-field">
-          <label className="setup-label">Closing takeaway</label>
-          <textarea
-            value={plan.closingTakeaway}
-            onChange={(event) =>
-              updatePlanField('closingTakeaway', event.target.value)
-            }
-            rows={4}
-            className="setup-textarea"
-            aria-label="Episode plan closing takeaway"
-          />
-        </div>
-      </div>
-
-      <div className="space-y-3">
-        <div>
-          <h3 className="text-sm font-semibold text-foreground">Sections</h3>
-          <p className="mt-0.5 text-xs text-muted-foreground">
-            Edit the sequence the script should follow.
-          </p>
-        </div>
-
-        {plan.sections.map((section, index) => {
-          const sourceLabels = section.sourceIds
-            .map((sourceId) => sourceTitleMap.get(sourceId) ?? sourceId)
-            .filter(Boolean);
-
-          return (
-            <PlanSectionCard
-              key={`${section.heading}-${index}`}
-              plan={plan}
-              section={section}
-              index={index}
-              isExpanded={expandedSections.has(index)}
-              sourceLabels={sourceLabels}
-              onToggle={toggleSection}
-              onPlanChange={onPlanChange}
-            />
-          );
-        })}
-
-        <button
-          type="button"
-          onClick={addSection}
-          className="flex w-full items-center justify-center gap-2 rounded-xl border-2 border-dashed border-border py-3 text-sm font-medium text-muted-foreground transition-all duration-200 hover:border-warning/40 hover:bg-warning/5 hover:text-foreground"
-        >
-          <PlusIcon className="h-4 w-4" />
-          Add section
-        </button>
-      </div>
-    </div>
-  );
-}
-
 export function StepPlan({
   plan,
   setupInstructions,
@@ -471,10 +165,20 @@ export function StepPlan({
       <PlannerSeed setupInstructions={setupInstructions} />
 
       {plan ? (
-        <PlanEditor
+        <EpisodePlanEditor
           plan={plan}
-          selectedSources={selectedSources}
+          sources={selectedSources}
           onPlanChange={onPlanChange}
+          intro={
+            <div className="rounded-xl border border-success/30 bg-success/5 px-4 py-3">
+              <p className="text-sm text-muted-foreground">
+                <span className="font-medium text-foreground">
+                  Plan generated.
+                </span>{' '}
+                Review and edit below, then approve to start the script draft.
+              </p>
+            </div>
+          }
         />
       ) : (
         <EmptyPlanState

@@ -6,7 +6,7 @@ interface SourceListProps {
   sources: SourceInfo[];
   disabled?: boolean;
   onRemove: (sourceId: string) => void;
-  onAdd: () => void;
+  onAdd?: () => void;
 }
 
 export function SourceList({
@@ -45,7 +45,7 @@ export function SourceList({
         </div>
       ))}
 
-      {!disabled && (
+      {!disabled && onAdd && (
         <Button
           variant="ghost"
           size="sm"

@@ -9,6 +9,7 @@ import { type Page, type Locator, expect } from '@playwright/test';
 import { BasePage } from './base.page';
 
 export class DashboardPage extends BasePage {
+  readonly quickCreateToolbar: Locator;
   readonly uploadSourceAction: Locator;
   readonly newPodcastAction: Locator;
   readonly viewAllSourcesLink: Locator;
@@ -18,10 +19,13 @@ export class DashboardPage extends BasePage {
     super(page);
 
     // Quick action buttons
-    this.uploadSourceAction = page.getByRole('button', {
-      name: /upload source/i,
+    this.quickCreateToolbar = page.getByText(/quick create:/i).locator('..');
+    this.uploadSourceAction = this.quickCreateToolbar.getByRole('button', {
+      name: /^source$/i,
     });
-    this.newPodcastAction = page.getByRole('button', { name: /new podcast/i });
+    this.newPodcastAction = this.quickCreateToolbar.getByRole('button', {
+      name: /^podcast$/i,
+    });
 
     // View all links
     this.viewAllSourcesLink = page

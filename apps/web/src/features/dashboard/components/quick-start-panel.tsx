@@ -50,45 +50,54 @@ export function QuickStartPanel({
   const hasGenerated =
     counts.podcasts > 0 || counts.voiceovers > 0 || counts.infographics > 0;
 
+  let contextualPanel: ReactNode = null;
+
   if (!hasDocuments) {
-    return <AddSourcesCard documentDialogs={documentDialogs} />;
-  }
+    contextualPanel = <AddSourcesCard documentDialogs={documentDialogs} />;
+  } else if (!hasGenerated) {
+    contextualPanel = <CreateFirstContentCard createActions={createActions} />;
+  } else {
+    const missingTypes: Array<{ label: string; icon: ReactNode }> = [];
 
-  if (!hasGenerated) {
-    return <CreateFirstContentCard createActions={createActions} />;
-  }
+    if (counts.podcasts === 0) {
+      missingTypes.push({
+        label: 'Podcast',
+        icon: <MixerHorizontalIcon className="w-3.5 h-3.5" />,
+      });
+    }
 
-  const missingTypes: Array<{ label: string; icon: ReactNode }> = [];
-  if (counts.podcasts === 0)
-    missingTypes.push({
-      label: 'Podcast',
-      icon: <MixerHorizontalIcon className="w-3.5 h-3.5" />,
-    });
-  if (counts.voiceovers === 0)
-    missingTypes.push({
-      label: 'Voiceover',
-      icon: <SpeakerLoudIcon className="w-3.5 h-3.5" />,
-    });
-  if (counts.infographics === 0)
-    missingTypes.push({
-      label: 'Infographic',
-      icon: <ImageIcon className="w-3.5 h-3.5" />,
-    });
+    if (counts.voiceovers === 0) {
+      missingTypes.push({
+        label: 'Voiceover',
+        icon: <SpeakerLoudIcon className="w-3.5 h-3.5" />,
+      });
+    }
 
-  if (missingTypes.length > 0) {
-    return (
-      <SuggestionBar
-        missingTypes={missingTypes}
-        createActions={createActions}
-      />
-    );
+    if (counts.infographics === 0) {
+      missingTypes.push({
+        label: 'Infographic',
+        icon: <ImageIcon className="w-3.5 h-3.5" />,
+      });
+    }
+
+    if (missingTypes.length > 0) {
+      contextualPanel = (
+        <SuggestionBar
+          missingTypes={missingTypes}
+          createActions={createActions}
+        />
+      );
+    }
   }
 
   return (
-    <QuickCreateToolbar
-      createActions={createActions}
-      documentDialogs={documentDialogs}
-    />
+    <div className="space-y-4">
+      {contextualPanel}
+      <QuickCreateToolbar
+        createActions={createActions}
+        documentDialogs={documentDialogs}
+      />
+    </div>
   );
 }
 
@@ -342,22 +351,6 @@ function QuickCreateToolbar({
         <ImageIcon className="w-3.5 h-3.5" aria-hidden="true" />
         Infographic
       </Button>
-      {isDeepResearchEnabled && (
-        <>
-          <span className="text-border" aria-hidden="true">
-            |
-          </span>
-          <Button
-            variant="ghost"
-            size="sm"
-            className="gap-1.5 text-xs text-violet-600 dark:text-violet-400 hover:text-violet-700 dark:hover:text-violet-300"
-            onClick={() => documentDialogs.onOpenResearchWithPodcast()}
-          >
-            <MagnifyingGlassIcon className="w-3.5 h-3.5" aria-hidden="true" />
-            Research &rarr; Podcast
-          </Button>
-        </>
-      )}
     </div>
   );
 }

@@ -593,4 +593,84 @@ describe('generateScript', () => {
       }),
     );
   });
+
+  it('uses saved prompt instructions before setup instructions when auto-creating a missing plan', async () => {
+    const user = createTestUser();
+    const doc = createTestSource({ createdBy: user.id });
+    const podcast = {
+      ...createTestPodcast({
+        createdBy: user.id,
+        setupInstructions: 'Fallback to the original setup framing.',
+        promptInstructions: 'Use the saved workbench framing instead.',
+      }),
+      sources: [doc],
+    } as unknown as PodcastWithSources;
+
+    const generateSpy = vi
+      .fn()
+      .mockImplementationOnce(({ prompt }: { prompt: string }) => {
+        expect(prompt).toContain('Use the saved workbench framing instead.');
+        expect(prompt).not.toContain('Fallback to the original setup framing.');
+        return Effect.succeed({
+          object: {
+            angle: 'Saved angle.',
+            openingHook: 'Saved hook.',
+            closingTakeaway: 'Saved takeaway.',
+            sections: [
+              {
+                heading: 'Saved section',
+                summary: 'Saved summary.',
+                keyPoints: ['Saved point'],
+                sourceIds: [doc.id],
+                estimatedMinutes: 2,
+              },
+            ],
+          },
+          usage: { inputTokens: 10, outputTokens: 10, totalTokens: 20 },
+        });
+      })
+      .mockImplementationOnce(() =>
+        Effect.succeed({
+          object: {
+            title: 'Generated Title',
+            description: 'Generated Description',
+            summary: 'Generated Summary',
+            tags: ['tag-a'],
+            segments: [{ speaker: 'host', line: 'Hello world' }],
+          },
+          usage: { inputTokens: 10, outputTokens: 10, totalTokens: 20 },
+        }),
+      );
+
+    const llmService: LLMService = {
+      generate: generateSpy as LLMService['generate'],
+      streamText: () => Effect.die('not implemented'),
+    };
+
+    const layers = Layer.mergeAll(
+      MockDbLive,
+      createMockPodcastRepo({
+        findByIdForUser: () => Effect.succeed(podcast),
+        updateStatus: (_id, status) =>
+          Effect.succeed({ ...podcast, status } as unknown as Podcast),
+        updateScript: (_id, data) =>
+          Effect.succeed({ ...podcast, ...data } as unknown as Podcast),
+        update: (_id, data) =>
+          Effect.succeed({ ...podcast, ...data } as unknown as Podcast),
+      }),
+      createMockPersonaRepo(),
+      createMockSourceRepo(),
+      createMockActivityLogRepo(),
+      createMockStorage({ baseUrl: 'https://storage.example/' }),
+      Layer.succeed(LLM, llmService),
+    );
+
+    await Effect.runPromise(
+      withTestUser(user)(
+        generateScript({ podcastId: podcast.id }).pipe(Effect.provide(layers)),
+      ),
+    );
+
+    expect(generateSpy).toHaveBeenCalledTimes(2);
+  });
 });

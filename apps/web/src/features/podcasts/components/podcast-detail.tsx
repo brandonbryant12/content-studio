@@ -1,3 +1,4 @@
+import { FileTextIcon } from '@radix-ui/react-icons';
 import { VersionStatus } from '@repo/api/contracts';
 import type { UsePodcastSettingsReturn } from '../hooks/use-podcast-settings';
 import type { UseScriptEditorReturn } from '../hooks/use-script-editor';
@@ -10,6 +11,7 @@ import {
   ConfigPanel,
   GlobalActionBar,
 } from './workbench';
+import { configSectionDefinitions } from './workbench/config-sections';
 
 type Podcast = RouterOutput['podcasts']['get'];
 
@@ -81,10 +83,47 @@ export function PodcastDetail({
     isDeleting,
   } = workbenchState;
   const { isApproved, isAdmin, isApprovalPending } = approvalState;
+  const tabs = [
+    {
+      value: 'script',
+      label: 'Script',
+      icon: <FileTextIcon className="w-4 h-4" />,
+      content: (
+        <ScriptPanel
+          segments={scriptEditor.segments}
+          summary={podcast.summary ?? null}
+          hasChanges={scriptEditor.hasChanges}
+          isSaving={scriptEditor.isSaving}
+          disabled={podcast.status !== VersionStatus.READY}
+          onUpdateSegment={scriptEditor.updateSegment}
+          onRemoveSegment={scriptEditor.removeSegment}
+          onAddSegment={scriptEditor.addSegment}
+          onDiscard={scriptEditor.discardChanges}
+        />
+      ),
+    },
+    ...configSectionDefinitions.map((section) => ({
+      value: section.value,
+      label: section.label,
+      icon: <section.Icon className="w-4 h-4" />,
+      content: (
+        <ConfigPanel
+          podcast={podcast}
+          userId={userId}
+          section={section.value}
+          isGenerating={isGenerating}
+          isPendingGeneration={isPendingGeneration}
+          settings={settings}
+          sourceSelection={sourceSelection}
+        />
+      ),
+    })),
+  ] as const;
 
   return (
     <WorkbenchLayout
       podcast={podcast}
+      tabs={tabs}
       onDelete={onDelete}
       isDeleting={isDeleting}
       isApproved={isApproved}
@@ -97,29 +136,6 @@ export function PodcastDetail({
       onExportAudio={onExportAudio}
       onExportScript={onExportScript}
       onCopyTranscript={onCopyTranscript}
-      leftPanel={
-        <ScriptPanel
-          segments={scriptEditor.segments}
-          summary={podcast.summary ?? null}
-          hasChanges={scriptEditor.hasChanges}
-          isSaving={scriptEditor.isSaving}
-          disabled={podcast.status !== VersionStatus.READY}
-          onUpdateSegment={scriptEditor.updateSegment}
-          onRemoveSegment={scriptEditor.removeSegment}
-          onAddSegment={scriptEditor.addSegment}
-          onDiscard={scriptEditor.discardChanges}
-        />
-      }
-      rightPanel={
-        <ConfigPanel
-          podcast={podcast}
-          userId={userId}
-          isGenerating={isGenerating}
-          isPendingGeneration={isPendingGeneration}
-          settings={settings}
-          sourceSelection={sourceSelection}
-        />
-      }
       audioStrip={displayAudio ? <AudioPlayer url={displayAudio.url} /> : null}
       actionBar={
         <GlobalActionBar

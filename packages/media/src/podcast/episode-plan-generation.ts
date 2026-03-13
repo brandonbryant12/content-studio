@@ -43,12 +43,14 @@ const loadPersonaName = (personaId: string | null | undefined) =>
 
 export interface GenerateEpisodePlanOptions {
   podcast: PodcastWithSources;
-  setupInstructionsOverride?: string | null;
+  instructionsOverride?: string | null;
+  fallbackInstructions?: string | null;
 }
 
 export const generateEpisodePlanForPodcast = ({
   podcast,
-  setupInstructionsOverride,
+  instructionsOverride,
+  fallbackInstructions,
 }: GenerateEpisodePlanOptions) =>
   Effect.gen(function* () {
     const llm = yield* LLM;
@@ -98,7 +100,9 @@ export const generateEpisodePlanForPodcast = ({
         title: podcast.title,
         description: podcast.description,
         setupInstructions: sanitizePodcastSetupInstructions(
-          setupInstructionsOverride ?? podcast.setupInstructions,
+          instructionsOverride ??
+            fallbackInstructions ??
+            podcast.setupInstructions,
         ),
         sourceEntries,
       }),

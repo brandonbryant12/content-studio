@@ -60,6 +60,11 @@ describe('StepPlan', () => {
 
     render(<ControlledStepPlan />);
 
+    // Overview is collapsed by default — expand it first
+    await user.click(
+      screen.getByRole('button', { name: 'Toggle episode overview' }),
+    );
+
     const angleField = screen.getByLabelText('Episode plan angle');
     await user.clear(angleField);
     await user.type(angleField, 'Center the episode on operational readiness.');
@@ -74,7 +79,8 @@ describe('StepPlan', () => {
 
     render(<ControlledStepPlan />);
 
-    await user.click(screen.getByRole('button', { name: 'Add section' }));
+    await user.click(screen.getByRole('button', { name: /Add Section/i }));
+
     expect(
       screen.getAllByRole('button', { name: /Remove section/ }),
     ).toHaveLength(2);

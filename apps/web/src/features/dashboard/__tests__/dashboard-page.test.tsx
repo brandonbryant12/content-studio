@@ -81,7 +81,7 @@ describe('DashboardPage heading and value communication', () => {
 
     expect(screen.getByText('Dashboard')).toBeInTheDocument();
     expect(
-      screen.getByText(/Create AI-generated podcasts, voiceovers, and visuals/),
+      screen.getByText(/Upload a source to create a podcast/),
     ).toBeInTheDocument();
   });
 
@@ -95,16 +95,17 @@ describe('DashboardPage heading and value communication', () => {
 });
 
 describe('DashboardPage quick-start panel', () => {
-  it('shows add sources panel when no documents exist', () => {
+  it('shows add sources panel and quick create toolbar when no documents exist', () => {
     render(<DashboardPage {...createProps()} />);
 
     expect(screen.getByText('Add your first source')).toBeInTheDocument();
     expect(screen.getByText('Upload a file')).toBeInTheDocument();
     expect(screen.getByText('Import from URL')).toBeInTheDocument();
     expect(screen.getByText('Deep Research')).toBeInTheDocument();
+    expect(screen.getByText('Quick create:')).toBeInTheDocument();
   });
 
-  it('shows create first content panel when documents exist but no generated content', () => {
+  it('shows create first content panel and quick create toolbar when documents exist but no generated content', () => {
     render(
       <DashboardPage
         {...createProps({
@@ -114,6 +115,7 @@ describe('DashboardPage quick-start panel', () => {
     );
 
     expect(screen.getByText('Create your first content')).toBeInTheDocument();
+    expect(screen.getByText('Quick create:')).toBeInTheDocument();
     // "Create Podcast" appears in both the quick-start panel and recent section
     expect(
       screen.getAllByRole('button', { name: /Create Podcast/i }).length,
@@ -126,7 +128,7 @@ describe('DashboardPage quick-start panel', () => {
     ).toBeGreaterThanOrEqual(1);
   });
 
-  it('shows suggestion bar for missing content types', () => {
+  it('shows suggestion bar and quick create toolbar for missing content types', () => {
     render(
       <DashboardPage
         {...createProps({
@@ -136,6 +138,7 @@ describe('DashboardPage quick-start panel', () => {
     );
 
     expect(screen.getByText('Try creating:')).toBeInTheDocument();
+    expect(screen.getByText('Quick create:')).toBeInTheDocument();
   });
 
   it('shows quick create toolbar when all types have content', () => {
@@ -153,6 +156,15 @@ describe('DashboardPage quick-start panel', () => {
         .getAllByRole('button', { name: /Infographic/i })
         .some((button) => !button.hasAttribute('disabled')),
     ).toBe(true);
+  });
+
+  it('keeps the featured research card but removes the duplicate toolbar shortcut', () => {
+    render(<DashboardPage {...createProps()} />);
+
+    expect(screen.getByText('Research to Podcast')).toBeInTheDocument();
+    expect(
+      screen.queryByText(/Research\s*→\s*Podcast/i),
+    ).not.toBeInTheDocument();
   });
 });
 

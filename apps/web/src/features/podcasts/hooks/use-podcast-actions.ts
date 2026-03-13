@@ -97,10 +97,11 @@ export function usePodcastActions({
           sourceIds: sourceSelection.hasChanges
             ? sourceSelection.sourceIds
             : undefined,
+          episodePlan: sourceSelection.hasChanges ? null : undefined,
           hostVoice: settings.hostVoice,
           coHostVoice: settings.coHostVoice,
           targetDurationMinutes: settings.targetDuration,
-          promptInstructions: settings.instructions || undefined,
+          promptInstructions: settings.instructions,
           hostPersonaId: settings.hostPersonaId,
           coHostPersonaId: settings.coHostPersonaId,
         });

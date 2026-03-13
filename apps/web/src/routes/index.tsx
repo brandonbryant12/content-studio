@@ -69,7 +69,7 @@ function RouteComponent() {
       step: 2,
       icon: LightningBoltIcon,
       title: 'AI creates your content',
-      desc: `Choose your format — podcast, voiceover, or infographic — and ${APP_NAME} generates it from your approved sources.`,
+      desc: 'Create a podcast from approved sources, or start a voiceover or infographic project.',
       color: 'text-primary',
       bg: 'bg-primary',
     },
@@ -86,10 +86,10 @@ function RouteComponent() {
     {
       icon: FileTextIcon,
       label: 'Sources',
-      headline: 'Ground every asset in verified source material',
+      headline: 'Sources for your podcasts',
       desc: isDeepResearchEnabled
-        ? `Upload approved files, import web pages, or use ${DEEP_RESEARCH_NAME} on a topic. Your source library becomes the single source of truth behind every piece of content.`
-        : 'Upload approved files or import web pages. Your source library becomes the single source of truth behind every piece of content.',
+        ? `Upload approved files, import web pages, or use ${DEEP_RESEARCH_NAME} on a topic. Use these sources to create podcasts.`
+        : 'Upload approved files or import web pages. Use these sources to create podcasts.',
       color: 'text-sky-400',
       iconBg: 'bg-sky-500/10',
     },
@@ -124,7 +124,7 @@ function RouteComponent() {
     '4 infographic formats',
     ...(isDeepResearchEnabled ? [DEEP_RESEARCH_NAME] : []),
     'Full script review',
-    'Source-grounded output',
+    'Podcasts from sources',
   ];
 
   useEffect(() => {
@@ -171,7 +171,7 @@ function RouteComponent() {
           {/* Subtitle */}
           <p className="text-body-lg mt-6 max-w-xl mx-auto animate-fade-in-up stagger-2">
             {heroSubtitle}
-            {` ${APP_NAME} generates polished podcasts, voiceovers, and visuals you can trust — grounded in your sources.`}
+            {` Use them to create a podcast, or start a voiceover or visual project.`}
           </p>
 
           {/* CTAs */}

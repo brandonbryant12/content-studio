@@ -99,8 +99,8 @@ export function DashboardPage({
       <div className="mb-6">
         <h1 className="page-title mb-1">Dashboard</h1>
         <p className="text-body text-muted-foreground">
-          Create AI-generated podcasts, voiceovers, and visuals — grounded in
-          your source material.
+          Upload a source to create a podcast, or start a voiceover or visual
+          project.
         </p>
       </div>
 

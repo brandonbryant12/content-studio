@@ -1,4 +1,4 @@
-import { ChevronDownIcon, InfoCircledIcon } from '@radix-ui/react-icons';
+import { ChevronDownIcon } from '@radix-ui/react-icons';
 import * as SelectPrimitive from '@radix-ui/react-select';
 import { Slider } from '@repo/ui/components/slider';
 import type { RouterOutput } from '@repo/api/client';
@@ -240,23 +240,16 @@ export function PodcastSettings({
   if (section === 'voice') {
     return (
       <div className={`mixer-section ${disabled ? 'disabled' : ''}`}>
-        <div className="mb-4 rounded-xl border border-violet-200/60 bg-violet-50/70 p-4 dark:border-violet-500/20 dark:bg-violet-500/5">
-          <div className="flex items-start gap-3">
-            <div className="mt-0.5 rounded-full bg-violet-500/10 p-2 text-violet-600 dark:text-violet-300">
-              <InfoCircledIcon className="h-4 w-4" />
-            </div>
-            <div>
-              <p className="text-sm font-semibold text-foreground">
-                Personas shape both script and audio
-              </p>
-              <p className="mt-1 text-sm leading-relaxed text-muted-foreground">
-                {PERSONA_PODCAST_SECTION_HELP}
-              </p>
-              <p className="mt-1 text-sm leading-relaxed text-muted-foreground">
-                {PERSONA_ASSIGNMENT_HELP}
-              </p>
-            </div>
-          </div>
+        <div className="mb-4 rounded-xl border border-primary/20 bg-primary/5 p-4">
+          <p className="text-sm font-semibold text-foreground">
+            Personas shape both script and audio
+          </p>
+          <p className="mt-1 text-sm leading-relaxed text-muted-foreground">
+            {PERSONA_PODCAST_SECTION_HELP}
+          </p>
+          <p className="mt-1 text-sm leading-relaxed text-muted-foreground">
+            {PERSONA_ASSIGNMENT_HELP}
+          </p>
         </div>
         <div
           className={`mixer-channels ${!isConversation ? 'grid-cols-1' : ''}`}
@@ -424,7 +417,7 @@ export function PodcastSettings({
           value={settings.instructions}
           onChange={(e) => handleInstructionsChange(e.target.value)}
           disabled={disabled}
-          placeholder="Tell the AI how to adjust the script..."
+          placeholder="Tell the AI how to adjust the script\u2026"
           className="mixer-direction-textarea"
           aria-label="Script direction"
         />

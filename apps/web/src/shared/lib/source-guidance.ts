@@ -2,10 +2,10 @@ import { APP_NAME } from '@/constants';
 
 export const DEEP_RESEARCH_NAME = 'Deep Research';
 
-export const SOURCE_DEFINITION = `Sources are reusable reference materials that ${APP_NAME} turns into podcasts, voiceovers, infographics, and future edits.`;
+export const SOURCE_DEFINITION = `Sources are reusable reference materials that ${APP_NAME} turns into podcasts.`;
 
 export const SOURCE_LIST_SUPPORT =
-  'Each source stores extracted text from reusable inputs so you can reference the same facts more than once.';
+  'Each source stores extracted text so you can reference the same facts across episodes.';
 
 export const SOURCE_ASSIGNMENT_HELP =
   'Selected sources ground the output. They shape the facts, examples, and claims the model can pull from.';

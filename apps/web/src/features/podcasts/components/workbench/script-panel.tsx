@@ -11,7 +11,6 @@ import { useState } from 'react';
 import type { ScriptSegment } from '../../hooks/use-script-editor';
 import { ScriptEditor } from './script-editor';
 import { ConfirmationDialog } from '@/shared/components/confirmation-dialog/confirmation-dialog';
-import { PODCAST_SCRIPT_HELP } from '@/shared/lib/content-guidance';
 
 interface ScriptPanelProps {
   segments: ScriptSegment[];
@@ -80,15 +79,6 @@ export function ScriptPanel({
       {/* Script content - full width scroll, centered inner content */}
       <div className="script-panel-v2-scroll">
         <div className="script-panel-v2-inner">
-          <div className="mb-5 rounded-xl border border-sky-200/60 bg-sky-50/70 p-4 dark:border-sky-500/20 dark:bg-sky-500/5">
-            <p className="text-sm font-semibold text-foreground">
-              How podcast scripts work
-            </p>
-            <p className="mt-1 text-sm leading-relaxed text-muted-foreground">
-              {PODCAST_SCRIPT_HELP}
-            </p>
-          </div>
-
           {/* Collapsible summary - minimal */}
           {summary && (
             <div className="script-summary-v2">

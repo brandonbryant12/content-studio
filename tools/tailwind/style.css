@@ -1601,14 +1601,16 @@
 
   /* Tab Navigation */
   .workbench-v3-tabs {
-    @apply shrink-0 flex gap-1 px-4 py-1.5 border-b border-border bg-muted/30
-           rounded-none justify-start h-auto;
+    @apply shrink-0 flex gap-1 px-4 pt-2 pb-0 bg-muted/30
+           rounded-none justify-start h-auto relative;
   }
 
   .workbench-v3-tab {
-    @apply flex items-center gap-2 px-4 py-2 rounded-lg
+    @apply flex items-center gap-2 px-4 py-2 rounded-t-lg
            text-sm font-medium text-muted-foreground
-           transition-all duration-150;
+           transition-all duration-150 relative -mb-px;
+    border: 1px solid transparent;
+    border-bottom: none;
   }
 
   .workbench-v3-tab:hover {
@@ -1616,7 +1618,9 @@
   }
 
   .workbench-v3-tab[data-state='active'] {
-    @apply text-foreground bg-card shadow-sm;
+    @apply text-foreground bg-card;
+    border-color: var(--border);
+    z-index: 1;
   }
 
   .workbench-v3-tab svg {
@@ -1625,7 +1629,7 @@
 
   /* Main content area */
   .workbench-v3-main {
-    @apply flex-1 min-h-0 overflow-hidden bg-card;
+    @apply flex-1 min-h-0 overflow-hidden bg-card border-t border-border;
   }
 
   .workbench-v3-content {
@@ -4313,7 +4317,7 @@
 
   /* Full-width inner content */
   .config-panel-v2-inner {
-    @apply w-full px-4 py-8 lg:px-6 lg:py-10 space-y-6;
+    @apply w-full px-4 py-6 lg:px-6 lg:py-8 space-y-6;
   }
 
   /* -----------------------------------------
@@ -4349,6 +4353,9 @@
   .studio-module-icon.direction {
     @apply bg-success/15 text-success;
   }
+  .studio-module-icon.planner {
+    @apply bg-info/15 text-info;
+  }
   .studio-module-title {
     font-family: 'Georgia', serif;
     @apply text-sm font-semibold text-foreground tracking-tight;
@@ -4358,6 +4365,56 @@
   }
   .studio-module-body {
     @apply p-4;
+  }
+
+  /* -----------------------------------------
+     EPISODE PLAN EDITOR
+     Compact card-based section editor
+     ----------------------------------------- */
+  .plan-section-card {
+    @apply rounded-lg border border-border/70 bg-card overflow-hidden;
+  }
+  .plan-section-toggle {
+    @apply flex w-full items-center gap-2.5 px-3.5 py-2.5 text-left
+           transition-colors duration-150 hover:bg-muted/40;
+  }
+  .plan-section-number {
+    @apply flex h-6 w-6 shrink-0 items-center justify-center rounded-full
+           bg-info/15 text-xs font-bold tabular-nums text-info;
+  }
+  .plan-section-duration {
+    @apply shrink-0 rounded bg-muted px-1.5 py-0.5 text-xs tabular-nums text-muted-foreground;
+  }
+  .plan-section-body {
+    @apply space-y-3 border-t border-border/40 px-3.5 pb-4 pt-3;
+  }
+  .plan-field {
+    @apply space-y-1;
+  }
+  .plan-field-label {
+    @apply block text-xs font-medium text-muted-foreground;
+  }
+  .plan-field-input {
+    @apply h-8 text-sm;
+  }
+  .plan-field-textarea {
+    @apply w-full rounded-lg border border-border bg-background px-3 py-2
+           text-sm leading-relaxed placeholder:text-muted-foreground
+           focus:outline-none focus:ring-1 focus:ring-ring
+           disabled:pointer-events-none disabled:opacity-50 resize-none;
+  }
+  .plan-section-remove {
+    @apply inline-flex items-center gap-1.5 rounded-md px-2 py-1
+           text-xs text-muted-foreground transition-colors
+           hover:bg-destructive/10 hover:text-destructive
+           disabled:pointer-events-none disabled:opacity-30;
+  }
+  .plan-add-section {
+    @apply flex w-full items-center justify-center gap-1.5 rounded-lg
+           border border-dashed border-border/70 py-2 text-xs font-medium
+           text-muted-foreground transition-colors duration-150
+           hover:border-info/40 hover:bg-info/5 hover:text-foreground
+           disabled:pointer-events-none disabled:opacity-60;
   }
 
   /* -----------------------------------------

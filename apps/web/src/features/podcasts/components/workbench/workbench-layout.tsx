@@ -1,10 +1,4 @@
-import {
-  ArrowLeftIcon,
-  DownloadIcon,
-  TrashIcon,
-  FileTextIcon,
-  MixerHorizontalIcon,
-} from '@radix-ui/react-icons';
+import { ArrowLeftIcon, DownloadIcon, TrashIcon } from '@radix-ui/react-icons';
 import { Badge } from '@repo/ui/components/badge';
 import { Button } from '@repo/ui/components/button';
 import {
@@ -33,8 +27,12 @@ type PodcastFull = RouterOutput['podcasts']['get'];
 
 interface WorkbenchLayoutProps {
   podcast: PodcastFull;
-  leftPanel: ReactNode;
-  rightPanel: ReactNode;
+  tabs: ReadonlyArray<{
+    value: string;
+    label: string;
+    icon: ReactNode;
+    content: ReactNode;
+  }>;
   audioStrip?: ReactNode;
   actionBar?: ReactNode;
   onDelete: () => void;
@@ -53,8 +51,7 @@ interface WorkbenchLayoutProps {
 
 export function WorkbenchLayout({
   podcast,
-  leftPanel,
-  rightPanel,
+  tabs,
   audioStrip,
   actionBar,
   onDelete,
@@ -76,8 +73,11 @@ export function WorkbenchLayout({
   const handleExportAudio = onExportAudio ?? (() => {});
   const handleExportScript = onExportScript ?? (() => {});
   const handleCopyTranscript = onCopyTranscript ?? (() => {});
-  const [activeTab, setActiveTab] = useState('script');
+  const [activeTab, setActiveTab] = useState(tabs[0]?.value ?? 'script');
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+  const selectedTab = tabs.some((tab) => tab.value === activeTab)
+    ? activeTab
+    : (tabs[0]?.value ?? 'script');
 
   const handleDeleteConfirm = useCallback(() => {
     setDeleteConfirmOpen(false);
@@ -173,40 +173,36 @@ export function WorkbenchLayout({
       {audioStrip && <div className="workbench-audio-strip">{audioStrip}</div>}
 
       <Tabs
-        value={activeTab}
+        value={selectedTab}
         onValueChange={setActiveTab}
         className="workbench-v3-tabs-root"
       >
         <TabsList
-          className="workbench-v3-tabs flex justify-start"
+          className="workbench-v3-tabs flex h-auto flex-wrap justify-start gap-2"
           aria-label="Podcast workbench"
         >
-          <TabsTrigger
-            value="script"
-            className={`workbench-v3-tab ${activeTab === 'script' ? 'active' : ''}`}
-          >
-            <FileTextIcon className="w-4 h-4" />
-            <span>Script</span>
-          </TabsTrigger>
-          <TabsTrigger
-            value="settings"
-            className={`workbench-v3-tab ${activeTab === 'settings' ? 'active' : ''}`}
-          >
-            <MixerHorizontalIcon className="w-4 h-4" />
-            <span>Settings</span>
-          </TabsTrigger>
+          {tabs.map((tab) => (
+            <TabsTrigger
+              key={tab.value}
+              value={tab.value}
+              className={`workbench-v3-tab ${selectedTab === tab.value ? 'active' : ''}`}
+            >
+              {tab.icon}
+              <span>{tab.label}</span>
+            </TabsTrigger>
+          ))}
         </TabsList>
 
         <div className="workbench-v3-main">
-          <TabsContent value="script" className="workbench-v3-content">
-            {leftPanel}
-          </TabsContent>
-          <TabsContent
-            value="settings"
-            className="workbench-v3-content workbench-v3-settings"
-          >
-            {rightPanel}
-          </TabsContent>
+          {tabs.map((tab) => (
+            <TabsContent
+              key={tab.value}
+              value={tab.value}
+              className="workbench-v3-content"
+            >
+              {tab.content}
+            </TabsContent>
+          ))}
         </div>
       </Tabs>
 
