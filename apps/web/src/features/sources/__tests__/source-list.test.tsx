@@ -2,7 +2,10 @@ import { describe, it, expect, vi } from 'vitest';
 import type { SourceListItem } from '../components/source-item';
 import type { ReactNode, ComponentProps } from 'react';
 import { SourceList } from '../components/source-list';
-import { APP_NAME } from '@/constants';
+import {
+  SOURCE_DEFINITION,
+  SOURCE_LIST_SUPPORT,
+} from '@/shared/lib/source-guidance';
 import { render, screen, userEvent } from '@/test-utils';
 
 vi.mock('@tanstack/react-router', () => ({
@@ -114,9 +117,9 @@ describe('SourceList', () => {
     ).toBeInTheDocument();
     expect(
       screen.getByText(
-        new RegExp(
-          `Sources are reusable reference materials that ${APP_NAME} turns into podcasts, voiceovers, infographics, and future edits\\.`,
-        ),
+        (_content, element) =>
+          element?.textContent ===
+          `${SOURCE_DEFINITION} ${SOURCE_LIST_SUPPORT}`,
       ),
     ).toBeInTheDocument();
     expect(screen.getByText('What sources do')).toBeInTheDocument();

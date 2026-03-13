@@ -16,6 +16,25 @@
     "eventFile": "events/2026-03.jsonl"
   },
   {
+    "id": "2026-03-13-feature-delivery-podcast-lint-cleanup-pinned-transitive-baseline-browser-mapping",
+    "date": "2026-03-13",
+    "month": "2026-03",
+    "workflow": "Feature Delivery",
+    "title": "Podcast lint cleanup pinned transitive baseline browser mapping",
+    "severity": "low",
+    "status": "completed",
+    "tags": [
+      "skill:debug-fix",
+      "podcasts",
+      "lint",
+      "baseline-browser-mapping",
+      "workbench"
+    ],
+    "importance": 0.64,
+    "confidence": 0.95,
+    "eventFile": "events/2026-03.jsonl"
+  },
+  {
     "id": "2026-03-13-feature-delivery-removed-episode-planner-from-podcast-workbench-ui",
     "date": "2026-03-13",
     "month": "2026-03",
@@ -31,6 +50,24 @@
       "planner",
       "ui"
     ],
+    "eventFile": "events/2026-03.jsonl"
+  },
+  {
+    "id": "2026-03-13-feature-delivery-source-list-test-now-follows-shared-source-guidance-copy",
+    "date": "2026-03-13",
+    "month": "2026-03",
+    "workflow": "Feature Delivery",
+    "title": "Source list test now follows shared source guidance copy",
+    "severity": "low",
+    "status": "completed",
+    "tags": [
+      "skill:debug-fix",
+      "sources",
+      "tests",
+      "copy-drift"
+    ],
+    "importance": 0.58,
+    "confidence": 0.97,
     "eventFile": "events/2026-03.jsonl"
   },
   {

@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 import type { AnchorHTMLAttributes } from 'react';
-import { WorkbenchLayout } from '../components/workbench/workbench-layout';
 import { PodcastDetail } from '../components/podcast-detail';
+import { WorkbenchLayout } from '../components/workbench/workbench-layout';
 import { render, screen, userEvent } from '@/test-utils';
 
 vi.mock('@tanstack/react-router', () => ({
