@@ -97,13 +97,7 @@ describe('PodcastSettings', () => {
     );
 
     expect(
-      screen.getByText('Personas shape both script and audio'),
-    ).toBeInTheDocument();
-    expect(
       screen.getByText(/saved persona voices replace manual voice selection/i),
-    ).toBeInTheDocument();
-    expect(
-      screen.getByText(/persona details shape how the script sounds/i),
     ).toBeInTheDocument();
     expect(
       screen.getByRole('button', { name: 'Persona: what is a persona?' }),

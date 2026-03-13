@@ -1,7 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 import type { AnchorHTMLAttributes } from 'react';
 import { PodcastDetail } from '../components/podcast-detail';
-import { WorkbenchLayout } from '../components/workbench/workbench-layout';
 import { render, screen, userEvent } from '@/test-utils';
 
 vi.mock('@tanstack/react-router', () => ({
@@ -14,14 +13,27 @@ vi.mock('@/shared/components/approval/approve-button', () => ({
   ApproveButton: () => <div>approve-button</div>,
 }));
 
-vi.mock('../components/workbench', () => ({
-  WorkbenchLayout,
-  ScriptPanel: () => <div>script-panel</div>,
-  ConfigPanel: ({ section }: { section: string }) => (
-    <div>{`config-${section}`}</div>
+vi.mock('@/shared/components/audio-stage', () => ({
+  AudioStage: ({ src }: { src: string }) => (
+    <div data-testid="audio-stage">
+      <audio src={src} />
+    </div>
   ),
-  GlobalActionBar: () => <div>action-bar</div>,
 }));
+
+vi.mock('../components/workbench', async () => {
+  const actual = await vi.importActual<Record<string, unknown>>(
+    '../components/workbench/workbench-layout',
+  );
+  return {
+    ...actual,
+    ScriptPanel: () => <div>script-panel</div>,
+    ConfigPanel: ({ section }: { section: string }) => (
+      <div>{`config-${section}`}</div>
+    ),
+    GlobalActionBar: () => <div>action-bar</div>,
+  };
+});
 
 function createPodcast(overrides: Partial<Record<string, unknown>> = {}) {
   return {

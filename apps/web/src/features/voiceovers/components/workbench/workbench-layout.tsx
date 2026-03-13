@@ -14,6 +14,12 @@ import {
 } from '@repo/ui/components/dropdown-menu';
 import { Input } from '@repo/ui/components/input';
 import { Spinner } from '@repo/ui/components/spinner';
+import {
+  Tabs,
+  TabsList,
+  TabsTrigger,
+  TabsContent,
+} from '@repo/ui/components/tabs';
 import { Link } from '@tanstack/react-router';
 import { useState, useCallback, type ReactNode } from 'react';
 import type { RouterOutput } from '@repo/api/client';
@@ -31,7 +37,12 @@ interface WorkbenchLayoutProps {
   onTitleChange: (title: string) => void;
   hasTitleChanges: boolean;
   isTitleDisabled: boolean;
-  children: ReactNode;
+  tabs: ReadonlyArray<{
+    value: string;
+    label: string;
+    icon: ReactNode;
+    content: ReactNode;
+  }>;
   rightPanel?: ReactNode;
   audioStrip?: ReactNode;
   actionBar?: ReactNode;
@@ -55,7 +66,7 @@ export function WorkbenchLayout({
   onTitleChange,
   hasTitleChanges,
   isTitleDisabled,
-  children,
+  tabs,
   rightPanel,
   audioStrip,
   actionBar,
@@ -77,8 +88,12 @@ export function WorkbenchLayout({
   const handleExportAudio = onExportAudio ?? (() => {});
   const handleExportScript = onExportScript ?? (() => {});
   const handleCopyTranscript = onCopyTranscript ?? (() => {});
+  const [activeTab, setActiveTab] = useState(tabs[0]?.value ?? 'script');
+  const selectedTab = tabs.some((tab) => tab.value === activeTab)
+    ? activeTab
+    : (tabs[0]?.value ?? 'script');
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
-  const [assistantOpen, setAssistantOpen] = useState(true);
+  const [assistantOpen, setAssistantOpen] = useState(false);
 
   const handleDeleteClick = useCallback(() => {
     setDeleteConfirmOpen(true);
@@ -230,30 +245,64 @@ export function WorkbenchLayout({
           </div>
         </header>
 
-        {/* Hero audio strip — always visible when audio exists */}
+        {/* Tabs + Main content */}
+        <Tabs
+          value={selectedTab}
+          onValueChange={setActiveTab}
+          className="workbench-v3-tabs-root"
+        >
+          <TabsList
+            className="workbench-v3-tabs flex h-auto flex-wrap justify-start gap-2"
+            aria-label="Voiceover workbench"
+          >
+            {tabs.map((tab) => (
+              <TabsTrigger
+                key={tab.value}
+                value={tab.value}
+                className={`workbench-v3-tab ${selectedTab === tab.value ? 'active' : ''}`}
+              >
+                {tab.icon}
+                <span>{tab.label}</span>
+              </TabsTrigger>
+            ))}
+          </TabsList>
+
+          <div className="workbench-main">
+            {tabs.map((tab) => (
+              <TabsContent
+                key={tab.value}
+                value={tab.value}
+                className="workbench-v3-content flex-1 min-h-0"
+              >
+                {tab.content}
+              </TabsContent>
+            ))}
+          </div>
+        </Tabs>
+
+        {/* Audio player + Action bar — pinned to bottom */}
         {audioStrip && (
           <div className="workbench-audio-strip">{audioStrip}</div>
         )}
-
-        {/* Main content */}
-        <div className="workbench-main">
-          {rightPanel && assistantOpen ? (
-            <>
-              <div className="workbench-panel-left">
-                <div className="workbench-scroll-container">{children}</div>
-              </div>
-              <aside className="workbench-panel-right flex flex-col">
-                {rightPanel}
-              </aside>
-            </>
-          ) : (
-            <div className="workbench-scroll-container">{children}</div>
-          )}
-        </div>
-
-        {/* Global Action Bar */}
         {actionBar}
       </div>
+
+      {/* Writing assistant slide-over */}
+      {rightPanel && (
+        <>
+          <div
+            className={`assistant-overlay ${assistantOpen ? 'open' : ''}`}
+            onClick={() => setAssistantOpen(false)}
+            aria-hidden="true"
+          />
+          <aside
+            className={`assistant-slideout ${assistantOpen ? 'open' : ''}`}
+            aria-label="Writing assistant"
+          >
+            {rightPanel}
+          </aside>
+        </>
+      )}
       <ConfirmationDialog
         open={deleteConfirmOpen}
         onOpenChange={setDeleteConfirmOpen}

@@ -79,7 +79,6 @@ describe('ConfigPanel', () => {
       />,
     );
 
-    expect(screen.getByText('Voice Mixer')).toBeInTheDocument();
     expect(screen.getByText('settings-voice')).toBeInTheDocument();
     expect(screen.queryByText('sources-panel')).not.toBeInTheDocument();
   });

@@ -1,6 +1,6 @@
 import { useChat } from '@ai-sdk/react';
 import { eventIteratorToUnproxiedDataStream } from '@repo/api/client';
-import { useCallback, useEffect, useRef } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import type { UIMessage } from 'ai';
 import { rawApiClient } from '@/clients/apiClient';
 
@@ -15,7 +15,7 @@ const WRITE_CONFIRMATION_PREFIX = 'assistant-confirmation' as const;
 type TranscriptWriteToolPart = WritingAssistantMessage['parts'][number] & {
   readonly type: `tool-${typeof TRANSCRIPT_WRITE_TOOL}`;
   readonly toolCallId: string;
-  readonly state: 'input-available';
+  readonly state: 'input-available' | 'output-available';
   readonly input: TranscriptWriteToolInput;
 };
 
@@ -36,11 +36,20 @@ function isTranscriptWriteToolPart(
   part: WritingAssistantMessage['parts'][number],
 ): part is TranscriptWriteToolPart {
   if (part.type !== `tool-${TRANSCRIPT_WRITE_TOOL}`) return false;
-  if ((part as { state?: unknown }).state !== 'input-available') return false;
+  const state = (part as { state?: unknown }).state;
+  if (state !== 'input-available' && state !== 'output-available') {
+    return false;
+  }
   if (typeof (part as { toolCallId?: unknown }).toolCallId !== 'string') {
     return false;
   }
   return isTranscriptWriteInput((part as { input?: unknown }).input);
+}
+
+function isPendingTranscriptWriteToolPart(
+  part: WritingAssistantMessage['parts'][number],
+): part is TranscriptWriteToolPart & { readonly state: 'input-available' } {
+  return isTranscriptWriteToolPart(part) && part.state === 'input-available';
 }
 
 function extractPendingTranscriptWrites(
@@ -52,7 +61,7 @@ function extractPendingTranscriptWrites(
     if (message.role !== 'assistant') continue;
 
     for (const part of message.parts) {
-      if (!isTranscriptWriteToolPart(part)) continue;
+      if (!isPendingTranscriptWriteToolPart(part)) continue;
 
       writes.push({
         toolCallId: part.toolCallId,
@@ -77,6 +86,49 @@ function createTranscriptWriteConfirmationMessage(toolCallId: string) {
   } as WritingAssistantMessage;
 }
 
+function addTranscriptWriteConfirmationMessages(
+  messages: readonly WritingAssistantMessage[],
+  appliedToolCallIds: ReadonlySet<string>,
+) {
+  if (appliedToolCallIds.size === 0) {
+    return [...messages];
+  }
+
+  const existingMessageIds = new Set(messages.map((message) => message.id));
+  const messagesWithConfirmations: WritingAssistantMessage[] = [];
+
+  for (const message of messages) {
+    messagesWithConfirmations.push(message);
+
+    if (message.role !== 'assistant') {
+      continue;
+    }
+
+    for (const part of message.parts) {
+      if (!isTranscriptWriteToolPart(part)) {
+        continue;
+      }
+
+      if (!appliedToolCallIds.has(part.toolCallId)) {
+        continue;
+      }
+
+      const confirmationMessage = createTranscriptWriteConfirmationMessage(
+        part.toolCallId,
+      );
+
+      if (existingMessageIds.has(confirmationMessage.id)) {
+        continue;
+      }
+
+      existingMessageIds.add(confirmationMessage.id);
+      messagesWithConfirmations.push(confirmationMessage);
+    }
+  }
+
+  return messagesWithConfirmations;
+}
+
 const transport = {
   sendMessages: async (options: {
     messages: WritingAssistantMessage[];
@@ -97,18 +149,25 @@ export function useWritingAssistantChat(
   transcript: string,
   onApplyTranscriptEdit: (nextTranscript: string) => void,
 ) {
-  const { messages, sendMessage, status, error, setMessages, addToolResult } =
-    useChat<WritingAssistantMessage>({
-      transport,
-    });
+  const {
+    messages: chatMessages,
+    sendMessage,
+    status,
+    error,
+    setMessages,
+    addToolResult,
+  } = useChat<WritingAssistantMessage>({
+    transport,
+  });
 
   const handledToolCallIdsRef = useRef(new Set<string>());
+  const [appliedToolCallIds, setAppliedToolCallIds] = useState<string[]>([]);
 
   useEffect(() => {
     let isCancelled = false;
 
     const applyPendingWrites = async () => {
-      const pendingWrites = extractPendingTranscriptWrites(messages);
+      const pendingWrites = extractPendingTranscriptWrites(chatMessages);
       let latestAppliedTranscript: string | null = null;
       const appliedWriteToolCallIds: string[] = [];
 
@@ -147,23 +206,18 @@ export function useWritingAssistantChat(
         return;
       }
 
-      const followUpPromise = sendMessage(undefined, {
-        body: { transcript: latestAppliedTranscript },
-      });
+      setAppliedToolCallIds((currentToolCallIds) => {
+        const nextToolCallIds = new Set(currentToolCallIds);
 
-      setMessages((currentMessages) => {
-        const existingMessageIds = new Set(
-          currentMessages.map((message) => message.id),
-        );
-        const confirmationMessages = appliedWriteToolCallIds
-          .map(createTranscriptWriteConfirmationMessage)
-          .filter((message) => !existingMessageIds.has(message.id));
-
-        if (confirmationMessages.length === 0) {
-          return currentMessages;
+        for (const toolCallId of appliedWriteToolCallIds) {
+          nextToolCallIds.add(toolCallId);
         }
 
-        return [...currentMessages, ...confirmationMessages];
+        return [...nextToolCallIds];
+      });
+
+      const followUpPromise = sendMessage(undefined, {
+        body: { transcript: latestAppliedTranscript },
       });
 
       try {
@@ -180,12 +234,16 @@ export function useWritingAssistantChat(
     };
   }, [
     addToolResult,
-    messages,
+    chatMessages,
     onApplyTranscriptEdit,
     sendMessage,
-    setMessages,
     transcript,
   ]);
+
+  const messages = addTranscriptWriteConfirmationMessages(
+    chatMessages,
+    new Set(appliedToolCallIds),
+  );
 
   const isStreaming = status === 'submitted' || status === 'streaming';
 
@@ -196,6 +254,7 @@ export function useWritingAssistantChat(
 
   const reset = useCallback(() => {
     handledToolCallIdsRef.current.clear();
+    setAppliedToolCallIds([]);
     setMessages([]);
   }, [setMessages]);
 

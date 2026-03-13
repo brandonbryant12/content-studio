@@ -4,7 +4,6 @@ import type { UsePodcastSettingsReturn } from '../hooks/use-podcast-settings';
 import type { UseScriptEditorReturn } from '../hooks/use-script-editor';
 import type { UseSourceSelectionReturn } from '../hooks/use-source-selection';
 import type { RouterOutput } from '@repo/api/client';
-import { AudioPlayer } from './audio-player';
 import {
   WorkbenchLayout,
   ScriptPanel,
@@ -12,6 +11,7 @@ import {
   GlobalActionBar,
 } from './workbench';
 import { configSectionDefinitions } from './workbench/config-sections';
+import { AudioStage } from '@/shared/components/audio-stage';
 
 type Podcast = RouterOutput['podcasts']['get'];
 
@@ -136,7 +136,11 @@ export function PodcastDetail({
       onExportAudio={onExportAudio}
       onExportScript={onExportScript}
       onCopyTranscript={onCopyTranscript}
-      audioStrip={displayAudio ? <AudioPlayer url={displayAudio.url} /> : null}
+      audioStrip={
+        displayAudio ? (
+          <AudioStage src={displayAudio.url} duration={displayAudio.duration} />
+        ) : null
+      }
       actionBar={
         <GlobalActionBar
           status={podcast.status}

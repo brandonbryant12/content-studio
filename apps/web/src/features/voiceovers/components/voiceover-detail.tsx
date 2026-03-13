@@ -1,3 +1,4 @@
+import { FileTextIcon, SpeakerLoudIcon } from '@radix-ui/react-icons';
 import { Button } from '@repo/ui/components/button';
 import { useState, type ReactNode } from 'react';
 import type { UseVoiceoverSettingsReturn } from '../hooks/use-voiceover-settings';
@@ -91,6 +92,77 @@ export function VoiceoverDetail({
         ? 'Review the script and selected voice, then retry generation from the main action area.'
         : 'Add or revise the script before retrying generation.';
 
+  const failureAlert =
+    voiceover.status === 'failed' && failureMessage ? (
+      <section
+        className="rounded-2xl border border-destructive/25 bg-destructive/5 p-4"
+        role="alert"
+      >
+        <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
+          <div className="min-w-0">
+            <p className="text-sm font-semibold text-destructive">
+              Audio generation did not complete
+            </p>
+            <p className="mt-1 text-sm text-foreground">{failureMessage}</p>
+            <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
+              {failureHint}
+            </p>
+          </div>
+          <Button
+            type="button"
+            size="sm"
+            onClick={onGenerate}
+            disabled={isGenerating || isSaving}
+            className="shrink-0"
+          >
+            {hasChanges ? 'Save changes & retry' : 'Retry generation'}
+          </Button>
+        </div>
+      </section>
+    ) : null;
+
+  const tabs = [
+    {
+      value: 'script',
+      label: 'Script',
+      icon: <FileTextIcon className="w-4 h-4" />,
+      content: (
+        <div className="flex h-full flex-col gap-4 px-4 pt-4 pb-4 sm:px-6 lg:px-8">
+          {failureAlert}
+          <div className="flex-1 min-h-0">
+            {showQuickStart ? (
+              <QuickStartGuide
+                onStartWriting={() => setQuickStartDismissed(true)}
+                onDismiss={() => setQuickStartDismissed(true)}
+              />
+            ) : (
+              <TextEditor
+                text={settings.text}
+                onChange={settings.setText}
+                disabled={isGenerating}
+                autoFocus={quickStartDismissed}
+              />
+            )}
+          </div>
+        </div>
+      ),
+    },
+    {
+      value: 'voice',
+      label: 'Voice',
+      icon: <SpeakerLoudIcon className="w-4 h-4" />,
+      content: (
+        <div className="px-4 pt-4 pb-6 sm:px-6 lg:px-8">
+          <VoiceSelector
+            voice={settings.voice}
+            onChange={settings.setVoice}
+            disabled={isGenerating}
+          />
+        </div>
+      ),
+    },
+  ] as const;
+
   return (
     <WorkbenchLayout
       voiceover={voiceover}
@@ -98,6 +170,7 @@ export function VoiceoverDetail({
       onTitleChange={settings.setTitle}
       hasTitleChanges={settings.hasTitleChanges}
       isTitleDisabled={isGenerating}
+      tabs={tabs}
       onDelete={onDelete}
       isDeleting={isDeleting}
       isApproved={isApproved}
@@ -127,62 +200,6 @@ export function VoiceoverDetail({
           onGenerate={onGenerate}
         />
       }
-    >
-      <div className="flex min-h-full flex-col gap-6 px-4 pt-6 pb-28 sm:px-6 lg:px-8 lg:pt-8 lg:pb-32">
-        {voiceover.status === 'failed' && failureMessage ? (
-          <section
-            className="rounded-2xl border border-destructive/25 bg-destructive/5 p-4"
-            role="alert"
-          >
-            <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
-              <div className="min-w-0">
-                <p className="text-sm font-semibold text-destructive">
-                  Audio generation did not complete
-                </p>
-                <p className="mt-1 text-sm text-foreground">{failureMessage}</p>
-                <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
-                  {failureHint}
-                </p>
-              </div>
-              <Button
-                type="button"
-                size="sm"
-                onClick={onGenerate}
-                disabled={isGenerating || isSaving}
-                className="shrink-0"
-              >
-                {hasChanges ? 'Save changes & retry' : 'Retry generation'}
-              </Button>
-            </div>
-          </section>
-        ) : null}
-
-        {/* Voice Ensemble at top - pinned */}
-        <div className="shrink-0">
-          <VoiceSelector
-            voice={settings.voice}
-            onChange={settings.setVoice}
-            disabled={isGenerating}
-          />
-        </div>
-
-        {/* Full-width Manuscript - fills remaining space, scrolls internally */}
-        <div className="flex-1 min-h-0">
-          {showQuickStart ? (
-            <QuickStartGuide
-              onStartWriting={() => setQuickStartDismissed(true)}
-              onDismiss={() => setQuickStartDismissed(true)}
-            />
-          ) : (
-            <TextEditor
-              text={settings.text}
-              onChange={settings.setText}
-              disabled={isGenerating}
-              autoFocus={quickStartDismissed}
-            />
-          )}
-        </div>
-      </div>
-    </WorkbenchLayout>
+    />
   );
 }

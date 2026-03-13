@@ -160,7 +160,7 @@ export const PodcastItem = memo(function PodcastItem({
           to="/podcasts/$podcastId"
           params={{ podcastId: podcast.id }}
           search={{ version: undefined }}
-          className="flex flex-col flex-1"
+          className="stretched-link flex flex-col flex-1"
         >
           <div className="content-card-body">
             <h3 className="content-card-title">{podcast.title}</h3>

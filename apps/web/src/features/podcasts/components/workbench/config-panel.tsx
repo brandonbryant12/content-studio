@@ -1,12 +1,9 @@
-import { FileTextIcon, LockClosedIcon } from '@radix-ui/react-icons';
-import { useState, type ReactNode } from 'react';
+import { FileTextIcon } from '@radix-ui/react-icons';
+import { useState } from 'react';
+import type { ConfigSection } from './config-sections';
 import type { UsePodcastSettingsReturn } from '../../hooks/use-podcast-settings';
 import type { UseSourceSelectionReturn } from '../../hooks/use-source-selection';
 import type { RouterOutput } from '@repo/api/client';
-import {
-  getConfigSectionDefinition,
-  type ConfigSection,
-} from './config-sections';
 import { GenerationStatus } from './generation-status';
 import { PodcastSettings } from './podcast-settings';
 import { PromptViewerPanel } from './prompt-viewer';
@@ -22,48 +19,6 @@ interface ConfigPanelProps {
   isPendingGeneration: boolean;
   settings: UsePodcastSettingsReturn;
   sourceSelection: UseSourceSelectionReturn;
-}
-
-function SectionPanel({
-  title,
-  description,
-  icon,
-  iconVariant,
-  badge,
-  isGenerating,
-  children,
-}: {
-  title: string;
-  description: string;
-  icon: ReactNode;
-  iconVariant: string;
-  badge?: ReactNode;
-  isGenerating: boolean;
-  children: ReactNode;
-}) {
-  return (
-    <div className="studio-module">
-      <div className="studio-module-header">
-        <div className={`studio-module-icon ${iconVariant}`}>{icon}</div>
-        <div className="min-w-0 flex-1">
-          <div className="flex items-center gap-2">
-            <span className="studio-module-title">{title}</span>
-            {badge}
-          </div>
-          <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
-            {description}
-          </p>
-        </div>
-        {isGenerating && (
-          <span className="mixer-locked-hint">
-            <LockClosedIcon className="h-3 w-3" />
-            Locked
-          </span>
-        )}
-      </div>
-      <div className="studio-module-body">{children}</div>
-    </div>
-  );
 }
 
 function renderSectionContent({
@@ -105,47 +60,26 @@ export function ConfigPanel({
   sourceSelection,
 }: ConfigPanelProps) {
   const [showPromptViewer, setShowPromptViewer] = useState(false);
-  const definition = getConfigSectionDefinition(section);
-  const Icon = definition.Icon;
 
   return (
     <div className="config-panel-v2">
       <div className="config-panel-v2-scroll">
         <div className="config-panel-v2-inner">
           {(isPendingGeneration || isGenerating) && (
-            <div className="studio-module generating">
-              <div className="studio-module-body">
-                <GenerationStatus
-                  status={podcast.status}
-                  isSavingSettings={false}
-                  isPendingGeneration={isPendingGeneration}
-                />
-              </div>
-            </div>
+            <GenerationStatus
+              status={podcast.status}
+              isSavingSettings={false}
+              isPendingGeneration={isPendingGeneration}
+            />
           )}
 
-          <SectionPanel
-            title={definition.title}
-            description={definition.description}
-            icon={<Icon aria-hidden={true} />}
-            iconVariant={definition.iconVariant}
-            badge={
-              section === 'sources' ? (
-                <span className="studio-module-badge">
-                  {sourceSelection.sources.length}
-                </span>
-              ) : undefined
-            }
-            isGenerating={isGenerating}
-          >
-            {renderSectionContent({
-              section,
-              podcast,
-              settings,
-              sourceSelection,
-              isGenerating,
-            })}
-          </SectionPanel>
+          {renderSectionContent({
+            section,
+            podcast,
+            settings,
+            sourceSelection,
+            isGenerating,
+          })}
 
           {podcast.generationContext && (
             <button

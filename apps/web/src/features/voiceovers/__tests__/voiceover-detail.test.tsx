@@ -13,12 +13,12 @@ type Voiceover = RouterOutput['voiceovers']['get'];
 
 vi.mock('../components/workbench', () => ({
   WorkbenchLayout: ({
-    children,
+    tabs,
     actionBar,
     audioStrip,
     rightPanel,
   }: {
-    children: ReactNode;
+    tabs: ReadonlyArray<{ value: string; label: string; content: ReactNode }>;
     actionBar: ReactNode;
     audioStrip?: ReactNode;
     rightPanel?: ReactNode;
@@ -26,7 +26,13 @@ vi.mock('../components/workbench', () => ({
     <div data-testid="workbench-layout">
       {audioStrip && <div data-testid="audio-strip">{audioStrip}</div>}
       <div data-testid="action-bar-container">{actionBar}</div>
-      <div data-testid="workbench-content">{children}</div>
+      <div data-testid="workbench-content">
+        {tabs.map((tab) => (
+          <div key={tab.value} data-testid={`tab-${tab.value}`}>
+            {tab.content}
+          </div>
+        ))}
+      </div>
       <div data-testid="assistant-panel-container">{rightPanel}</div>
     </div>
   ),
@@ -217,15 +223,14 @@ describe('VoiceoverDetail', () => {
     expect(screen.getByTestId('voice-selector')).toBeInTheDocument();
   });
 
-  it('adds bottom clearance so long script content can scroll above the action bar', () => {
+  it('wraps script tab content in a flex column for layout', () => {
     renderVoiceoverDetail();
 
-    const contentWrapper = screen.getByTestId('workbench-content')
-      .firstElementChild as HTMLElement | null;
+    const scriptTab = screen.getByTestId('tab-script');
+    const contentWrapper = scriptTab.firstElementChild as HTMLElement | null;
 
     expect(contentWrapper).not.toBeNull();
-    expect(contentWrapper).toHaveClass('pb-28');
-    expect(contentWrapper?.className).toContain('lg:pb-32');
+    expect(contentWrapper).toHaveClass('flex');
   });
 
   it('passes settings values to editor controls', () => {

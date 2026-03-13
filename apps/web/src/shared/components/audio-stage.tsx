@@ -55,9 +55,9 @@ export function AudioStage({
           aria-label={isPlaying ? 'Pause' : 'Play'}
         >
           {isPlaying ? (
-            <PauseIcon className="w-6 h-6" />
+            <PauseIcon className="w-4 h-4" />
           ) : (
-            <PlayIcon className="w-6 h-6 ml-0.5" />
+            <PlayIcon className="w-4 h-4 ml-px" />
           )}
         </button>
 

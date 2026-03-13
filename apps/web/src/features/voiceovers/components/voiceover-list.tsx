@@ -196,12 +196,13 @@ const VoiceoverRow = memo(function VoiceoverRow({
           checked={isSelected}
           onCheckedChange={handleToggle}
           aria-label={`Select ${voiceover.title}`}
+          className="relative z-10"
         />
         {hasAudio ? (
           <Button
             variant="ghost"
             size="icon"
-            className="h-8 w-8 rounded-full shrink-0"
+            className="relative z-10 h-8 w-8 rounded-full shrink-0"
             onClick={handlePlayClick}
             aria-label={
               isThisPlaying
@@ -221,7 +222,7 @@ const VoiceoverRow = memo(function VoiceoverRow({
         <Link
           to="/voiceovers/$voiceoverId"
           params={{ voiceoverId: voiceover.id }}
-          className="flex-1 min-w-0 rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1"
+          className="stretched-link flex-1 min-w-0 rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1"
         >
           <span className="list-row-title block truncate">
             {voiceover.title}
@@ -256,7 +257,7 @@ const VoiceoverRow = memo(function VoiceoverRow({
           size="icon"
           onClick={handleDeleteClick}
           disabled={isDeleting}
-          className="h-7 w-7 shrink-0 opacity-0 group-hover:opacity-100 focus-visible:opacity-100 transition-opacity"
+          className="relative z-10 h-7 w-7 shrink-0 opacity-0 group-hover:opacity-100 focus-visible:opacity-100 transition-opacity"
           aria-label={`Delete ${voiceover.title}`}
         >
           {isDeleting ? (

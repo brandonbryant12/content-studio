@@ -71,6 +71,46 @@
     "eventFile": "events/2026-03.jsonl"
   },
   {
+    "id": "2026-03-13-feature-delivery-voiceover-assistant-edit-confirmation-now-survives-output-availa",
+    "date": "2026-03-13",
+    "month": "2026-03",
+    "workflow": "Feature Delivery",
+    "title": "Voiceover assistant edit confirmation now survives output-available tool state",
+    "severity": "low",
+    "status": "completed",
+    "tags": [
+      "skill:feature-delivery",
+      "skill:debug-fix",
+      "voiceovers",
+      "chat",
+      "assistant",
+      "tool-state"
+    ],
+    "importance": 0.71,
+    "confidence": 0.98,
+    "eventFile": "events/2026-03.jsonl"
+  },
+  {
+    "id": "2026-03-13-feature-delivery-voiceover-writing-assistant-edit-confirmations-now-persist-in-ch",
+    "date": "2026-03-13",
+    "month": "2026-03",
+    "workflow": "Feature Delivery",
+    "title": "Voiceover writing assistant edit confirmations now persist in chat",
+    "severity": "low",
+    "status": "completed",
+    "tags": [
+      "skill:feature-delivery",
+      "skill:codebase-nav",
+      "voiceovers",
+      "chat",
+      "assistant",
+      "ui"
+    ],
+    "importance": 0.63,
+    "confidence": 0.95,
+    "eventFile": "events/2026-03.jsonl"
+  },
+  {
     "id": "2026-03-12-feature-delivery-admin-source-list-now-defaults-to-owned-scope",
     "date": "2026-03-12",
     "month": "2026-03",

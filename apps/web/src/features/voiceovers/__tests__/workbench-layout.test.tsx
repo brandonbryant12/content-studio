@@ -47,7 +47,14 @@ function createProps() {
     onApprove: vi.fn(),
     onRevoke: vi.fn(),
     isApprovalPending: false,
-    children: <div>Workbench Content</div>,
+    tabs: [
+      {
+        value: 'script',
+        label: 'Script',
+        icon: null,
+        content: <div>Workbench Content</div>,
+      },
+    ],
   };
 }
 

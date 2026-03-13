@@ -1,5 +1,3 @@
-import { ChevronDownIcon } from '@radix-ui/react-icons';
-import * as SelectPrimitive from '@radix-ui/react-select';
 import { Slider } from '@repo/ui/components/slider';
 import type { RouterOutput } from '@repo/api/client';
 import {
@@ -14,7 +12,7 @@ import {
   getInstructionPresetLabel,
 } from '../../lib/instruction-presets';
 import { PersonaPicker } from './persona-picker';
-import { useVoicePreviewController } from '@/shared/hooks';
+import { VoiceSelector as VoiceGrid } from '@/shared/components/voice-selector';
 import {
   PERSONA_ASSIGNMENT_HELP,
   PERSONA_PODCAST_SECTION_HELP,
@@ -29,189 +27,6 @@ interface PodcastSettingsProps {
   section: 'voice' | 'duration' | 'instructions';
 }
 
-interface VoiceSelectorProps {
-  value: string;
-  onChange: (value: string) => void;
-  disabledVoice?: string;
-  disabled?: boolean;
-  previewUrls: Record<string, string>;
-  playingVoiceId: string | null;
-  onPreview: (voiceId: string) => void;
-}
-
-function VoicePreviewBtn({
-  voiceId,
-  voiceName,
-  disabled,
-  isPlaying,
-  onPreview,
-}: {
-  voiceId: string;
-  voiceName: string;
-  disabled?: boolean;
-  isPlaying: boolean;
-  onPreview: (voiceId: string) => void;
-}) {
-  return (
-    <button
-      type="button"
-      className={`mixer-voice-preview-btn ${isPlaying ? 'playing' : ''}`}
-      onClick={(e) => {
-        e.stopPropagation();
-        e.preventDefault();
-        onPreview(voiceId);
-      }}
-      aria-label={
-        isPlaying ? `Stop ${voiceName} preview` : `Preview ${voiceName} voice`
-      }
-      disabled={disabled}
-    >
-      {isPlaying ? (
-        <svg
-          viewBox="0 0 20 20"
-          fill="currentColor"
-          className="mixer-voice-preview-icon"
-          aria-hidden="true"
-        >
-          <path d="M5.75 3a.75.75 0 0 0-.75.75v12.5c0 .414.336.75.75.75h1.5a.75.75 0 0 0 .75-.75V3.75A.75.75 0 0 0 7.25 3h-1.5ZM12.75 3a.75.75 0 0 0-.75.75v12.5c0 .414.336.75.75.75h1.5a.75.75 0 0 0 .75-.75V3.75a.75.75 0 0 0-.75-.75h-1.5Z" />
-        </svg>
-      ) : (
-        <svg
-          viewBox="0 0 20 20"
-          fill="currentColor"
-          className="mixer-voice-preview-icon"
-          aria-hidden="true"
-        >
-          <path d="M10.5 3.75a.75.75 0 0 0-1.264-.546L5.203 7H3.006a.75.75 0 0 0-.75.75v4.5c0 .414.336.75.75.75h2.197l4.033 3.796A.75.75 0 0 0 10.5 16.25V3.75Z" />
-          <path d="M13.26 7.174a.75.75 0 0 1 1.06-.026 4.501 4.501 0 0 1 0 5.704.75.75 0 1 1-1.086-1.034 3.001 3.001 0 0 0 0-3.644.75.75 0 0 1 .026-1Z" />
-        </svg>
-      )}
-    </button>
-  );
-}
-
-function VoiceSelector({
-  value,
-  onChange,
-  disabledVoice,
-  disabled,
-  previewUrls,
-  playingVoiceId,
-  onPreview,
-}: VoiceSelectorProps) {
-  const selectedVoice = VOICES.find((v) => v.id === value);
-
-  return (
-    <div className="mixer-voice-selector-wrap">
-      <SelectPrimitive.Root
-        value={value}
-        onValueChange={onChange}
-        disabled={disabled}
-      >
-        <SelectPrimitive.Trigger
-          className="mixer-voice-current"
-          aria-label="Select voice"
-        >
-          <div className={`mixer-voice-avatar ${selectedVoice?.gender}`}>
-            {selectedVoice?.name.charAt(0)}
-          </div>
-          <div className="mixer-voice-info">
-            <p className="mixer-voice-name">{selectedVoice?.name}</p>
-            <p className="mixer-voice-desc">{selectedVoice?.description}</p>
-          </div>
-          <SelectPrimitive.Icon>
-            <ChevronDownIcon className="mixer-voice-chevron" />
-          </SelectPrimitive.Icon>
-        </SelectPrimitive.Trigger>
-
-        <SelectPrimitive.Portal>
-          <SelectPrimitive.Content
-            className="mixer-voice-dropdown min-w-[var(--radix-select-trigger-width)]"
-            position="popper"
-            sideOffset={4}
-          >
-            <SelectPrimitive.Viewport>
-              <SelectPrimitive.Group>
-                <SelectPrimitive.Label className="mixer-voice-group-label">
-                  <span className="inline-block w-1.5 h-1.5 rounded-full bg-warning" />
-                  Female
-                </SelectPrimitive.Label>
-                {VOICES.filter((v) => v.gender === 'female').map((voice) => {
-                  const isDisabled = voice.id === disabledVoice;
-                  return (
-                    <SelectPrimitive.Item
-                      key={voice.id}
-                      value={voice.id}
-                      disabled={isDisabled}
-                      className={`mixer-voice-option ${value === voice.id ? 'selected' : ''} ${isDisabled ? 'disabled' : ''}`}
-                    >
-                      <div className="mixer-voice-option-avatar bg-warning/20 text-warning">
-                        {voice.name.charAt(0)}
-                      </div>
-                      <SelectPrimitive.ItemText>
-                        <span className="mixer-voice-option-name">
-                          {voice.name}
-                        </span>
-                      </SelectPrimitive.ItemText>
-                      <VoicePreviewBtn
-                        voiceId={voice.id}
-                        voiceName={voice.name}
-                        disabled={isDisabled || !previewUrls[voice.id]}
-                        isPlaying={playingVoiceId === voice.id}
-                        onPreview={onPreview}
-                      />
-                    </SelectPrimitive.Item>
-                  );
-                })}
-              </SelectPrimitive.Group>
-              <SelectPrimitive.Group>
-                <SelectPrimitive.Label className="mixer-voice-group-label">
-                  <span className="inline-block w-1.5 h-1.5 rounded-full bg-info" />
-                  Male
-                </SelectPrimitive.Label>
-                {VOICES.filter((v) => v.gender === 'male').map((voice) => {
-                  const isDisabled = voice.id === disabledVoice;
-                  return (
-                    <SelectPrimitive.Item
-                      key={voice.id}
-                      value={voice.id}
-                      disabled={isDisabled}
-                      className={`mixer-voice-option ${value === voice.id ? 'selected' : ''} ${isDisabled ? 'disabled' : ''}`}
-                    >
-                      <div className="mixer-voice-option-avatar bg-info/20 text-info">
-                        {voice.name.charAt(0)}
-                      </div>
-                      <SelectPrimitive.ItemText>
-                        <span className="mixer-voice-option-name">
-                          {voice.name}
-                        </span>
-                      </SelectPrimitive.ItemText>
-                      <VoicePreviewBtn
-                        voiceId={voice.id}
-                        voiceName={voice.name}
-                        disabled={isDisabled || !previewUrls[voice.id]}
-                        isPlaying={playingVoiceId === voice.id}
-                        onPreview={onPreview}
-                      />
-                    </SelectPrimitive.Item>
-                  );
-                })}
-              </SelectPrimitive.Group>
-            </SelectPrimitive.Viewport>
-          </SelectPrimitive.Content>
-        </SelectPrimitive.Portal>
-      </SelectPrimitive.Root>
-      <VoicePreviewBtn
-        voiceId={value}
-        voiceName={selectedVoice?.name ?? 'selected'}
-        disabled={disabled || !previewUrls[value]}
-        isPlaying={playingVoiceId === value}
-        onPreview={onPreview}
-      />
-    </div>
-  );
-}
-
 export function PodcastSettings({
   podcast,
   disabled,
@@ -219,8 +34,6 @@ export function PodcastSettings({
   section,
 }: PodcastSettingsProps) {
   const isConversation = podcast.format === 'conversation';
-  const { playingVoiceId, previewUrls, togglePreview } =
-    useVoicePreviewController();
   const activePreset = getInstructionPresetLabel(settings.instructions);
 
   const handlePresetClick = (preset: (typeof INSTRUCTION_PRESETS)[number]) => {
@@ -238,121 +51,108 @@ export function PodcastSettings({
   };
 
   if (section === 'voice') {
+    const hostVoiceLocked = !!settings.hostPersonaVoiceId;
+    const coHostVoiceLocked = !!settings.coHostPersonaVoiceId;
+    const hostEffectiveVoice =
+      settings.hostPersonaVoiceId || settings.hostVoice;
+    const coHostEffectiveVoice =
+      settings.coHostPersonaVoiceId || settings.coHostVoice;
+
     return (
       <div className={`mixer-section ${disabled ? 'disabled' : ''}`}>
-        <div className="mb-4 rounded-xl border border-primary/20 bg-primary/5 p-4">
-          <p className="text-sm font-semibold text-foreground">
-            Personas shape both script and audio
-          </p>
-          <p className="mt-1 text-sm leading-relaxed text-muted-foreground">
-            {PERSONA_PODCAST_SECTION_HELP}
-          </p>
-          <p className="mt-1 text-sm leading-relaxed text-muted-foreground">
-            {PERSONA_ASSIGNMENT_HELP}
-          </p>
-        </div>
-        <div
-          className={`mixer-channels ${!isConversation ? 'grid-cols-1' : ''}`}
-        >
+        {/* Persona assignment */}
+        <div className="space-y-4 mb-6">
+          <div className="rounded-lg border border-primary/15 bg-primary/5 px-4 py-3">
+            <p className="text-xs leading-relaxed text-muted-foreground">
+              {PERSONA_PODCAST_SECTION_HELP} {PERSONA_ASSIGNMENT_HELP}
+            </p>
+          </div>
+
           <div
-            className={`mixer-channel host-channel ${!isConversation ? 'single' : ''}`}
+            className={`grid gap-4 ${isConversation ? 'grid-cols-2' : 'grid-cols-1'}`}
           >
-            <div className="mixer-channel-header">
-              <div className="mixer-channel-indicator host" />
-              <span className="mixer-channel-label">
-                {isConversation ? 'Host' : 'Voice'}
-              </span>
-            </div>
-            <PersonaPicker
-              selectedPersonaId={settings.hostPersonaId}
-              onSelect={(personaId, voiceId) =>
-                settings.setHostPersona(personaId, voiceId)
-              }
-              disabled={disabled}
-              label={isConversation ? 'Host Persona' : 'Persona'}
-            />
-            {settings.hostPersonaVoiceId ? (
-              <div className="mixer-voice-readonly">
-                <div
-                  className={`mixer-voice-avatar ${VOICES.find((v) => v.id === settings.hostPersonaVoiceId)?.gender}`}
-                >
-                  {VOICES.find(
-                    (v) => v.id === settings.hostPersonaVoiceId,
-                  )?.name.charAt(0)}
-                </div>
-                <div className="mixer-voice-info">
-                  <p className="mixer-voice-name">
+            <div className="space-y-2">
+              <PersonaPicker
+                selectedPersonaId={settings.hostPersonaId}
+                onSelect={(personaId, voiceId) =>
+                  settings.setHostPersona(personaId, voiceId)
+                }
+                disabled={disabled}
+                label={isConversation ? 'Host Persona' : 'Persona'}
+              />
+              {hostVoiceLocked && (
+                <p className="text-xs text-muted-foreground px-1">
+                  Voice set to{' '}
+                  <span className="font-medium text-foreground">
                     {
                       VOICES.find((v) => v.id === settings.hostPersonaVoiceId)
                         ?.name
                     }
-                  </p>
-                  <p className="mixer-voice-desc">Set by persona</p>
-                </div>
-              </div>
-            ) : (
-              <VoiceSelector
-                value={settings.hostVoice}
-                onChange={settings.setHostVoice}
-                disabledVoice={
-                  isConversation ? settings.coHostVoice : undefined
-                }
-                disabled={disabled}
-                previewUrls={previewUrls}
-                playingVoiceId={playingVoiceId}
-                onPreview={togglePreview}
-              />
-            )}
-          </div>
+                  </span>{' '}
+                  by persona
+                </p>
+              )}
+            </div>
 
-          {isConversation && (
-            <div className="mixer-channel cohost-channel">
-              <div className="mixer-channel-header">
-                <div className="mixer-channel-indicator cohost" />
-                <span className="mixer-channel-label">Co-Host</span>
-              </div>
-              <PersonaPicker
-                selectedPersonaId={settings.coHostPersonaId}
-                onSelect={(personaId, voiceId) =>
-                  settings.setCoHostPersona(personaId, voiceId)
-                }
-                disabled={disabled}
-                label="Co-Host Persona"
-              />
-              {settings.coHostPersonaVoiceId ? (
-                <div className="mixer-voice-readonly">
-                  <div
-                    className={`mixer-voice-avatar ${VOICES.find((v) => v.id === settings.coHostPersonaVoiceId)?.gender}`}
-                  >
-                    {VOICES.find(
-                      (v) => v.id === settings.coHostPersonaVoiceId,
-                    )?.name.charAt(0)}
-                  </div>
-                  <div className="mixer-voice-info">
-                    <p className="mixer-voice-name">
+            {isConversation && (
+              <div className="space-y-2">
+                <PersonaPicker
+                  selectedPersonaId={settings.coHostPersonaId}
+                  onSelect={(personaId, voiceId) =>
+                    settings.setCoHostPersona(personaId, voiceId)
+                  }
+                  disabled={disabled}
+                  label="Co-Host Persona"
+                />
+                {coHostVoiceLocked && (
+                  <p className="text-xs text-muted-foreground px-1">
+                    Voice set to{' '}
+                    <span className="font-medium text-foreground">
                       {
                         VOICES.find(
                           (v) => v.id === settings.coHostPersonaVoiceId,
                         )?.name
                       }
-                    </p>
-                    <p className="mixer-voice-desc">Set by persona</p>
-                  </div>
-                </div>
-              ) : (
-                <VoiceSelector
-                  value={settings.coHostVoice}
-                  onChange={settings.setCoHostVoice}
-                  disabledVoice={settings.hostVoice}
-                  disabled={disabled}
-                  previewUrls={previewUrls}
-                  playingVoiceId={playingVoiceId}
-                  onPreview={togglePreview}
-                />
-              )}
-            </div>
-          )}
+                    </span>{' '}
+                    by persona
+                  </p>
+                )}
+              </div>
+            )}
+          </div>
         </div>
+
+        {/* Voice grid — host */}
+        {!hostVoiceLocked && (
+          <div className="mb-6">
+            {isConversation && (
+              <h3 className="text-xs font-medium uppercase tracking-wider text-muted-foreground mb-3">
+                Host voice
+              </h3>
+            )}
+            <VoiceGrid
+              voice={hostEffectiveVoice}
+              onChange={settings.setHostVoice}
+              disabledVoice={isConversation ? coHostEffectiveVoice : undefined}
+              disabled={disabled}
+            />
+          </div>
+        )}
+
+        {/* Voice grid — co-host */}
+        {isConversation && !coHostVoiceLocked && (
+          <div>
+            <h3 className="text-xs font-medium uppercase tracking-wider text-muted-foreground mb-3">
+              Co-Host voice
+            </h3>
+            <VoiceGrid
+              voice={coHostEffectiveVoice}
+              onChange={settings.setCoHostVoice}
+              disabledVoice={hostEffectiveVoice}
+              disabled={disabled}
+            />
+          </div>
+        )}
 
         {settings.voiceConflict && (
           <div className="mixer-voice-conflict">

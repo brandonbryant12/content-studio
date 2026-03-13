@@ -135,7 +135,7 @@ export const InfographicItem = memo(function InfographicItem({
         <Link
           to="/infographics/$infographicId"
           params={{ infographicId: infographic.id }}
-          className="flex flex-col flex-1"
+          className="stretched-link flex flex-col flex-1"
         >
           <div className="content-card-body">
             <h3 className="content-card-title">{infographic.title}</h3>
