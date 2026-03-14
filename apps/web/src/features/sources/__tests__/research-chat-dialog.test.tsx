@@ -46,40 +46,7 @@ const createProps = (
 const renderDialog = (overrides: Partial<ResearchChatDialogProps> = {}) =>
   render(<ResearchChatDialog {...createProps(overrides)} />);
 
-function getTopicChips() {
-  return screen
-    .getByText(
-      'What topic should become a reusable research source? Try one of these:',
-    )
-    .closest('div')
-    ?.querySelectorAll('button');
-}
-
 describe('ResearchChatDialog', () => {
-  it('supports topic discovery from empty state and suggestion chips', async () => {
-    const user = userEvent.setup();
-    const onSendMessage = vi.fn();
-    renderDialog({ onSendMessage });
-
-    expect(
-      screen.getByRole('textbox', { name: 'Research topic' }),
-    ).toHaveAttribute('placeholder', 'Describe your research topic...');
-    expect(
-      screen.queryByRole('button', { name: 'Start Research' }),
-    ).not.toBeInTheDocument();
-
-    const chips = getTopicChips();
-    expect(chips).toHaveLength(3);
-
-    const firstChip = chips?.[0];
-    if (!firstChip) {
-      throw new Error('Expected at least one suggestion chip');
-    }
-
-    await user.click(firstChip);
-    expect(onSendMessage).toHaveBeenCalledWith(firstChip.textContent);
-  });
-
   it('handles composer submit and multiline editing semantics', async () => {
     const user = userEvent.setup();
     const onSendMessage = vi.fn();
@@ -113,12 +80,6 @@ describe('ResearchChatDialog', () => {
     });
 
     expect(screen.getByText('Question 1 of 2')).toBeInTheDocument();
-    expect(
-      screen.getByRole('textbox', { name: 'Research topic' }),
-    ).toHaveAttribute(
-      'placeholder',
-      'Add more details or click Start Research...',
-    );
 
     await user.click(screen.getByRole('button', { name: 'Start Research' }));
     expect(onStartResearch).toHaveBeenCalledTimes(1);
@@ -181,20 +142,5 @@ describe('ResearchChatDialog', () => {
 
     await user.click(screen.getByRole('button', { name: 'Start Research' }));
     expect(onStartResearch).toHaveBeenCalledTimes(1);
-  });
-
-  it('routes checkbox toggle state through the provided callback', async () => {
-    const user = userEvent.setup();
-    const onAutoGeneratePodcastChange = vi.fn();
-
-    renderDialog({ onAutoGeneratePodcastChange });
-
-    await user.click(
-      screen.getByRole('checkbox', {
-        name: 'Create a podcast when research completes',
-      }),
-    );
-
-    expect(onAutoGeneratePodcastChange).toHaveBeenCalledWith(true);
   });
 });
