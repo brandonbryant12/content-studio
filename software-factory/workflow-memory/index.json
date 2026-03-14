@@ -70,6 +70,25 @@
     "eventFile": "events/2026-03.jsonl"
   },
   {
+    "id": "2026-03-14-feature-delivery-frontend-test-hygiene-no-op-confirmation",
+    "date": "2026-03-14",
+    "month": "2026-03",
+    "workflow": "Feature Delivery",
+    "title": "Frontend test-hygiene no-op confirmation",
+    "severity": "medium",
+    "status": "done",
+    "tags": [
+      "workflow:feature-delivery",
+      "automation:frontend-test-hygiene",
+      "area:frontend",
+      "area:testing",
+      "decision:no-op",
+      "skill:test-surface-steward",
+      "skill:periodic-scans"
+    ],
+    "eventFile": "events/2026-03.jsonl"
+  },
+  {
     "id": "2026-03-14-feature-delivery-frontend-test-hygiene-quick-start-panel-cleanup",
     "date": "2026-03-14",
     "month": "2026-03",
