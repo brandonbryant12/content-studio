@@ -136,6 +136,29 @@
     "eventFile": "events/2026-03.jsonl"
   },
   {
+    "id": "2026-03-14-feature-delivery-frontend-test-hygiene-removes-thin-persona-list-container-suite",
+    "date": "2026-03-14",
+    "month": "2026-03",
+    "workflow": "Feature Delivery",
+    "title": "Frontend test hygiene removes thin persona list container suite",
+    "severity": "low",
+    "status": "closed",
+    "tags": [
+      "frontend",
+      "test-hygiene",
+      "low-signal",
+      "callback-wiring",
+      "automation:frontend-test-hygiene",
+      "skill:feature-delivery",
+      "skill:test-surface-steward",
+      "skill:periodic-scans"
+    ],
+    "importance": 0.6,
+    "recency": 1,
+    "confidence": 0.88,
+    "eventFile": "events/2026-03.jsonl"
+  },
+  {
     "id": "2026-03-14-feature-delivery-frontend-testing-docs-now-call-out-copy-locking-and-fragmented-d",
     "date": "2026-03-14",
     "month": "2026-03",
