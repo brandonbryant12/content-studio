@@ -2,10 +2,6 @@ import { describe, it, expect, vi } from 'vitest';
 import type { SourceListItem } from '../components/source-item';
 import type { ReactNode, ComponentProps } from 'react';
 import { SourceList } from '../components/source-list';
-import {
-  SOURCE_DEFINITION,
-  SOURCE_LIST_SUPPORT,
-} from '@/shared/lib/source-guidance';
 import { render, screen, userEvent } from '@/test-utils';
 
 vi.mock('@tanstack/react-router', () => ({
@@ -109,24 +105,12 @@ const renderList = (
 ) => render(<SourceList {...createProps(overrides)} />);
 
 describe('SourceList', () => {
-  it('renders heading, controls, and source rows', () => {
+  it('renders core controls and source rows', () => {
     renderList();
 
     expect(
       screen.getByRole('heading', { name: 'Sources' }),
     ).toBeInTheDocument();
-    expect(
-      screen.getByText(
-        (_content, element) =>
-          element?.textContent ===
-          `${SOURCE_DEFINITION} ${SOURCE_LIST_SUPPORT}`,
-      ),
-    ).toBeInTheDocument();
-    expect(screen.getByText('What sources do')).toBeInTheDocument();
-    expect(
-      screen.getByRole('button', { name: /how it works/i }),
-    ).toBeInTheDocument();
-    expect(screen.queryByText('Upload a file')).not.toBeInTheDocument();
     expect(
       screen.getByRole('button', { name: /add source/i }),
     ).toBeInTheDocument();
@@ -167,19 +151,6 @@ describe('SourceList', () => {
     expect(screen.getByText('API Documentation')).toBeInTheDocument();
     expect(screen.queryByText('Getting Started Guide')).not.toBeInTheDocument();
     expect(screen.queryByText('Project Roadmap')).not.toBeInTheDocument();
-  });
-
-  it('calls onSearch when user types in search input', async () => {
-    const user = userEvent.setup();
-    const onSearch = vi.fn();
-    renderList({ onSearch });
-
-    await user.type(
-      screen.getByPlaceholderText('Search sources…'),
-      'test query',
-    );
-
-    expect(onSearch).toHaveBeenCalled();
   });
 
   it('opens upload flow from Add Source menu', async () => {

@@ -169,6 +169,22 @@
     "eventFile": "events/2026-03.jsonl"
   },
   {
+    "id": "2026-03-14-feature-delivery-trim-low-signal-sourcelist-test-assertions",
+    "date": "2026-03-14",
+    "month": "2026-03",
+    "workflow": "Feature Delivery",
+    "title": "Trim low-signal SourceList test assertions",
+    "severity": "low",
+    "status": "completed",
+    "tags": [
+      "workflow:feature-delivery",
+      "area:frontend-testing",
+      "skill:test-surface-steward",
+      "skill:periodic-scans"
+    ],
+    "eventFile": "events/2026-03.jsonl"
+  },
+  {
     "id": "2026-03-13-feature-delivery-dashboard-quick-create-toolbar-persistence",
     "date": "2026-03-13",
     "month": "2026-03",
