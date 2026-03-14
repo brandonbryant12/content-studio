@@ -103,6 +103,23 @@
     "eventFile": "events/2026-03.jsonl"
   },
   {
+    "id": "2026-03-14-feature-delivery-frontend-test-hygiene-confirmation-dialog-suite-cleanup",
+    "date": "2026-03-14",
+    "month": "2026-03",
+    "workflow": "Feature Delivery",
+    "title": "Frontend test-hygiene: confirmation dialog suite cleanup",
+    "severity": "medium",
+    "status": "done",
+    "tags": [
+      "workflow:feature-delivery",
+      "skill:test-surface-steward",
+      "skill:periodic-scans",
+      "surface:frontend",
+      "tests:hygiene"
+    ],
+    "eventFile": "events/2026-03.jsonl"
+  },
+  {
     "id": "2026-03-14-feature-delivery-frontend-test-hygiene-consolidated-confirmation-dialog-coverage",
     "date": "2026-03-14",
     "month": "2026-03",

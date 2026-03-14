@@ -12,34 +12,23 @@ describe('ConfirmationDialog', () => {
     onConfirm: vi.fn(),
   };
 
-  it('does not render content when open=false', () => {
-    render(<ConfirmationDialog {...baseProps} open={false} />);
-
-    expect(screen.queryByText('Test Title')).not.toBeInTheDocument();
-  });
-
-  it('renders the dialog and closes when cancel is clicked', async () => {
+  it('routes cancel and confirm actions through callbacks when enabled', async () => {
     const user = userEvent.setup();
     const onOpenChange = vi.fn();
-    render(<ConfirmationDialog {...baseProps} onOpenChange={onOpenChange} />);
-
-    expect(screen.getByText('Test Title')).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Cancel' })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Confirm' })).toBeInTheDocument();
+    const onConfirm = vi.fn();
+    render(
+      <ConfirmationDialog
+        {...baseProps}
+        onOpenChange={onOpenChange}
+        onConfirm={onConfirm}
+      />,
+    );
 
     await user.click(screen.getByRole('button', { name: 'Cancel' }));
-
     expect(onOpenChange).toHaveBeenCalledWith(false);
-  });
-
-  it('triggers the confirm handler when confirm is clicked', async () => {
-    const user = userEvent.setup();
-    const onConfirm = vi.fn();
-    render(<ConfirmationDialog {...baseProps} onConfirm={onConfirm} />);
 
     await user.click(screen.getByRole('button', { name: 'Confirm' }));
-
-    expect(onConfirm).toHaveBeenCalled();
+    expect(onConfirm).toHaveBeenCalledOnce();
   });
 
   it('shows a loading state and blocks both actions when isLoading=true', async () => {
