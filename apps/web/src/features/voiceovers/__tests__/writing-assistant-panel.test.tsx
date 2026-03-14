@@ -56,27 +56,4 @@ describe('WritingAssistantPanel', () => {
     expect(onReset).toHaveBeenCalled();
   });
 
-  it('shows direct-apply guidance copy', () => {
-    render(
-      <WritingAssistantPanel
-        messages={[]}
-        isStreaming={false}
-        error={undefined}
-        onSendMessage={vi.fn()}
-        onReset={vi.fn()}
-      />,
-    );
-
-    expect(
-      screen.getByText(
-        /Use AI to improve the current script before you generate audio\./i,
-      ),
-    ).toBeInTheDocument();
-    expect(
-      screen.getByText(/uses your current script as context/i),
-    ).toBeInTheDocument();
-    expect(
-      screen.getByText(/rewrites are applied directly to the editor/i),
-    ).toBeInTheDocument();
-  });
 });

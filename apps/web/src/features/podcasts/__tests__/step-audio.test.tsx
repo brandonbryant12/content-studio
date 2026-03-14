@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 import { StepAudio } from '../components/setup/steps/step-audio';
-import { render, screen } from '@/test-utils';
+import { render, screen, userEvent } from '@/test-utils';
 
 class ResizeObserverMock {
   observe() {}
@@ -58,7 +58,10 @@ vi.mock('@/shared/hooks', () => ({
 }));
 
 describe('StepAudio', () => {
-  it('shows persona help in the podcast wizard', () => {
+  it('applies the recommended runtime through the callback', async () => {
+    const user = userEvent.setup();
+    const onDurationChange = vi.fn();
+
     render(
       <StepAudio
         format="monologue"
@@ -71,7 +74,7 @@ describe('StepAudio', () => {
         coHostVoice="Charon"
         hostPersonaId={null}
         coHostPersonaId={null}
-        onDurationChange={vi.fn()}
+        onDurationChange={onDurationChange}
         onHostVoiceChange={vi.fn()}
         onCoHostVoiceChange={vi.fn()}
         onHostPersonaChange={vi.fn()}
@@ -79,12 +82,8 @@ describe('StepAudio', () => {
       />,
     );
 
-    expect(
-      screen.getByRole('button', { name: 'Persona: what is a persona?' }),
-    ).toBeInTheDocument();
-    expect(screen.getByText('Recommended runtime: 4 min')).toBeInTheDocument();
-    expect(
-      screen.getByRole('button', { name: 'Use 4 min' }),
-    ).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'Use 4 min' }));
+
+    expect(onDurationChange).toHaveBeenCalledWith(4);
   });
 });

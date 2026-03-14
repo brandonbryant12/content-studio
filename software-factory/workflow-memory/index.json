@@ -16,6 +16,25 @@
     "eventFile": "events/2026-03.jsonl"
   },
   {
+    "id": "2026-03-14-feature-delivery-frontend-copy-locking-test-hygiene-slice",
+    "date": "2026-03-14",
+    "month": "2026-03",
+    "workflow": "Feature Delivery",
+    "title": "Frontend copy-locking test hygiene slice",
+    "severity": "low",
+    "status": "closed",
+    "tags": [
+      "frontend",
+      "testing",
+      "hygiene",
+      "skill:test-surface-steward",
+      "skill:periodic-scans"
+    ],
+    "importance": 0.58,
+    "confidence": 0.9,
+    "eventFile": "events/2026-03.jsonl"
+  },
+  {
     "id": "2026-03-14-feature-delivery-frontend-test-hygiene-consolidated-confirmation-dialog-coverage",
     "date": "2026-03-14",
     "month": "2026-03",

@@ -17,15 +17,6 @@ function ControlledStepQuickStart() {
 }
 
 describe('StepQuickStart', () => {
-  it('shows the custom instructions step with preset buttons', () => {
-    render(<ControlledStepQuickStart />);
-
-    expect(screen.getByText('Custom Instructions')).toBeInTheDocument();
-    expect(screen.getByText(/planner and script/i)).toBeInTheDocument();
-    expect(screen.getByText('Conversational')).toBeInTheDocument();
-    expect(screen.getByText('Deep dive')).toBeInTheDocument();
-  });
-
   it('updates instructions through the controlled callback', async () => {
     const user = userEvent.setup();
 
