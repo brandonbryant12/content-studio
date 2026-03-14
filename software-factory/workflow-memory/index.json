@@ -1,26 +1,5 @@
 [
   {
-    "id": "2026-03-14-feature-delivery-api-test-cleanup-share-admin-role-denial-and-router-helpers",
-    "date": "2026-03-14",
-    "month": "2026-03",
-    "workflow": "Feature Delivery",
-    "title": "API test cleanup: share admin-role denial and router helpers",
-    "severity": "medium",
-    "status": "closed",
-    "tags": [
-      "workflow:feature-delivery",
-      "skill:feature-delivery",
-      "skill:test-surface-steward",
-      "api",
-      "testing",
-      "docs",
-      "invariants"
-    ],
-    "importance": 0.74,
-    "confidence": 0.97,
-    "eventFile": "events/2026-03.jsonl"
-  },
-  {
     "id": "2026-03-14-feature-delivery-dashboard-frontend-test-hygiene-slice",
     "date": "2026-03-14",
     "month": "2026-03",
@@ -37,24 +16,38 @@
     "eventFile": "events/2026-03.jsonl"
   },
   {
-    "id": "2026-03-14-feature-delivery-final-api-test-cleanup-review-no-recurring-automation-needed",
+    "id": "2026-03-14-feature-delivery-frontend-copy-locking-test-hygiene-slice",
     "date": "2026-03-14",
     "month": "2026-03",
     "workflow": "Feature Delivery",
-    "title": "Final API test cleanup review found no remaining recurring cleanup slice",
+    "title": "Frontend copy-locking test hygiene slice",
     "severity": "low",
-    "status": "done",
+    "status": "closed",
     "tags": [
-      "feature-delivery",
-      "api",
-      "tests",
+      "frontend",
+      "testing",
+      "hygiene",
       "skill:test-surface-steward",
-      "automation-decision"
+      "skill:periodic-scans"
     ],
-    "importance": 0.54,
-    "confidence": 0.84,
-    "hasScenario": true,
-    "scenarioSkill": "test-surface-steward",
+    "importance": 0.58,
+    "confidence": 0.9,
+    "eventFile": "events/2026-03.jsonl"
+  },
+  {
+    "id": "2026-03-14-feature-delivery-frontend-test-hygiene-chat-message-suite-consolidation",
+    "date": "2026-03-14",
+    "month": "2026-03",
+    "workflow": "Feature Delivery",
+    "title": "Frontend test hygiene: chat-message suite consolidation",
+    "severity": "low",
+    "status": "completed",
+    "tags": [
+      "frontend",
+      "test-hygiene",
+      "skill:test-surface-steward",
+      "skill:periodic-scans"
+    ],
     "eventFile": "events/2026-03.jsonl"
   },
   {
@@ -74,6 +67,72 @@
     ],
     "importance": 0.58,
     "confidence": 0.93,
+    "eventFile": "events/2026-03.jsonl"
+  },
+  {
+    "id": "2026-03-14-feature-delivery-frontend-test-hygiene-no-op-confirmation",
+    "date": "2026-03-14",
+    "month": "2026-03",
+    "workflow": "Feature Delivery",
+    "title": "Frontend test-hygiene no-op confirmation",
+    "severity": "medium",
+    "status": "done",
+    "tags": [
+      "workflow:feature-delivery",
+      "automation:frontend-test-hygiene",
+      "area:frontend",
+      "area:testing",
+      "decision:no-op",
+      "skill:test-surface-steward",
+      "skill:periodic-scans"
+    ],
+    "eventFile": "events/2026-03.jsonl"
+  },
+  {
+    "id": "2026-03-14-feature-delivery-frontend-test-hygiene-quick-start-panel-cleanup",
+    "date": "2026-03-14",
+    "month": "2026-03",
+    "workflow": "Feature Delivery",
+    "title": "Frontend test hygiene quick-start-panel cleanup",
+    "severity": "medium",
+    "status": "done",
+    "tags": [
+      "workflow:feature-delivery",
+      "area:frontend-tests",
+      "skill:test-surface-steward",
+      "automation:frontend-test-hygiene"
+    ],
+    "eventFile": "events/2026-03.jsonl"
+  },
+  {
+    "id": "2026-03-14-feature-delivery-frontend-test-hygiene-remove-low-signal-podcast-settings-copy-te",
+    "date": "2026-03-14",
+    "month": "2026-03",
+    "workflow": "Feature Delivery",
+    "title": "Frontend test hygiene: remove low-signal podcast-settings copy test",
+    "severity": "low",
+    "status": "applied",
+    "tags": [
+      "workflow:feature-delivery",
+      "skill:test-surface-steward",
+      "skill:periodic-scans",
+      "area:web-tests"
+    ],
+    "eventFile": "events/2026-03.jsonl"
+  },
+  {
+    "id": "2026-03-14-feature-delivery-frontend-test-hygiene-remove-low-signal-quick-start-guide-unit-s",
+    "date": "2026-03-14",
+    "month": "2026-03",
+    "workflow": "Feature Delivery",
+    "title": "Frontend test hygiene: remove low-signal quick-start guide unit suite",
+    "severity": "low",
+    "status": "done",
+    "tags": [
+      "quality:test-hygiene",
+      "skill:test-surface-steward",
+      "skill:periodic-scans"
+    ],
     "eventFile": "events/2026-03.jsonl"
   },
   {
@@ -97,28 +156,6 @@
     "eventFile": "events/2026-03.jsonl"
   },
   {
-    "id": "2026-03-14-feature-delivery-invariant-suite-cleanup-remove-narrow-docs-drift-and-redundant-c",
-    "date": "2026-03-14",
-    "month": "2026-03",
-    "workflow": "Feature Delivery",
-    "title": "Invariant suite cleanup: remove narrow docs drift and redundant checks",
-    "severity": "medium",
-    "status": "closed",
-    "tags": [
-      "workflow:feature-delivery",
-      "skill:feature-delivery",
-      "skill:test-surface-steward",
-      "testing",
-      "invariants",
-      "docs",
-      "api",
-      "media"
-    ],
-    "importance": 0.76,
-    "confidence": 0.97,
-    "eventFile": "events/2026-03.jsonl"
-  },
-  {
     "id": "2026-03-14-feature-delivery-prune-redundant-dashboard-callback-wiring-tests",
     "date": "2026-03-14",
     "month": "2026-03",
@@ -135,24 +172,19 @@
     "eventFile": "events/2026-03.jsonl"
   },
   {
-    "id": "2026-03-14-feature-delivery-remove-api-anti-bloat-invariants-in-favor-of-docs-and-periodic-c",
+    "id": "2026-03-14-feature-delivery-pruned-low-signal-stepsources-copy-lock-tests",
     "date": "2026-03-14",
     "month": "2026-03",
     "workflow": "Feature Delivery",
-    "title": "Remove API anti-bloat invariants in favor of docs and periodic cleanup",
-    "severity": "medium",
-    "status": "closed",
+    "title": "Pruned low-signal StepSources copy-lock tests",
+    "severity": "low",
+    "status": "done",
     "tags": [
       "workflow:feature-delivery",
-      "skill:feature-delivery",
-      "skill:test-surface-steward",
-      "testing",
-      "invariants",
-      "docs",
-      "api"
+      "area:frontend",
+      "focus:test-hygiene",
+      "skill:test-surface-steward"
     ],
-    "importance": 0.79,
-    "confidence": 0.98,
     "eventFile": "events/2026-03.jsonl"
   },
   {
@@ -166,6 +198,39 @@
     "tags": [
       "frontend",
       "test-hygiene",
+      "skill:test-surface-steward",
+      "skill:periodic-scans"
+    ],
+    "eventFile": "events/2026-03.jsonl"
+  },
+  {
+    "id": "2026-03-14-feature-delivery-trim-low-signal-persona-list-copy-locking-test",
+    "date": "2026-03-14",
+    "month": "2026-03",
+    "workflow": "Feature Delivery",
+    "title": "Trim low-signal persona list copy-locking test",
+    "severity": "medium",
+    "status": "done",
+    "tags": [
+      "frontend",
+      "test-hygiene",
+      "skill:feature-delivery",
+      "skill:test-surface-steward",
+      "skill:periodic-scans"
+    ],
+    "eventFile": "events/2026-03.jsonl"
+  },
+  {
+    "id": "2026-03-14-feature-delivery-trim-low-signal-sourcelist-test-assertions",
+    "date": "2026-03-14",
+    "month": "2026-03",
+    "workflow": "Feature Delivery",
+    "title": "Trim low-signal SourceList test assertions",
+    "severity": "low",
+    "status": "completed",
+    "tags": [
+      "workflow:feature-delivery",
+      "area:frontend-testing",
       "skill:test-surface-steward",
       "skill:periodic-scans"
     ],
