@@ -169,6 +169,23 @@
     "eventFile": "events/2026-03.jsonl"
   },
   {
+    "id": "2026-03-14-feature-delivery-trim-low-signal-persona-list-copy-locking-test",
+    "date": "2026-03-14",
+    "month": "2026-03",
+    "workflow": "Feature Delivery",
+    "title": "Trim low-signal persona list copy-locking test",
+    "severity": "medium",
+    "status": "done",
+    "tags": [
+      "frontend",
+      "test-hygiene",
+      "skill:feature-delivery",
+      "skill:test-surface-steward",
+      "skill:periodic-scans"
+    ],
+    "eventFile": "events/2026-03.jsonl"
+  },
+  {
     "id": "2026-03-14-feature-delivery-trim-low-signal-sourcelist-test-assertions",
     "date": "2026-03-14",
     "month": "2026-03",
