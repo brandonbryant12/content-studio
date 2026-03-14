@@ -1,5 +1,25 @@
 [
   {
+    "id": "2026-03-14-feature-delivery-frontend-testing-docs-now-call-out-copy-locking-and-fragmented-d",
+    "date": "2026-03-14",
+    "month": "2026-03",
+    "workflow": "Feature Delivery",
+    "title": "Frontend testing docs now call out copy-locking and fragmented dialog tests",
+    "severity": "low",
+    "status": "completed",
+    "tags": [
+      "skill:feature-delivery",
+      "skill:test-surface-steward",
+      "frontend",
+      "testing",
+      "docs",
+      "personas"
+    ],
+    "importance": 0.68,
+    "confidence": 0.97,
+    "eventFile": "events/2026-03.jsonl"
+  },
+  {
     "id": "2026-03-13-feature-delivery-dashboard-quick-create-toolbar-persistence",
     "date": "2026-03-13",
     "month": "2026-03",

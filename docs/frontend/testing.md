@@ -38,9 +38,29 @@ flowchart LR
 
 1. Cover behavior states, not every visual micro-variation.
 2. Prefer one strong scenario test with multiple meaningful assertions over many one-assertion duplicates.
-3. Keep E2E focused on critical outcomes: auth, create, upload, generate, save, delete.
-4. Remove placeholder skipped tests quickly; either implement them or delete them.
-5. Replace `waitForTimeout` with explicit UI assertions whenever possible.
+3. Do not add tests that only pin instructional, guidance, marketing, or static explanatory copy unless the text is itself a contract (accessibility name, destructive confirmation, legal/compliance text, or required CTA copy).
+4. Keep prop-spy container tests only when they verify payload shaping, sanitization, blocker logic, loading/error branching, or success side effects.
+5. Delete thin container tests that only prove callback pass-through such as `navigate(...)` or child prop wiring.
+6. Keep E2E focused on critical outcomes: auth, create, upload, generate, save, delete.
+7. Remove placeholder skipped tests quickly; either implement them or delete them.
+8. Replace `waitForTimeout` with explicit UI assertions whenever possible.
+
+## Frontend Unit Test Anti-Patterns
+
+1. Copy-locking tests:
+   Delete tests whose only value is preserving helper copy, onboarding prose, or descriptive headings.
+2. Thin wiring tests:
+   Replace container tests that only prove a child callback forwards into `navigate(...)`, `setState(...)`, or another pass-through prop with a branch that has unique behavioral value.
+3. Fragmented render-state tests:
+   When one dialog or async surface has a small state machine, prefer a few scenario tests that cover pending, error, confirm, and recovery paths instead of a separate test for each text fragment.
+4. Low-level event overuse:
+   Use `fireEvent` only for interactions `userEvent` cannot model well, such as image `error`.
+5. Shared interaction state:
+   Call `userEvent.setup()` inside each test so keyboard and pointer state never leaks across cases.
+6. Shared query cache:
+   `renderWithQuery(...)` should use a fresh `QueryClient` per test. Preserve the default test utility behavior and keep retries disabled in error-path tests unless retry logic is the thing under test.
+7. Mixed mocking seams:
+   Use MSW when transport behavior matters, or `vi.mock(...)` when isolating hooks/containers/components. Avoid mixing both in one test unless the extra seam is required by the assertion.
 
 ## Test Types
 

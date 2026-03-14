@@ -96,6 +96,8 @@ flowchart LR
 7. Replace arbitrary sleeps with deterministic waits/assertions.
 8. If a test failure would not identify a user-impacting regression, delete or merge that test.
 9. Do not add tests for compile-time guarantees from TypeScript/Effect typing alone; only test runtime behavior and runtime validation boundaries.
+10. For frontend unit tests, static guidance/help-text assertions do not count as meaningful coverage unless the text is itself a contract (accessibility name, destructive confirmation, legal/compliance text, or required CTA copy).
+11. Thin frontend container tests that only prove callback wiring should be deleted or replaced with a test for a unique branch, state transition, or side effect.
 
 ## Test File Locations
 

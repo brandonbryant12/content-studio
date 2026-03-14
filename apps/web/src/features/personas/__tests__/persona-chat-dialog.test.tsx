@@ -40,79 +40,90 @@ const messagesFixture: UIMessage[] = [
 ];
 
 describe('PersonaChatDialog', () => {
-  it('calls onCreatePersona when clicking Create Persona', async () => {
+  it('supports the manual create path and trims follow-up messages', async () => {
     const user = userEvent.setup();
     const onCreatePersona = vi.fn();
+    const onSendMessage = vi.fn();
 
     renderDialog({
       messages: messagesFixture,
       canCreatePersona: true,
+      followUpCount: 1,
       onCreatePersona,
+      onSendMessage,
     });
 
+    expect(screen.getByText('Question 1 of 2')).toBeInTheDocument();
+
+    await user.type(
+      screen.getByLabelText('Persona description'),
+      '  Add a more conversational tone  ',
+    );
+    await user.click(screen.getByRole('button', { name: 'Send message' }));
+
+    expect(onSendMessage).toHaveBeenCalledWith(
+      'Add a more conversational tone',
+    );
+
     await user.click(screen.getByRole('button', { name: 'Create Persona' }));
+
     expect(onCreatePersona).toHaveBeenCalled();
   });
 
-  it('shows creating state while creating persona', () => {
-    renderDialog({
+  it('walks the pending and retry states in the manual create flow', () => {
+    const { rerender } = renderDialog({
       messages: messagesFixture,
       canCreatePersona: true,
       isCreatingPersona: true,
     });
 
     expect(screen.getByText('Creating persona...')).toBeInTheDocument();
-  });
+    expect(
+      screen.getByRole('button', { name: /creating persona/i }),
+    ).toBeDisabled();
+    expect(screen.getByLabelText('Persona description')).toBeDisabled();
 
-  it('shows create error when provided', () => {
-    renderDialog({
-      messages: messagesFixture,
-      canCreatePersona: true,
-      createError: new Error('Failed'),
-    });
+    rerender(
+      <PersonaChatDialog
+        {...defaultProps}
+        messages={messagesFixture}
+        canCreatePersona={true}
+        createError={new Error('Failed')}
+      />,
+    );
 
     expect(
       screen.getByText('Failed to create persona. Please try again.'),
     ).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Retry' })).toBeEnabled();
+    expect(screen.getByLabelText('Persona description')).toBeEnabled();
   });
 
-  it('shows auto-trigger confirmation when autoCreateReady', () => {
-    renderDialog({
-      messages: messagesFixture,
-      canCreatePersona: true,
-      autoCreateReady: true,
-    });
-
-    expect(screen.getByText('Ready to proceed?')).toBeInTheDocument();
-    expect(
-      screen.getByRole('button', { name: 'Create Persona' }),
-    ).toBeInTheDocument();
-    expect(screen.getByText('Keep Refining')).toBeInTheDocument();
-  });
-
-  it('calls onKeepRefining in auto-trigger mode', async () => {
+  it('uses the auto-trigger confirmation path to confirm or keep refining', async () => {
     const user = userEvent.setup();
+    const onCreatePersona = vi.fn();
     const onKeepRefining = vi.fn();
 
     renderDialog({
       messages: messagesFixture,
       canCreatePersona: true,
       autoCreateReady: true,
+      onCreatePersona,
       onKeepRefining,
     });
 
-    await user.click(screen.getByText('Keep Refining'));
-    expect(onKeepRefining).toHaveBeenCalled();
-  });
+    expect(screen.getByText('Ready to proceed?')).toBeInTheDocument();
+    expect(
+      screen.getByRole('button', { name: 'Create Persona' }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole('button', { name: 'Keep Refining' }),
+    ).toBeInTheDocument();
 
-  it('disables input while creating persona', () => {
-    renderDialog({
-      messages: messagesFixture,
-      canCreatePersona: true,
-      isCreatingPersona: true,
-    });
+    await user.click(screen.getByRole('button', { name: 'Keep Refining' }));
+    expect(onKeepRefining).toHaveBeenCalledTimes(1);
 
-    const input = screen.getByLabelText('Persona description');
-    expect(input).toBeDisabled();
+    await user.click(screen.getByRole('button', { name: 'Create Persona' }));
+    expect(onCreatePersona).toHaveBeenCalledTimes(1);
   });
 });
