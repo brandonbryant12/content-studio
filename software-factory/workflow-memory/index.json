@@ -19,6 +19,22 @@
     "eventFile": "events/2026-03.jsonl"
   },
   {
+    "id": "2026-03-14-feature-delivery-bounded-frontend-test-hygiene-quick-start-panel",
+    "date": "2026-03-14",
+    "month": "2026-03",
+    "workflow": "Feature Delivery",
+    "title": "Bounded frontend test hygiene: quick-start panel",
+    "severity": "low",
+    "status": "done",
+    "tags": [
+      "workflow:feature-delivery",
+      "skill:test-surface-steward",
+      "skill:periodic-scans",
+      "automation:frontend-test-hygiene"
+    ],
+    "eventFile": "events/2026-03.jsonl"
+  },
+  {
     "id": "2026-03-14-feature-delivery-dashboard-frontend-test-hygiene-slice",
     "date": "2026-03-14",
     "month": "2026-03",

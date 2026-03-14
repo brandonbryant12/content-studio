@@ -3,7 +3,7 @@ import {
   QuickStartPanel,
   type QuickStartPanelProps,
 } from '../components/quick-start-panel';
-import { render, screen, within } from '@/test-utils';
+import { render, screen, userEvent, within } from '@/test-utils';
 
 vi.mock('@/env', () => ({
   env: {
@@ -38,19 +38,39 @@ function createProps(
 }
 
 describe('QuickStartPanel', () => {
-  it('shows add-sources card and quick-create toolbar when no documents exist', () => {
-    render(<QuickStartPanel {...createProps({})} />);
+  it('shows source-acquisition actions when there are no sources', async () => {
+    const user = userEvent.setup();
+    const onUploadOpenChange = vi.fn();
+    const onUrlDialogOpenChange = vi.fn();
+    const onResearchDialogOpenChange = vi.fn();
 
-    expect(
-      screen.getByRole('heading', { name: /add your first source/i }),
-    ).toBeInTheDocument();
-    expect(
-      screen.queryByRole('heading', { name: /create your first content/i }),
-    ).not.toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Source' })).toBeInTheDocument();
+    render(
+      <QuickStartPanel
+        {...createProps({
+          documentDialogs: {
+            onUploadOpenChange,
+            onUrlDialogOpenChange,
+            onResearchDialogOpenChange,
+            onOpenResearchWithPodcast: vi.fn(),
+          },
+        })}
+      />,
+    );
+
+    await user.click(
+      screen.getByRole('button', { name: /^Upload a file/i }),
+    );
+    await user.click(
+      screen.getByRole('button', { name: /^Import from URL/i }),
+    );
+    await user.click(screen.getByRole('button', { name: /^Deep Research/i }));
+
+    expect(onUploadOpenChange).toHaveBeenCalledWith(true);
+    expect(onUrlDialogOpenChange).toHaveBeenCalledWith(true);
+    expect(onResearchDialogOpenChange).toHaveBeenCalledWith(true);
   });
 
-  it('shows create-first-content card when sources exist but no generated content', () => {
+  it('shows primary create actions when sources exist and no generated outputs exist', () => {
     render(
       <QuickStartPanel
         {...createProps({
@@ -60,15 +80,17 @@ describe('QuickStartPanel', () => {
     );
 
     expect(
-      screen.getByRole('heading', { name: /create your first content/i }),
-    ).toBeInTheDocument();
+      screen.getAllByRole('button', { name: 'Podcast' }).length,
+    ).toBeGreaterThan(0);
     expect(
-      screen.queryByRole('heading', { name: /add your first source/i }),
-    ).not.toBeInTheDocument();
-    expect(screen.queryByText('Try creating:')).not.toBeInTheDocument();
+      screen.getAllByRole('button', { name: 'Voiceover' }).length,
+    ).toBeGreaterThan(0);
+    expect(
+      screen.getAllByRole('button', { name: 'Infographic' }).length,
+    ).toBeGreaterThan(0);
   });
 
-  it('surfaces only missing content types in suggestion bar', () => {
+  it('surfaces only missing content types in the suggestion bar', () => {
     render(
       <QuickStartPanel
         {...createProps({
@@ -91,7 +113,7 @@ describe('QuickStartPanel', () => {
     ).toBeInTheDocument();
   });
 
-  it('hides suggestion bar when all content types already exist', () => {
+  it('hides the suggestion bar when all content types already exist', () => {
     render(
       <QuickStartPanel
         {...createProps({
