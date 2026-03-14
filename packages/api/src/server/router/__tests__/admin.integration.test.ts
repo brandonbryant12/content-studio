@@ -181,22 +181,38 @@ describe('admin router', () => {
     await ctx.rollback();
   });
 
+  it('returns FORBIDDEN for all admin-only handlers when user lacks admin role', async () => {
+    const member = createTestUser({ id: 'member-1' });
+    await insertTestUser(ctx, member);
+
+    const context = createMockContext(runtime, toUser(member));
+    const calls: Array<() => Promise<unknown>> = [
+      () =>
+        handlers.search({
+          context,
+          input: { query: 'alice' },
+          errors,
+        }),
+      () =>
+        handlers.get({
+          context,
+          input: { userId: member.id, usagePeriod: '30d' },
+          errors,
+        }),
+      () =>
+        handlers.entities({
+          context,
+          input: { userId: member.id, limit: 12, offset: 0 },
+          errors,
+        }),
+    ];
+
+    for (const call of calls) {
+      await expectHandlerErrorCode(call, 'FORBIDDEN');
+    }
+  });
+
   describe('users.search handler', () => {
-    it('returns FORBIDDEN for non-admin users', async () => {
-      const member = createTestUser({ id: 'member-1' });
-      await insertTestUser(ctx, member);
-
-      await expectHandlerErrorCode(
-        () =>
-          handlers.search({
-            context: createMockContext(runtime, toUser(member)),
-            input: { query: 'alice' },
-            errors,
-          }),
-        'FORBIDDEN',
-      );
-    });
-
     it('returns serialized users filtered by name or email', async () => {
       const alice = createTestUser({
         id: 'user-1',
@@ -455,21 +471,6 @@ describe('admin router', () => {
   });
 
   describe('users.entities handler', () => {
-    it('returns FORBIDDEN for non-admin users', async () => {
-      const member = createTestUser({ id: 'member-entities-1' });
-      await insertTestUser(ctx, member);
-
-      await expectHandlerErrorCode(
-        () =>
-          handlers.entities({
-            context: createMockContext(runtime, toUser(member)),
-            input: { userId: member.id, limit: 12, offset: 0 },
-            errors,
-          }),
-        'FORBIDDEN',
-      );
-    });
-
     it('returns paginated user entities filtered by search and type', async () => {
       const member = createTestUser({
         id: 'member-entities-2',

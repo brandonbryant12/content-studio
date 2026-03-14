@@ -119,6 +119,15 @@ Workflow tests share the same runtime setup as integration tests. See [`docs/tes
 | Idempotency | Duplicate calls return same job | 1 per job type |
 | Multi-phase (if applicable) | All phases complete in sequence | 1 per multi-phase job |
 
+## Anti-Bloat Rules
+<!-- enforced-by: manual-review -->
+
+1. Keep one full API-to-worker flow per job type and one explicit alignment test per distinct status chain.
+2. Keep idempotency or enqueue-behavior coverage for each job-starting API path, but avoid multiple tests that restate the same worker acceptance path with minor input changes.
+3. Use `it.each(...)` for equivalent starting-state matrices such as `failed` and `ready` when they share the same enqueue and worker path.
+4. Prefer use-case tests for save-input permutations; workflow tests should focus on API setup, queueing, worker acceptance, and final status compatibility.
+5. For multi-phase jobs, keep one representative full chain plus explicit alignment coverage instead of several near-identical end-to-end flows.
+
 ## When to Add Workflow Tests
 
 - Creating a new job type

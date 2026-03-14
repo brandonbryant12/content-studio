@@ -15,40 +15,17 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import type { ServerRuntime } from '../../runtime';
 import type { AudioEncoding, VoiceInfo } from '@repo/ai';
 import {
+  callORPCHandler,
   createMockContext,
   createMockErrors,
   createTestServerRuntime,
+  expectHandlerErrorCode,
+  expectHandlerErrorMessage,
 } from '../_shared/test-helpers';
 import voicesRouter from '../voices';
 
 type ORPCProcedure = {
   '~orpc': { handler: (args: unknown) => Promise<unknown> };
-};
-
-const callHandler = <T>(
-  procedure: ORPCProcedure,
-  args: { context: unknown; input?: unknown; errors: unknown },
-): Promise<T> => {
-  return procedure['~orpc'].handler(args) as Promise<T>;
-};
-
-const expectErrorWithMessage = async (
-  promise: Promise<unknown>,
-  expectedMessage: string | RegExp,
-) => {
-  const error = await promise.then(
-    () => {
-      throw new Error('Expected promise to reject');
-    },
-    (rejected) => rejected,
-  );
-
-  const message = error instanceof Error ? error.message : String(error);
-  if (typeof expectedMessage === 'string') {
-    expect(message).toContain(expectedMessage);
-    return;
-  }
-  expect(message).toMatch(expectedMessage);
 };
 
 type HandlerArgs = { context: unknown; input?: unknown; errors: unknown };
@@ -65,12 +42,12 @@ interface PreviewOutput {
 
 const handlers = {
   list: (args: HandlerArgs): Promise<VoiceOutput[]> =>
-    callHandler<VoiceOutput[]>(
+    callORPCHandler<VoiceOutput[]>(
       voicesRouter.list as unknown as ORPCProcedure,
       args,
     ),
   preview: (args: HandlerArgs): Promise<PreviewOutput> =>
-    callHandler<PreviewOutput>(
+    callORPCHandler<PreviewOutput>(
       voicesRouter.preview as unknown as ORPCProcedure,
       args,
     ),
@@ -193,9 +170,9 @@ describe('voices router', () => {
       });
       const context = createMockContext(customRuntime, user);
 
-      await expectErrorWithMessage(
-        handlers.list({ context, errors }),
-        /INTERNAL_ERROR|Storage operation failed|Connection failed/i,
+      await expectHandlerErrorCode(
+        () => handlers.list({ context, errors }),
+        'INTERNAL_ERROR',
       );
     });
   });
@@ -222,12 +199,13 @@ describe('voices router', () => {
     it('rejects invalid voice ids with contextual error message', async () => {
       const context = createMockContext(runtime, user);
 
-      await expectErrorWithMessage(
-        handlers.preview({
-          context,
-          input: { voiceId: 'NonexistentVoice' },
-          errors,
-        }),
+      await expectHandlerErrorMessage(
+        () =>
+          handlers.preview({
+            context,
+            input: { voiceId: 'NonexistentVoice' },
+            errors,
+          }),
         /not found|NonexistentVoice/i,
       );
     });
@@ -238,13 +216,14 @@ describe('voices router', () => {
       });
       const context = createMockContext(errorRuntime, user);
 
-      await expectErrorWithMessage(
-        handlers.preview({
-          context,
-          input: { voiceId: 'Charon' },
-          errors,
-        }),
-        /SERVICE_UNAVAILABLE|service unavailable/i,
+      await expectHandlerErrorCode(
+        () =>
+          handlers.preview({
+            context,
+            input: { voiceId: 'Charon' },
+            errors,
+          }),
+        'SERVICE_UNAVAILABLE',
       );
     });
   });

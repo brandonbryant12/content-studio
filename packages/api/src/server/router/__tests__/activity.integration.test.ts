@@ -17,38 +17,16 @@ import { Layer } from 'effect';
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import type { ServerRuntime } from '../../runtime';
 import {
+  callORPCHandler,
   createMockContext,
   createMockErrors,
   createTestServerRuntime,
+  expectHandlerErrorCode,
 } from '../_shared/test-helpers';
 import activityRouter from '../activity';
 
 type ORPCProcedure = {
   '~orpc': { handler: (args: unknown) => Promise<unknown> };
-};
-
-const callHandler = <T>(
-  procedure: ORPCProcedure,
-  args: { context: unknown; input: unknown; errors: unknown },
-): Promise<T> => {
-  return procedure['~orpc'].handler(args) as Promise<T>;
-};
-
-const expectErrorWithMessage = async (
-  promise: Promise<unknown>,
-  expectedMessage: string | RegExp,
-) => {
-  await expect(promise).rejects.toThrow();
-  try {
-    await promise;
-  } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : String(error);
-    if (typeof expectedMessage === 'string') {
-      expect(errorMessage).toContain(expectedMessage);
-    } else {
-      expect(errorMessage).toMatch(expectedMessage);
-    }
-  }
 };
 
 type HandlerArgs = { context: unknown; input: unknown; errors: unknown };
@@ -68,12 +46,12 @@ interface ActivityStatsOutput {
 
 const handlers = {
   list: (args: HandlerArgs): Promise<ListActivityOutput> =>
-    callHandler<ListActivityOutput>(
+    callORPCHandler<ListActivityOutput>(
       activityRouter.list as unknown as ORPCProcedure,
       args,
     ),
   stats: (args: HandlerArgs): Promise<ActivityStatsOutput> =>
-    callHandler<ActivityStatsOutput>(
+    callORPCHandler<ActivityStatsOutput>(
       activityRouter.stats as unknown as ORPCProcedure,
       args,
     ),
@@ -147,22 +125,22 @@ describe('activity router', () => {
     await ctx.rollback();
   });
 
+  it('returns FORBIDDEN for all admin-only handlers when user lacks admin role', async () => {
+    const member = createTestUser({ id: 'user-1' });
+    await insertTestUser(ctx, member);
+
+    const context = createMockContext(runtime, toUser(member));
+    const calls: Array<() => Promise<unknown>> = [
+      () => handlers.list({ context, input: {}, errors }),
+      () => handlers.stats({ context, input: { period: '7d' }, errors }),
+    ];
+
+    for (const call of calls) {
+      await expectHandlerErrorCode(call, 'FORBIDDEN');
+    }
+  });
+
   describe('list handler', () => {
-    it('returns FORBIDDEN for non-admin users', async () => {
-      const user = createTestUser({ id: 'user-1' });
-      await insertTestUser(ctx, user);
-
-      const context = createMockContext(runtime, toUser(user));
-      await expectErrorWithMessage(
-        handlers.list({
-          context,
-          input: {},
-          errors,
-        }),
-        /requires admin role/i,
-      );
-    });
-
     it('returns paginated serialized activity entries', async () => {
       const member = createTestUser({ id: 'user-2', name: 'Member One' });
       await insertTestUser(ctx, member);
@@ -240,21 +218,6 @@ describe('activity router', () => {
   });
 
   describe('stats handler', () => {
-    it('returns FORBIDDEN for non-admin users', async () => {
-      const user = createTestUser({ id: 'user-4' });
-      await insertTestUser(ctx, user);
-
-      const context = createMockContext(runtime, toUser(user));
-      await expectErrorWithMessage(
-        handlers.stats({
-          context,
-          input: { period: '7d' },
-          errors,
-        }),
-        /requires admin role/i,
-      );
-    });
-
     it('returns aggregated counts scoped to the selected period', async () => {
       const alice = createTestUser({ name: 'Alice' });
       const bob = createTestUser({ name: 'Bob' });

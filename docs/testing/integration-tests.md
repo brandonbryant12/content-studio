@@ -85,10 +85,11 @@ TESTCONTAINERS_REUSE_ENABLE=true pnpm --filter @repo/api test
 | `createTestUser` / `toUser` | `@repo/testing` | Test user factory |
 | `createInMemoryStorage` | `@repo/storage/testing` | In-memory S3-compatible storage |
 | `MockLLMLive` / `MockTTSLive` | `@repo/ai/testing` | Mock AI service layers |
-| `createMockContext` | `./helpers` | Mock oRPC context with runtime + user |
-| `createMockErrors` | `./helpers` | Mock oRPC error factories |
+| `createMockContext` | `packages/api/src/server/router/_shared/test-helpers.ts` | Mock oRPC context with runtime + user |
+| `createMockErrors` | `packages/api/src/server/router/_shared/test-helpers.ts` | Mock oRPC error factories |
+| `callORPCHandler` / `expectHandlerErrorCode` / `expectIsoTimestamp` | `packages/api/src/server/router/_shared/test-helpers.ts` | Shared handler invocation and protocol assertions |
 
-**Test helpers:** `packages/api/src/server/router/__tests__/helpers.ts`
+**Test helpers:** `packages/api/src/server/router/_shared/test-helpers.ts`
 
 ## Test Structure
 
@@ -121,9 +122,15 @@ describe('{domain} router', () => {
 
     it('throws NOT_FOUND when missing', async () => {
       const context = createMockContext(runtime, user);
-      await expect(
-        router.get['~orpc'].handler({ context, input: { id: 'nonexistent' }, errors })
-      ).rejects.toThrow('NOT_FOUND');
+      await expectHandlerErrorCode(
+        () =>
+          router.get['~orpc'].handler({
+            context,
+            input: { id: 'nonexistent' },
+            errors,
+          }),
+        'NOT_FOUND',
+      );
     });
   });
 });
@@ -152,20 +159,22 @@ const createTestRuntime = (ctx: TestContext): ServerRuntime => {
 |---|---|---|
 | Success | 1 | Correct serialized response shape |
 | Authentication | 1 (shared per router) | `null` user throws UNAUTHORIZED |
-| Authorization | 1-2 | Cross-user access returns NOT_FOUND |
-| Error cases | 1 per error type | Error code matches protocol |
-| Response format | 1 (shared per router) | Dates are strings, IDs match patterns |
+| Authorization | 1-2 | Cross-user access returns NOT_FOUND; admin-only suites usually share one non-admin FORBIDDEN test |
+| Error cases | 1 per error type | Error code/status/data match protocol |
+| Response format | 1 (shared per router) | Dates are strings, IDs match patterns; avoid repeating equivalent timestamp checks in every happy path |
 
 ## Anti-Bloat Rules
 <!-- enforced-by: manual-review -->
 
 1. Keep authentication checks shared at router level; do not repeat `UNAUTHORIZED` tests for every handler.
-2. Keep response-format checks shared at router level; avoid per-handler ISO/date duplication unless shape differs.
-3. For each handler, prefer one strong success case + only unique protocol failures for that handler.
-4. Extract repetitive oRPC call/test-runtime helpers into `./helpers` instead of re-declaring in each file.
-5. Do not add integration tests that only restate type-level guarantees (for example, compile-time-only shapes).
-6. Delete or merge tests that assert the same error code for the same failure mode through equivalent paths.
-7. Avoid tests that only prove Effect/TypeScript compile-time constraints; keep integration assertions on runtime protocol, wiring, and authorization behavior.
+2. For admin-only router suites, prefer one shared non-admin `FORBIDDEN` test unless a handler has materially different auth behavior.
+3. Keep response-format checks shared at router level; avoid per-handler ISO/date duplication unless shape differs.
+4. For each handler, prefer one strong success case + only unique protocol failures for that handler.
+5. Default to asserting protocol code/status/data; only assert message text when the message itself is a contract.
+6. Extract repetitive oRPC call/test-runtime helpers into `packages/api/src/server/router/_shared/test-helpers.ts` instead of re-declaring them in each file.
+7. Do not add integration tests that only restate type-level guarantees (for example, compile-time-only shapes).
+8. Delete or merge tests that assert the same error code for the same failure mode through equivalent paths.
+9. Avoid tests that only prove Effect/TypeScript compile-time constraints; keep integration assertions on runtime protocol, wiring, serialization, and authorization behavior.
 
 ## Why Test All Handlers
 

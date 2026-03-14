@@ -155,6 +155,38 @@ const buildEpisodePlan = (sourceId: string) => ({
   ],
 });
 
+type AudioRegenerationCase = {
+  name: string;
+  saveInput: Omit<Parameters<typeof saveAndQueueAudio>[0], 'podcastId'>;
+};
+
+const audioRegenerationCases: AudioRegenerationCase[] = [
+  {
+    name: 'voice changes',
+    saveInput: {
+      hostVoice: 'Fenrir',
+      hostVoiceName: 'Fenrir',
+    },
+  },
+  {
+    name: 'script edits',
+    saveInput: {
+      segments: [
+        {
+          speaker: 'Host',
+          line: 'Updated line with new content!',
+          index: 0,
+        },
+        {
+          speaker: 'Co-Host',
+          line: 'Added a new segment!',
+          index: 1,
+        },
+      ],
+    },
+  },
+];
+
 // =============================================================================
 // Workflow Tests
 // =============================================================================
@@ -258,109 +290,56 @@ describe('podcast job workflow', () => {
   });
 
   describe('audio regeneration workflow (generate-audio)', () => {
-    it('worker can process audio job after API enqueues it', async () => {
-      // Arrange: Create a podcast that's already ready (has audio)
-      const podcast = await insertTestPodcast(ctx, testUser.id, {
-        title: 'Regeneration Test',
-        status: 'ready',
-        segments: DEFAULT_TEST_SEGMENTS,
-        audioUrl: 'https://old-audio.example.com/audio.wav',
-        duration: 100,
-      });
+    it.each(audioRegenerationCases)(
+      'worker can process audio regeneration after $name',
+      async ({ saveInput }) => {
+        const previousAudioUrl = 'https://old-audio.example.com/audio.wav';
+        const podcast = await insertTestPodcast(ctx, testUser.id, {
+          title: 'Regeneration Test',
+          status: 'ready',
+          segments: DEFAULT_TEST_SEGMENTS,
+          audioUrl: previousAudioUrl,
+          duration: 100,
+        });
 
-      // Step 1: Call the API use case (saveAndQueueAudio)
-      const startResult = await runtime.runPromise(
-        withCurrentUser(user)(
-          saveAndQueueAudio({
-            podcastId: podcast.id,
-            hostVoice: 'Fenrir', // Change voice to trigger regeneration
-            hostVoiceName: 'Fenrir',
-          }),
-        ),
-      );
+        const startResult = await runtime.runPromise(
+          withCurrentUser(user)(
+            saveAndQueueAudio({
+              podcastId: podcast.id,
+              ...saveInput,
+            }),
+          ),
+        );
 
-      expect(startResult.jobId).toMatch(/^job_/);
-      expect(startResult.status).toBe('pending');
+        expect(startResult.jobId).toMatch(/^job_/);
+        expect(startResult.status).toBe('pending');
 
-      // Verify: Podcast status was updated to script_ready (by saveChanges)
-      const [afterSave] = await ctx.db
-        .select()
-        .from(podcastTable)
-        .where(eq(podcastTable.id, podcast.id));
-      expect(afterSave?.status).toBe(VersionStatus.SCRIPT_READY);
-      // Audio should be cleared
-      expect(afterSave?.audioUrl).toBeNull();
+        const [afterSave] = await ctx.db
+          .select()
+          .from(podcastTable)
+          .where(eq(podcastTable.id, podcast.id));
+        expect(afterSave?.status).toBe(VersionStatus.SCRIPT_READY);
+        expect(afterSave?.audioUrl).toBeNull();
 
-      // Step 2: Worker runs generateAudio
-      const audioResult = await runtime.runPromise(
-        withCurrentUser(user)(
-          generateAudio({
-            podcastId: podcast.id,
-          }),
-        ),
-      );
+        const audioResult = await runtime.runPromise(
+          withCurrentUser(user)(
+            generateAudio({
+              podcastId: podcast.id,
+            }),
+          ),
+        );
 
-      expect(audioResult.podcast.id).toBe(podcast.id);
-      expect(audioResult.audioUrl).toMatch(/^[a-z]+:\/\//);
+        expect(audioResult.podcast.id).toBe(podcast.id);
+        expect(audioResult.audioUrl).toMatch(/^[a-z]+:\/\//);
 
-      // Verify: Final status is ready with new audio
-      const [afterAudio] = await ctx.db
-        .select()
-        .from(podcastTable)
-        .where(eq(podcastTable.id, podcast.id));
-      expect(afterAudio?.status).toBe(VersionStatus.READY);
-      expect(afterAudio?.audioUrl).not.toBe(
-        'https://old-audio.example.com/audio.wav',
-      );
-    });
-
-    it('worker can regenerate after script edits', async () => {
-      // Arrange: Create a podcast that's ready
-      const podcast = await insertTestPodcast(ctx, testUser.id, {
-        title: 'Script Edit Test',
-        status: 'ready',
-        segments: DEFAULT_TEST_SEGMENTS,
-        audioUrl: 'https://old-audio.example.com/audio.wav',
-        duration: 50,
-      });
-
-      // Step 1: Save new segments via API
-      const startResult = await runtime.runPromise(
-        withCurrentUser(user)(
-          saveAndQueueAudio({
-            podcastId: podcast.id,
-            segments: [
-              {
-                speaker: 'Host',
-                line: 'Updated line with new content!',
-                index: 0,
-              },
-              { speaker: 'Co-Host', line: 'Added a new segment!', index: 1 },
-            ],
-          }),
-        ),
-      );
-
-      expect(startResult.status).toBe('pending');
-
-      // Verify status transition
-      const [afterSave] = await ctx.db
-        .select()
-        .from(podcastTable)
-        .where(eq(podcastTable.id, podcast.id));
-      expect(afterSave?.status).toBe(VersionStatus.SCRIPT_READY);
-
-      // Step 2: Worker processes the job
-      const audioResult = await runtime.runPromise(
-        withCurrentUser(user)(
-          generateAudio({
-            podcastId: podcast.id,
-          }),
-        ),
-      );
-
-      expect(audioResult.podcast.status).toBe(VersionStatus.READY);
-    });
+        const [afterAudio] = await ctx.db
+          .select()
+          .from(podcastTable)
+          .where(eq(podcastTable.id, podcast.id));
+        expect(afterAudio?.status).toBe(VersionStatus.READY);
+        expect(afterAudio?.audioUrl).not.toBe(previousAudioUrl);
+      },
+    );
   });
 
   describe('state validation', () => {
@@ -519,7 +498,9 @@ describe('podcast job workflow', () => {
 
       expect(result1.jobId).toBe(result2.jobId);
     });
+  });
 
+  describe('enqueue behavior', () => {
     it('saveAndQueueAudio creates job and transitions status correctly', async () => {
       // Note: saveAndQueueAudio can't be called twice because the first call
       // changes status from 'ready' to 'script_ready', and saveChanges requires 'ready'.

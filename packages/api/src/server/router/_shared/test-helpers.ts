@@ -301,6 +301,19 @@ const mapMessageToCode = (message: string): ErrorCode | null => {
     return 'FORBIDDEN';
   }
 
+  if (normalized.includes('service unavailable')) {
+    return 'SERVICE_UNAVAILABLE';
+  }
+
+  if (
+    normalized.includes('storage operation failed') ||
+    normalized.includes('audio processing failed') ||
+    normalized.includes('file upload failed') ||
+    normalized.includes('internal error')
+  ) {
+    return 'INTERNAL_ERROR';
+  }
+
   if (normalized.includes('not found')) {
     if (normalized.includes('job ')) {
       return 'JOB_NOT_FOUND';
@@ -420,6 +433,26 @@ export const expectHandlerErrorCode = async (
     return;
   }
   throw new Error(`Expected error '${expectedCode}', but operation resolved`);
+};
+
+export const expectHandlerErrorMessage = async (
+  operation: () => Promise<unknown>,
+  expectedMessage: string | RegExp,
+) => {
+  try {
+    await operation();
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    if (typeof expectedMessage === 'string') {
+      expect(message).toContain(expectedMessage);
+    } else {
+      expect(message).toMatch(expectedMessage);
+    }
+    return;
+  }
+  throw new Error(
+    `Expected error matching '${expectedMessage}', but operation resolved`,
+  );
 };
 
 export const expectIsoTimestamp = (value: string) => {

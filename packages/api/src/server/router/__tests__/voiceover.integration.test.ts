@@ -27,11 +27,12 @@ import { Layer } from 'effect';
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import type { ServerRuntime } from '../../runtime';
 import {
+  callORPCHandler,
   createMockContext,
   createMockErrors,
-  assertORPCError,
-  type ErrorCode,
   createTestServerRuntime,
+  expectHandlerErrorCode,
+  expectIsoTimestamp,
 } from '../_shared/test-helpers';
 import voiceoverRouter from '../voiceover';
 
@@ -48,31 +49,6 @@ import voiceoverRouter from '../voiceover';
  */
 type ORPCProcedure = {
   '~orpc': { handler: (args: unknown) => Promise<unknown> };
-};
-
-const callHandler = <T>(
-  procedure: ORPCProcedure,
-  args: { context: unknown; input: unknown; errors: unknown },
-): Promise<T> => {
-  return procedure['~orpc'].handler(args) as Promise<T>;
-};
-
-const expectHandlerErrorCode = async (
-  operation: () => Promise<unknown>,
-  expectedCode: ErrorCode,
-) => {
-  try {
-    await operation();
-  } catch (error: unknown) {
-    assertORPCError(error, expectedCode);
-    return;
-  }
-  throw new Error(`Expected error '${expectedCode}', but operation resolved`);
-};
-
-const expectIsoTimestamp = (value: string) => {
-  expect(value).toMatch(/^\d{4}-\d{2}-\d{2}T/);
-  expect(Number.isNaN(Date.parse(value))).toBe(false);
 };
 
 // Handler args type
@@ -101,47 +77,47 @@ interface GenerateResponse {
 // Typed handler accessors for voiceover router
 const handlers = {
   create: (args: HandlerArgs): Promise<VoiceoverOutput> =>
-    callHandler<VoiceoverOutput>(
+    callORPCHandler<VoiceoverOutput>(
       voiceoverRouter.create as unknown as ORPCProcedure,
       args,
     ),
   list: (args: HandlerArgs): Promise<VoiceoverListItemOutput[]> =>
-    callHandler<VoiceoverListItemOutput[]>(
+    callORPCHandler<VoiceoverListItemOutput[]>(
       voiceoverRouter.list as unknown as ORPCProcedure,
       args,
     ),
   get: (args: HandlerArgs): Promise<VoiceoverOutput> =>
-    callHandler<VoiceoverOutput>(
+    callORPCHandler<VoiceoverOutput>(
       voiceoverRouter.get as unknown as ORPCProcedure,
       args,
     ),
   update: (args: HandlerArgs): Promise<VoiceoverOutput> =>
-    callHandler<VoiceoverOutput>(
+    callORPCHandler<VoiceoverOutput>(
       voiceoverRouter.update as unknown as ORPCProcedure,
       args,
     ),
   delete: (args: HandlerArgs): Promise<Record<string, never>> =>
-    callHandler<Record<string, never>>(
+    callORPCHandler<Record<string, never>>(
       voiceoverRouter.delete as unknown as ORPCProcedure,
       args,
     ),
   generate: (args: HandlerArgs): Promise<GenerateResponse> =>
-    callHandler<GenerateResponse>(
+    callORPCHandler<GenerateResponse>(
       voiceoverRouter.generate as unknown as ORPCProcedure,
       args,
     ),
   getJob: (args: HandlerArgs): Promise<JobOutput> =>
-    callHandler<JobOutput>(
+    callORPCHandler<JobOutput>(
       voiceoverRouter.getJob as unknown as ORPCProcedure,
       args,
     ),
   approve: (args: HandlerArgs): Promise<VoiceoverOutput> =>
-    callHandler<VoiceoverOutput>(
+    callORPCHandler<VoiceoverOutput>(
       voiceoverRouter.approve as unknown as ORPCProcedure,
       args,
     ),
   revokeApproval: (args: HandlerArgs): Promise<VoiceoverOutput> =>
-    callHandler<VoiceoverOutput>(
+    callORPCHandler<VoiceoverOutput>(
       voiceoverRouter.revokeApproval as unknown as ORPCProcedure,
       args,
     ),

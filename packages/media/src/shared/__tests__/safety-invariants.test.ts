@@ -53,6 +53,10 @@ const usesUseCaseHelper = (source: string): boolean =>
 const usesAuthedUseCaseSpanMetadata = (source: string): boolean =>
   source.includes('span:') || source.includes('annotateSpan(');
 
+const usesUseCaseSpanCoverage = (source: string): boolean =>
+  usesExplicitUseCaseSpanPattern(source) ||
+  (usesUseCaseHelper(source) && usesAuthedUseCaseSpanMetadata(source));
+
 describe('safety invariants', () => {
   it('forbids blanket catchAll null/void fallbacks in media use-cases', () => {
     const files = collectUseCaseFiles(srcRoot);
@@ -84,17 +88,13 @@ describe('safety invariants', () => {
     ).toEqual([]);
   });
 
-  it('requires use-case spans to annotate user and resource ids', () => {
+  it('requires use-case implementations to attach user and resource span metadata', () => {
     const files = collectUseCaseFiles(srcRoot).filter(
       (file) => !shouldSkipUseCaseTest(file),
     );
     const offenders = files.filter((file) => {
       const source = fs.readFileSync(file, 'utf-8');
-      if (!/useCase\./.test(source)) return false;
-      return (
-        !usesExplicitUseCaseSpanPattern(source) &&
-        !(usesUseCaseHelper(source) && usesAuthedUseCaseSpanMetadata(source))
-      );
+      return !usesUseCaseSpanCoverage(source);
     });
 
     expect(
@@ -134,24 +134,6 @@ describe('safety invariants', () => {
     expect(
       missing.map((file) => path.relative(srcRoot, file)),
       'Add matching __tests__/{name}.test.ts files or document exceptions.',
-    ).toEqual([]);
-  });
-
-  it('requires use-case spans to include user and resource attributes', () => {
-    const files = collectUseCaseFiles(srcRoot).filter(
-      (file) => !shouldSkipUseCaseTest(file),
-    );
-    const missing = files.filter((file) => {
-      const source = fs.readFileSync(file, 'utf-8');
-      return (
-        !source.includes('annotateUseCaseSpan(') &&
-        !(usesUseCaseHelper(source) && usesAuthedUseCaseSpanMetadata(source))
-      );
-    });
-
-    expect(
-      missing.map((file) => path.relative(srcRoot, file)),
-      'Use defineAuthedUseCase(), defineRoleUseCase(), or annotateUseCaseSpan() to attach user.id and resource metadata to use-case spans.',
     ).toEqual([]);
   });
 

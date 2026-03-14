@@ -14,12 +14,17 @@ const chatRouterPath = path.join(
 const readChatRouter = () => fs.readFileSync(chatRouterPath, 'utf-8');
 
 describe('chat handler invariants', () => {
-  it('routes use handler pipeline helpers for protocol + spans', () => {
+  it('routes every chat handler through bindEffectProtocol run/stream helpers', () => {
     const source = readChatRouter();
+    const handlerCount =
+      source.match(/protectedProcedure\.chat\.[A-Za-z0-9_]+\.handler\(/g) ?? [];
+    const boundHandlers =
+      source.match(
+        /bindEffectProtocol\(\{ context, errors \}\)\.(run|stream)\(/g,
+      ) ?? [];
 
-    expect(source).toContain('bindEffectProtocol');
-    expect(source).toContain('.run(');
-    expect(source).toContain('.stream(');
+    expect(handlerCount.length).toBeGreaterThan(0);
+    expect(boundHandlers).toHaveLength(handlerCount.length);
   });
 
   it('routes do not call runtime.runPromise directly', () => {
@@ -27,15 +32,5 @@ describe('chat handler invariants', () => {
     const forbidden = /context\.runtime\.runPromise/;
 
     expect(source).not.toMatch(forbidden);
-  });
-
-  it('routes bind request protocol context for each handler', () => {
-    const source = readChatRouter();
-    const matches =
-      source.match(
-        /bindEffectProtocol\(\{ context, errors \}\)\.(run|stream)\(/g,
-      ) ?? [];
-
-    expect(matches).toHaveLength(5);
   });
 });

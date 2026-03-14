@@ -110,31 +110,52 @@ describe('infographic router', () => {
     await ctx.rollback();
   });
 
-  describe('approve handler', () => {
-    it('returns FORBIDDEN for non-admin users', async () => {
-      const infographic = await insertTestInfographic(ctx, memberUser.id, {
-        status: 'ready',
-      });
-
-      await expectHandlerErrorCode(
-        () =>
-          handlers.approve({
-            context: createMockContext(runtime, member),
-            input: { id: infographic.id },
-            errors,
-          }),
-        'FORBIDDEN',
-      );
-
-      const [persisted] = await ctx.db
-        .select()
-        .from(infographicTable)
-        .where(eq(infographicTable.id, infographic.id));
-
-      expect(persisted?.approvedBy).toBeNull();
-      expect(persisted?.approvedAt).toBeNull();
+  it('returns FORBIDDEN for all admin-only handlers when user lacks admin role', async () => {
+    const readyInfographic = await insertTestInfographic(ctx, memberUser.id, {
+      status: 'ready',
+    });
+    const approvedInfographic = await insertTestInfographic(ctx, memberUser.id, {
+      status: 'ready',
+      approvedBy: adminUser.id,
+      approvedAt: new Date(),
     });
 
+    const context = createMockContext(runtime, member);
+    const calls: Array<() => Promise<unknown>> = [
+      () =>
+        handlers.approve({
+          context,
+          input: { id: readyInfographic.id },
+          errors,
+        }),
+      () =>
+        handlers.revokeApproval({
+          context,
+          input: { id: approvedInfographic.id },
+          errors,
+        }),
+    ];
+
+    for (const call of calls) {
+      await expectHandlerErrorCode(call, 'FORBIDDEN');
+    }
+
+    const [persistedReady] = await ctx.db
+      .select()
+      .from(infographicTable)
+      .where(eq(infographicTable.id, readyInfographic.id));
+    expect(persistedReady?.approvedBy).toBeNull();
+    expect(persistedReady?.approvedAt).toBeNull();
+
+    const [persistedApproved] = await ctx.db
+      .select()
+      .from(infographicTable)
+      .where(eq(infographicTable.id, approvedInfographic.id));
+    expect(persistedApproved?.approvedBy).toBe(adminUser.id);
+    expect(persistedApproved?.approvedAt).not.toBeNull();
+  });
+
+  describe('approve handler', () => {
     it('allows admins to approve infographics', async () => {
       const infographic = await insertTestInfographic(ctx, memberUser.id, {
         status: 'ready',
@@ -157,32 +178,6 @@ describe('infographic router', () => {
   });
 
   describe('revokeApproval handler', () => {
-    it('returns FORBIDDEN for non-admin users', async () => {
-      const infographic = await insertTestInfographic(ctx, memberUser.id, {
-        status: 'ready',
-        approvedBy: adminUser.id,
-        approvedAt: new Date(),
-      });
-
-      await expectHandlerErrorCode(
-        () =>
-          handlers.revokeApproval({
-            context: createMockContext(runtime, member),
-            input: { id: infographic.id },
-            errors,
-          }),
-        'FORBIDDEN',
-      );
-
-      const [persisted] = await ctx.db
-        .select()
-        .from(infographicTable)
-        .where(eq(infographicTable.id, infographic.id));
-
-      expect(persisted?.approvedBy).toBe(adminUser.id);
-      expect(persisted?.approvedAt).not.toBeNull();
-    });
-
     it('allows admins to revoke infographic approval', async () => {
       const infographic = await insertTestInfographic(ctx, memberUser.id, {
         status: 'ready',

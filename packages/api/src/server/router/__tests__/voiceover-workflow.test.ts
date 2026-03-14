@@ -107,6 +107,25 @@ const insertTestVoiceover = async (
   return voiceover;
 };
 
+type ReenqueueCase = {
+  name: string;
+  startStatus: 'failed' | 'ready';
+  previousAudioUrl: string | null;
+};
+
+const reenqueueCases: ReenqueueCase[] = [
+  {
+    name: 'failure recovery',
+    startStatus: 'failed',
+    previousAudioUrl: null,
+  },
+  {
+    name: 'audio regeneration',
+    startStatus: 'ready',
+    previousAudioUrl: 'https://old-audio.example.com/audio.wav',
+  },
+];
+
 // =============================================================================
 // Workflow Tests
 // =============================================================================
@@ -188,87 +207,55 @@ describe('voiceover job workflow', () => {
       expect(afterGenerate?.audioUrl).toBeDefined();
     });
 
-    it('worker can retry after failure (failed → generating_audio → ready)', async () => {
-      // Arrange: Create a voiceover in failed status (previous attempt failed)
-      const voiceover = await insertTestVoiceover(ctx, testUser.id, {
-        title: 'Retry Test',
-        text: 'This is a test for retry workflow.',
-        status: 'failed',
-      });
+    it.each(reenqueueCases)(
+      'worker reaches ready after $name',
+      async ({ startStatus, previousAudioUrl }) => {
+        const voiceover = await insertTestVoiceover(ctx, testUser.id, {
+          title: 'Retry Test',
+          text: 'This is a test for retry workflow.',
+          status: startStatus,
+        });
 
-      // Step 1: User clicks "Retry" - API enqueues new job
-      const startResult = await runtime.runPromise(
-        withCurrentUser(user)(
-          startVoiceoverGeneration({
-            voiceoverId: voiceover.id,
-          }),
-        ),
-      );
+        if (previousAudioUrl) {
+          await ctx.db
+            .update(voiceoverTable)
+            .set({
+              audioUrl: previousAudioUrl,
+              duration: 100,
+            })
+            .where(eq(voiceoverTable.id, voiceover.id));
+        }
 
-      expect(startResult.status).toBe('pending');
+        const startResult = await runtime.runPromise(
+          withCurrentUser(user)(
+            startVoiceoverGeneration({
+              voiceoverId: voiceover.id,
+            }),
+          ),
+        );
 
-      // Verify status transition
-      const [afterStart] = await ctx.db
-        .select()
-        .from(voiceoverTable)
-        .where(eq(voiceoverTable.id, voiceover.id));
-      expect(afterStart?.status).toBe(VoiceoverStatus.GENERATING_AUDIO);
+        expect(startResult.status).toBe('pending');
 
-      // Step 2: Worker processes the job
-      const generateResult = await runtime.runPromise(
-        withCurrentUser(user)(
-          generateVoiceoverAudio({
-            voiceoverId: voiceover.id,
-          }),
-        ),
-      );
+        const [afterStart] = await ctx.db
+          .select()
+          .from(voiceoverTable)
+          .where(eq(voiceoverTable.id, voiceover.id));
+        expect(afterStart?.status).toBe(VoiceoverStatus.GENERATING_AUDIO);
 
-      expect(generateResult.voiceover.status).toBe(VoiceoverStatus.READY);
-    });
+        const generateResult = await runtime.runPromise(
+          withCurrentUser(user)(
+            generateVoiceoverAudio({
+              voiceoverId: voiceover.id,
+            }),
+          ),
+        );
 
-    it('worker can regenerate existing audio (ready → generating_audio → ready)', async () => {
-      // Arrange: Create a voiceover that already has audio
-      const voiceover = await insertTestVoiceover(ctx, testUser.id, {
-        title: 'Regenerate Test',
-        text: 'Updated text that needs new audio.',
-        status: 'ready',
-      });
-
-      // Update with existing audio
-      await ctx.db
-        .update(voiceoverTable)
-        .set({
-          audioUrl: 'https://old-audio.example.com/audio.wav',
-          duration: 100,
-        })
-        .where(eq(voiceoverTable.id, voiceover.id));
-
-      // Step 1: User clicks "Regenerate" - API enqueues new job
-      const startResult = await runtime.runPromise(
-        withCurrentUser(user)(
-          startVoiceoverGeneration({
-            voiceoverId: voiceover.id,
-          }),
-        ),
-      );
-
-      expect(startResult.status).toBe('pending');
-
-      // Step 2: Worker processes the job
-      const generateResult = await runtime.runPromise(
-        withCurrentUser(user)(
-          generateVoiceoverAudio({
-            voiceoverId: voiceover.id,
-          }),
-        ),
-      );
-
-      // Verify: New audio was generated
-      expect(generateResult.voiceover.status).toBe(VoiceoverStatus.READY);
-      expect(generateResult.audioUrl).not.toBe(
-        'https://old-audio.example.com/audio.wav',
-      );
-    });
+        expect(generateResult.voiceover.status).toBe(VoiceoverStatus.READY);
+        if (previousAudioUrl) {
+          expect(generateResult.audioUrl).not.toBe(previousAudioUrl);
+        }
+      },
+    );
   });
 
   describe('state validation', () => {

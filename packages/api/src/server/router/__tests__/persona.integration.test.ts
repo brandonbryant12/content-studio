@@ -14,38 +14,16 @@ import { Layer } from 'effect';
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import type { ServerRuntime } from '../../runtime';
 import {
+  callORPCHandler,
   createMockContext,
   createMockErrors,
   createTestServerRuntime,
+  expectHandlerErrorCode,
 } from '../_shared/test-helpers';
 import personaRouter from '../persona';
 
 type ORPCProcedure = {
   '~orpc': { handler: (args: unknown) => Promise<unknown> };
-};
-
-const callHandler = <T>(
-  procedure: ORPCProcedure,
-  args: { context: unknown; input: unknown; errors: unknown },
-): Promise<T> => {
-  return procedure['~orpc'].handler(args) as Promise<T>;
-};
-
-const expectErrorWithMessage = async (
-  promise: Promise<unknown>,
-  expectedMessage: string | RegExp,
-) => {
-  await expect(promise).rejects.toThrow();
-  try {
-    await promise;
-  } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : String(error);
-    if (typeof expectedMessage === 'string') {
-      expect(errorMessage).toContain(expectedMessage);
-    } else {
-      expect(errorMessage).toMatch(expectedMessage);
-    }
-  }
 };
 
 type HandlerArgs = { context: unknown; input: unknown; errors: unknown };
@@ -58,17 +36,17 @@ interface PersonaOutput {
 
 const handlers = {
   create: (args: HandlerArgs): Promise<PersonaOutput> =>
-    callHandler<PersonaOutput>(
+    callORPCHandler<PersonaOutput>(
       personaRouter.create as unknown as ORPCProcedure,
       args,
     ),
   get: (args: HandlerArgs): Promise<PersonaOutput> =>
-    callHandler<PersonaOutput>(
+    callORPCHandler<PersonaOutput>(
       personaRouter.get as unknown as ORPCProcedure,
       args,
     ),
   generateAvatar: (args: HandlerArgs): Promise<Record<string, never>> =>
-    callHandler<Record<string, never>>(
+    callORPCHandler<Record<string, never>>(
       personaRouter.generateAvatar as unknown as ORPCProcedure,
       args,
     ),
@@ -160,13 +138,14 @@ describe('persona router', () => {
       errors,
     });
 
-    await expectErrorWithMessage(
-      handlers.generateAvatar({
-        context,
-        input: { id: persona.id },
-        errors,
-      }),
-      /SERVICE_UNAVAILABLE|Image generation service unavailable/i,
+    await expectHandlerErrorCode(
+      () =>
+        handlers.generateAvatar({
+          context,
+          input: { id: persona.id },
+          errors,
+        }),
+      'SERVICE_UNAVAILABLE',
     );
   });
 });

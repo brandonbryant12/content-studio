@@ -99,6 +99,13 @@ flowchart LR
 10. For frontend unit tests, static guidance/help-text assertions do not count as meaningful coverage unless the text is itself a contract (accessibility name, destructive confirmation, legal/compliance text, or required CTA copy).
 11. Thin frontend container tests that only prove callback wiring should be deleted or replaced with a test for a unique branch, state transition, or side effect.
 
+## API Router Anti-Bloat Focus
+
+- Share admin-role denial coverage across admin-only handlers in the same router suite unless a handler has distinct authorization behavior.
+- Use shared router helpers from `packages/api/src/server/router/_shared/test-helpers.ts` before adding file-local oRPC invocation or timestamp helpers.
+- Assert protocol code/status/data by default; keep message assertions only when the message content itself is intentional contract behavior.
+- Router integration tests should verify protocol mapping, runtime wiring, authorization, and serialization, not duplicate the use-case branch matrix already covered in domain tests.
+
 ## Test File Locations
 
 | Test Type         | Path Pattern                                                            |

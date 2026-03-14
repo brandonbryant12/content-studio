@@ -81,43 +81,27 @@ describe('effect-handler fallback invariants', () => {
     expect(thrown).toMatchObject({ code: 'UNPROCESSABLE_CONTENT' });
   });
 
-  it('annotates the active span with request.id when provided', () => {
+  it('keeps handler span annotations and nested span attributes wired through the protocol helper', () => {
     const source = readEffectHandler();
 
     expect(source).toContain(
       "Effect.annotateCurrentSpan('request.id', options.requestId);",
     );
-  });
-
-  it('annotates the active span with handler attributes when provided', () => {
-    const source = readEffectHandler();
-
     expect(source).toContain(
       'yield* Effect.annotateCurrentSpan(options.attributes);',
     );
-  });
-
-  it('preserves explicit nested span attributes when options.span is provided', () => {
-    const source = readEffectHandler();
-
     expect(source).toContain('Effect.withSpan(options.span, {');
     expect(source).toContain('attributes: options.attributes,');
     expect(source).toContain('return yield* tracedEffect;');
   });
 
-  it('keeps stream handlers routed through handleEffectWithProtocol', () => {
+  it('exposes request-bound run/stream helpers on top of the shared protocol pipeline', () => {
     const source = readEffectHandler();
 
     expect(source).toContain('handleEffectWithProtocol(');
     expect(source).toContain('handleEffectStreamWithProtocol');
-  });
-
-  it('supports binding request protocol context once per handler', () => {
-    const source = readEffectHandler();
-
     expect(source).toContain('export const bindEffectProtocol =');
     expect(source).toContain('{ ...options, requestId: context.requestId }');
-    expect(source).toContain('handleEffectStreamWithProtocol(');
   });
 
   it('router files do not call protocol helpers directly when request binding is available', () => {
