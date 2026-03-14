@@ -35,6 +35,22 @@
     "eventFile": "events/2026-03.jsonl"
   },
   {
+    "id": "2026-03-14-feature-delivery-frontend-test-hygiene-quick-start-panel-cleanup",
+    "date": "2026-03-14",
+    "month": "2026-03",
+    "workflow": "Feature Delivery",
+    "title": "Frontend test hygiene quick-start-panel cleanup",
+    "severity": "medium",
+    "status": "done",
+    "tags": [
+      "workflow:feature-delivery",
+      "area:frontend-tests",
+      "skill:test-surface-steward",
+      "automation:frontend-test-hygiene"
+    ],
+    "eventFile": "events/2026-03.jsonl"
+  },
+  {
     "id": "2026-03-14-feature-delivery-frontend-test-hygiene-remove-low-signal-quick-start-guide-unit-s",
     "date": "2026-03-14",
     "month": "2026-03",

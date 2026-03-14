@@ -3,7 +3,7 @@ import {
   QuickStartPanel,
   type QuickStartPanelProps,
 } from '../components/quick-start-panel';
-import { render, screen, userEvent, within } from '@/test-utils';
+import { render, screen, within } from '@/test-utils';
 
 vi.mock('@/env', () => ({
   env: {
@@ -38,67 +38,39 @@ function createProps(
 }
 
 describe('QuickStartPanel', () => {
-  it('opens source actions when no documents exist', async () => {
-    const user = userEvent.setup();
-    const onUploadOpenChange = vi.fn();
-    const onUrlDialogOpenChange = vi.fn();
-    const onResearchDialogOpenChange = vi.fn();
-
+  it('shows add-sources card and quick-create toolbar when no documents exist', () => {
     render(
       <QuickStartPanel
         {...createProps({
-          documentDialogs: {
-            onUploadOpenChange,
-            onUrlDialogOpenChange,
-            onResearchDialogOpenChange,
-            onOpenResearchWithPodcast: vi.fn(),
-          },
         })}
       />,
     );
 
-    await user.click(screen.getByRole('button', { name: /upload a file/i }));
-    await user.click(screen.getByRole('button', { name: /import from url/i }));
-    await user.click(screen.getByRole('button', { name: /deep research/i }));
-    await user.click(screen.getByRole('button', { name: 'Source' }));
-
-    expect(onUploadOpenChange).toHaveBeenNthCalledWith(1, true);
-    expect(onUploadOpenChange).toHaveBeenNthCalledWith(2, true);
-    expect(onUrlDialogOpenChange).toHaveBeenCalledWith(true);
-    expect(onResearchDialogOpenChange).toHaveBeenCalledWith(true);
+    expect(
+      screen.getByRole('heading', { name: /add your first source/i }),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByRole('heading', { name: /create your first content/i }),
+    ).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Source' })).toBeInTheDocument();
   });
 
-  it('shows create-first-content actions when sources exist but no generated content', async () => {
-    const user = userEvent.setup();
-    const onCreatePodcast = vi.fn();
-    const onCreateVoiceover = vi.fn();
-    const onCreateInfographic = vi.fn();
-
+  it('shows create-first-content card when sources exist but no generated content', () => {
     render(
       <QuickStartPanel
         {...createProps({
           counts: { sources: 2, podcasts: 0, voiceovers: 0, infographics: 0 },
-          createActions: {
-            onCreatePodcast,
-            isPodcastPending: false,
-            onCreateVoiceover,
-            isVoiceoverPending: false,
-            onCreateInfographic,
-            isInfographicPending: false,
-          },
         })}
       />,
     );
 
-    expect(screen.queryByRole('button', { name: /upload a file/i })).not.toBeInTheDocument();
-
-    await user.click(screen.getByRole('button', { name: /create podcast/i }));
-    await user.click(screen.getByRole('button', { name: /create voiceover/i }));
-    await user.click(screen.getByRole('button', { name: /create infographic/i }));
-
-    expect(onCreatePodcast).toHaveBeenCalledOnce();
-    expect(onCreateVoiceover).toHaveBeenCalledOnce();
-    expect(onCreateInfographic).toHaveBeenCalledOnce();
+    expect(
+      screen.getByRole('heading', { name: /create your first content/i }),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByRole('heading', { name: /add your first source/i }),
+    ).not.toBeInTheDocument();
+    expect(screen.queryByText('Try creating:')).not.toBeInTheDocument();
   });
 
   it('surfaces only missing content types in suggestion bar', () => {
