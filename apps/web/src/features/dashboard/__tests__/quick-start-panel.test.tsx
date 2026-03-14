@@ -38,36 +38,24 @@ function createProps(
 }
 
 describe('QuickStartPanel', () => {
-  it('shows source-acquisition actions when there are no sources', async () => {
-    const user = userEvent.setup();
-    const onUploadOpenChange = vi.fn();
-    const onUrlDialogOpenChange = vi.fn();
-    const onResearchDialogOpenChange = vi.fn();
+  it('shows source-acquisition actions when there are no sources', () => {
+    render(<QuickStartPanel {...createProps()} />);
 
-    render(
-      <QuickStartPanel
-        {...createProps({
-          documentDialogs: {
-            onUploadOpenChange,
-            onUrlDialogOpenChange,
-            onResearchDialogOpenChange,
-            onOpenResearchWithPodcast: vi.fn(),
-          },
-        })}
-      />,
-    );
-
-    await user.click(
+    expect(
+      screen.getByRole('heading', { name: 'Add your first source' }),
+    ).toBeInTheDocument();
+    expect(
       screen.getByRole('button', { name: /^Upload a file/i }),
-    );
-    await user.click(
+    ).toBeInTheDocument();
+    expect(
       screen.getByRole('button', { name: /^Import from URL/i }),
-    );
-    await user.click(screen.getByRole('button', { name: /^Deep Research/i }));
-
-    expect(onUploadOpenChange).toHaveBeenCalledWith(true);
-    expect(onUrlDialogOpenChange).toHaveBeenCalledWith(true);
-    expect(onResearchDialogOpenChange).toHaveBeenCalledWith(true);
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole('button', { name: /^Deep Research/i }),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByRole('heading', { name: 'Create your first content' }),
+    ).not.toBeInTheDocument();
   });
 
   it('shows primary create actions when sources exist and no generated outputs exist', () => {
@@ -90,11 +78,23 @@ describe('QuickStartPanel', () => {
     ).toBeGreaterThan(0);
   });
 
-  it('surfaces only missing content types in the suggestion bar', () => {
+  it('surfaces only missing content types in the suggestion bar', async () => {
+    const user = userEvent.setup();
+    const onCreateVoiceover = vi.fn();
+    const onCreateInfographic = vi.fn();
+
     render(
       <QuickStartPanel
         {...createProps({
           counts: { sources: 3, podcasts: 1, voiceovers: 0, infographics: 0 },
+          createActions: {
+            onCreatePodcast: vi.fn(),
+            isPodcastPending: false,
+            onCreateVoiceover,
+            isVoiceoverPending: false,
+            onCreateInfographic,
+            isInfographicPending: false,
+          },
         })}
       />,
     );
@@ -111,6 +111,16 @@ describe('QuickStartPanel', () => {
     expect(
       within(suggestionBar!).getByRole('button', { name: 'Infographic' }),
     ).toBeInTheDocument();
+
+    await user.click(
+      within(suggestionBar!).getByRole('button', { name: 'Voiceover' }),
+    );
+    await user.click(
+      within(suggestionBar!).getByRole('button', { name: 'Infographic' }),
+    );
+
+    expect(onCreateVoiceover).toHaveBeenCalledTimes(1);
+    expect(onCreateInfographic).toHaveBeenCalledTimes(1);
   });
 
   it('hides the suggestion bar when all content types already exist', () => {
