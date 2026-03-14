@@ -1,9 +1,9 @@
-import { describe, it, expect, vi } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import {
   DashboardPage,
   type DashboardPageProps,
 } from '../components/dashboard-page';
-import { render, screen } from '@/test-utils';
+import { render, screen, userEvent } from '@/test-utils';
 
 vi.mock('@/env', () => ({
   env: {
@@ -14,7 +14,6 @@ vi.mock('@/env', () => ({
   isDeepResearchEnabled: true,
 }));
 
-// Stub TanStack Router
 vi.mock('@tanstack/react-router', () => ({
   Link: ({
     to,
@@ -31,7 +30,6 @@ vi.mock('@tanstack/react-router', () => ({
   ),
 }));
 
-// Stub source components to avoid deep dependency chains
 vi.mock('@/features/sources/components', () => ({
   UploadSourceDialog: () => null,
   AddFromUrlDialog: () => null,
@@ -75,111 +73,65 @@ function createProps(
   };
 }
 
-describe('DashboardPage heading and value communication', () => {
-  it('renders visible dashboard heading with value subtitle', () => {
+describe('DashboardPage', () => {
+  it('exposes research entrypoint without duplicate quick toolbar shortcut', () => {
     render(<DashboardPage {...createProps()} />);
 
-    expect(screen.getByText('Dashboard')).toBeInTheDocument();
-    expect(
-      screen.getByText(/Upload a source to create a podcast/),
-    ).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /try it now/i })).toBeInTheDocument();
+    expect(screen.queryByText(/Research\s*→\s*Podcast/i)).not.toBeInTheDocument();
   });
 
-  it('renders the workflow strip with all three steps', () => {
-    render(<DashboardPage {...createProps()} />);
+  it('wires quick-start source upload action through document dialog callback', async () => {
+    const user = userEvent.setup();
+    const onUploadOpenChange = vi.fn();
 
-    expect(screen.getByText('Upload sources')).toBeInTheDocument();
-    expect(screen.getByText('AI creates content')).toBeInTheDocument();
-    expect(screen.getByText('Review & refine')).toBeInTheDocument();
+    render(
+      <DashboardPage
+        {...createProps({
+          documentDialogs: {
+            ...createProps().documentDialogs,
+            onUploadOpenChange,
+          },
+        })}
+      />,
+    );
+
+    await user.click(screen.getByRole('button', { name: /upload a file/i }));
+    expect(onUploadOpenChange).toHaveBeenCalledWith(true);
   });
-});
 
-describe('DashboardPage quick-start panel', () => {
-  it('shows add sources panel and quick create toolbar when no documents exist', () => {
-    render(<DashboardPage {...createProps()} />);
+  it('wires create actions when documents exist but generated content does not', async () => {
+    const user = userEvent.setup();
+    const onCreatePodcast = vi.fn();
+    const onCreateVoiceover = vi.fn();
+    const onCreateInfographic = vi.fn();
 
-    expect(screen.getByText('Add your first source')).toBeInTheDocument();
-    expect(screen.getByText('Upload a file')).toBeInTheDocument();
-    expect(screen.getByText('Import from URL')).toBeInTheDocument();
-    expect(screen.getByText('Deep Research')).toBeInTheDocument();
-    expect(screen.getByText('Quick create:')).toBeInTheDocument();
-  });
-
-  it('shows create first content panel and quick create toolbar when documents exist but no generated content', () => {
     render(
       <DashboardPage
         {...createProps({
           counts: { sources: 3, podcasts: 0, voiceovers: 0, infographics: 0 },
+          createActions: {
+            onCreatePodcast,
+            isPodcastPending: false,
+            onCreateVoiceover,
+            isVoiceoverPending: false,
+            onCreateInfographic,
+            isInfographicPending: false,
+          },
         })}
       />,
     );
 
-    expect(screen.getByText('Create your first content')).toBeInTheDocument();
-    expect(screen.getByText('Quick create:')).toBeInTheDocument();
-    // "Create Podcast" appears in both the quick-start panel and recent section
-    expect(
-      screen.getAllByRole('button', { name: /Create Podcast/i }).length,
-    ).toBeGreaterThanOrEqual(1);
-    expect(
-      screen.getAllByRole('button', { name: /Create Voiceover/i }).length,
-    ).toBeGreaterThanOrEqual(1);
-    expect(
-      screen.getAllByRole('button', { name: /Create Infographic/i }).length,
-    ).toBeGreaterThanOrEqual(1);
-  });
-
-  it('shows suggestion bar and quick create toolbar for missing content types', () => {
-    render(
-      <DashboardPage
-        {...createProps({
-          counts: { sources: 3, podcasts: 2, voiceovers: 0, infographics: 0 },
-        })}
-      />,
+    await user.click(screen.getAllByRole('button', { name: /create podcast/i })[0]);
+    await user.click(
+      screen.getAllByRole('button', { name: /create voiceover/i })[0],
+    );
+    await user.click(
+      screen.getAllByRole('button', { name: /create infographic/i })[0],
     );
 
-    expect(screen.getByText('Try creating:')).toBeInTheDocument();
-    expect(screen.getByText('Quick create:')).toBeInTheDocument();
-  });
-
-  it('shows quick create toolbar when all types have content', () => {
-    render(
-      <DashboardPage
-        {...createProps({
-          counts: { sources: 3, podcasts: 2, voiceovers: 1, infographics: 1 },
-        })}
-      />,
-    );
-
-    expect(screen.getByText('Quick create:')).toBeInTheDocument();
-    expect(
-      screen
-        .getAllByRole('button', { name: /Infographic/i })
-        .some((button) => !button.hasAttribute('disabled')),
-    ).toBe(true);
-  });
-
-  it('keeps the featured research card but removes the duplicate toolbar shortcut', () => {
-    render(<DashboardPage {...createProps()} />);
-
-    expect(screen.getByText('Research to Podcast')).toBeInTheDocument();
-    expect(
-      screen.queryByText(/Research\s*→\s*Podcast/i),
-    ).not.toBeInTheDocument();
-  });
-});
-
-describe('DashboardPage empty messages', () => {
-  it('shows action-oriented empty messages in recent sections', () => {
-    render(<DashboardPage {...createProps()} />);
-
-    expect(
-      screen.getByText('Create a podcast from your sources'),
-    ).toBeInTheDocument();
-    expect(
-      screen.getByText('Record a voiceover with AI narration'),
-    ).toBeInTheDocument();
-    expect(
-      screen.getByText('Generate visuals from your content'),
-    ).toBeInTheDocument();
+    expect(onCreatePodcast).toHaveBeenCalled();
+    expect(onCreateVoiceover).toHaveBeenCalled();
+    expect(onCreateInfographic).toHaveBeenCalled();
   });
 });
