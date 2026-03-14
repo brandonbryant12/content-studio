@@ -16,6 +16,25 @@
     "eventFile": "events/2026-03.jsonl"
   },
   {
+    "id": "2026-03-14-feature-delivery-frontend-test-hygiene-consolidated-confirmation-dialog-coverage",
+    "date": "2026-03-14",
+    "month": "2026-03",
+    "workflow": "Feature Delivery",
+    "title": "Frontend test hygiene: consolidated confirmation dialog coverage",
+    "severity": "low",
+    "status": "closed",
+    "tags": [
+      "frontend",
+      "tests",
+      "hygiene",
+      "skill:test-surface-steward",
+      "skill:periodic-scans"
+    ],
+    "importance": 0.58,
+    "confidence": 0.93,
+    "eventFile": "events/2026-03.jsonl"
+  },
+  {
     "id": "2026-03-14-feature-delivery-frontend-testing-docs-now-call-out-copy-locking-and-fragmented-d",
     "date": "2026-03-14",
     "month": "2026-03",
