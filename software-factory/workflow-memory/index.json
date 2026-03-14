@@ -36,6 +36,22 @@
     "eventFile": "events/2026-03.jsonl"
   },
   {
+    "id": "2026-03-14-feature-delivery-prune-redundant-dashboard-callback-wiring-tests",
+    "date": "2026-03-14",
+    "month": "2026-03",
+    "workflow": "Feature Delivery",
+    "title": "Prune redundant dashboard callback wiring tests",
+    "severity": "low",
+    "status": "completed",
+    "tags": [
+      "workflow:feature-delivery",
+      "skill:test-surface-steward",
+      "skill:periodic-scans",
+      "area:web-tests"
+    ],
+    "eventFile": "events/2026-03.jsonl"
+  },
+  {
     "id": "2026-03-14-feature-delivery-research-chat-dialog-hygiene",
     "date": "2026-03-14",
     "month": "2026-03",

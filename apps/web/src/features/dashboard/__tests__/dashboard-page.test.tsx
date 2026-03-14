@@ -3,7 +3,7 @@ import {
   DashboardPage,
   type DashboardPageProps,
 } from '../components/dashboard-page';
-import { render, screen, userEvent } from '@/test-utils';
+import { render, screen } from '@/test-utils';
 
 vi.mock('@/env', () => ({
   env: {
@@ -79,59 +79,5 @@ describe('DashboardPage', () => {
 
     expect(screen.getByRole('button', { name: /try it now/i })).toBeInTheDocument();
     expect(screen.queryByText(/Research\s*→\s*Podcast/i)).not.toBeInTheDocument();
-  });
-
-  it('wires quick-start source upload action through document dialog callback', async () => {
-    const user = userEvent.setup();
-    const onUploadOpenChange = vi.fn();
-
-    render(
-      <DashboardPage
-        {...createProps({
-          documentDialogs: {
-            ...createProps().documentDialogs,
-            onUploadOpenChange,
-          },
-        })}
-      />,
-    );
-
-    await user.click(screen.getByRole('button', { name: /upload a file/i }));
-    expect(onUploadOpenChange).toHaveBeenCalledWith(true);
-  });
-
-  it('wires create actions when documents exist but generated content does not', async () => {
-    const user = userEvent.setup();
-    const onCreatePodcast = vi.fn();
-    const onCreateVoiceover = vi.fn();
-    const onCreateInfographic = vi.fn();
-
-    render(
-      <DashboardPage
-        {...createProps({
-          counts: { sources: 3, podcasts: 0, voiceovers: 0, infographics: 0 },
-          createActions: {
-            onCreatePodcast,
-            isPodcastPending: false,
-            onCreateVoiceover,
-            isVoiceoverPending: false,
-            onCreateInfographic,
-            isInfographicPending: false,
-          },
-        })}
-      />,
-    );
-
-    await user.click(screen.getAllByRole('button', { name: /create podcast/i })[0]);
-    await user.click(
-      screen.getAllByRole('button', { name: /create voiceover/i })[0],
-    );
-    await user.click(
-      screen.getAllByRole('button', { name: /create infographic/i })[0],
-    );
-
-    expect(onCreatePodcast).toHaveBeenCalled();
-    expect(onCreateVoiceover).toHaveBeenCalled();
-    expect(onCreateInfographic).toHaveBeenCalled();
   });
 });
