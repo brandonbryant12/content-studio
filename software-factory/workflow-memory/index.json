@@ -230,6 +230,22 @@
     "eventFile": "events/2026-03.jsonl"
   },
   {
+    "id": "2026-03-14-feature-delivery-replace-copy-locking-persona-detail-test-with-behavior-checks",
+    "date": "2026-03-14",
+    "month": "2026-03",
+    "workflow": "Feature Delivery",
+    "title": "Replace copy-locking persona detail test with behavior checks",
+    "severity": "low",
+    "status": "done",
+    "tags": [
+      "workflow:feature-delivery",
+      "skill:test-surface-steward",
+      "skill:periodic-scans",
+      "area:frontend-tests"
+    ],
+    "eventFile": "events/2026-03.jsonl"
+  },
+  {
     "id": "2026-03-14-feature-delivery-research-chat-dialog-hygiene",
     "date": "2026-03-14",
     "month": "2026-03",

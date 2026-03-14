@@ -2,7 +2,7 @@ import { describe, expect, it, vi } from 'vitest';
 import type { RouterOutput } from '@repo/api/client';
 import type { ComponentProps, PropsWithChildren } from 'react';
 import { PersonaDetail } from '../components/persona-detail';
-import { render, screen } from '@/test-utils';
+import { render, screen, userEvent } from '@/test-utils';
 
 vi.mock('@/env', () => ({
   env: {
@@ -63,18 +63,54 @@ const defaultProps: PersonaDetailProps = {
 };
 
 describe('PersonaDetail', () => {
-  it('shows workflow guidance and field-level education', () => {
-    render(<PersonaDetail {...defaultProps} />);
+  it('shows save/discard controls only when there are pending changes', () => {
+    const { rerender } = render(<PersonaDetail {...defaultProps} />);
 
-    expect(screen.getByText('How this persona is used')).toBeInTheDocument();
-    expect(screen.getByText(/shape how this host speaks/i)).toBeInTheDocument();
     expect(
-      screen.getByText(/speaker name shown in podcast scripts/i),
-    ).toBeInTheDocument();
+      screen.queryAllByRole('button', { name: /save changes/i }),
+    ).toHaveLength(0);
+    expect(screen.queryAllByRole('button', { name: /discard/i })).toHaveLength(
+      0,
+    );
+
+    rerender(<PersonaDetail {...defaultProps} hasChanges={true} />);
+
+    expect(screen.getAllByRole('button', { name: /save changes/i })).toHaveLength(
+      2,
+    );
+    expect(screen.getAllByRole('button', { name: /discard/i })).toHaveLength(2);
+  });
+
+  it('disables save when trimmed name is empty', () => {
+    render(
+      <PersonaDetail
+        {...defaultProps}
+        hasChanges={true}
+        formValues={{
+          ...defaultProps.formValues,
+          name: '   ',
+        }}
+      />,
+    );
+
+    expect(screen.getByRole('button', { name: /save changes/i })).toBeDisabled();
+  });
+
+  it('opens delete confirmation and calls onDelete after confirmation', async () => {
+    const user = userEvent.setup();
+    const onDelete = vi.fn();
+
+    render(<PersonaDetail {...defaultProps} onDelete={onDelete} />);
+
+    await user.click(screen.getByRole('button', { name: /delete persona/i }));
+
+    expect(screen.getByRole('heading', { name: /delete persona/i })).toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: /^delete$/i }));
+
+    expect(onDelete).toHaveBeenCalledOnce();
     expect(
-      screen.getByText(
-        /default voice to use whenever this persona is selected/i,
-      ),
-    ).toBeInTheDocument();
+      screen.queryByRole('heading', { name: /delete persona/i }),
+    ).not.toBeInTheDocument();
   });
 });
