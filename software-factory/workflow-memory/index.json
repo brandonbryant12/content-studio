@@ -71,6 +71,22 @@
     "eventFile": "events/2026-03.jsonl"
   },
   {
+    "id": "2026-03-14-feature-delivery-pruned-low-signal-stepsources-copy-lock-tests",
+    "date": "2026-03-14",
+    "month": "2026-03",
+    "workflow": "Feature Delivery",
+    "title": "Pruned low-signal StepSources copy-lock tests",
+    "severity": "low",
+    "status": "done",
+    "tags": [
+      "workflow:feature-delivery",
+      "area:frontend",
+      "focus:test-hygiene",
+      "skill:test-surface-steward"
+    ],
+    "eventFile": "events/2026-03.jsonl"
+  },
+  {
     "id": "2026-03-14-feature-delivery-research-chat-dialog-hygiene",
     "date": "2026-03-14",
     "month": "2026-03",

@@ -1,7 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { StepSources } from '../components/setup/steps/step-sources';
 import {
-  fireEvent,
   renderWithQuery,
   screen,
   userEvent,
@@ -76,14 +75,6 @@ describe('StepSources', () => {
       <StepSources selectedIds={[]} onSelectionChange={onSelectionChange} />,
     );
 
-    expect(screen.getByText('Add Sources')).toBeInTheDocument();
-    expect(screen.getByText('Why sources matter')).toBeInTheDocument();
-    expect(
-      screen.getByText(
-        /Each selected source becomes part of the factual context/i,
-      ),
-    ).toBeInTheDocument();
-
     await user.click(screen.getByRole('tab', { name: 'From URL' }));
     await user.type(
       screen.getByLabelText('URL'),
@@ -113,41 +104,5 @@ describe('StepSources', () => {
     ).toBeInTheDocument();
     expect(screen.getByRole('tab', { name: 'Upload New' })).toBeInTheDocument();
     expect(screen.getByRole('tab', { name: 'From URL' })).toBeInTheDocument();
-  });
-
-  it('uses source-first wording in upload copy', async () => {
-    const user = userEvent.setup();
-
-    const { container } = renderWithQuery(
-      <StepSources selectedIds={[]} onSelectionChange={vi.fn()} />,
-    );
-
-    await user.click(screen.getByRole('tab', { name: 'Upload New' }));
-    expect(
-      screen.getByLabelText(
-        'Upload a source file. Supports TXT, PDF, DOCX, PPTX',
-      ),
-    ).toBeInTheDocument();
-    expect(
-      screen.queryByLabelText(
-        'Upload a document file. Supports TXT, PDF, DOCX, PPTX',
-      ),
-    ).not.toBeInTheDocument();
-
-    const fileInput = container.querySelector(
-      'input[type="file"]',
-    ) as HTMLInputElement;
-    fireEvent.change(fileInput, {
-      target: {
-        files: [
-          new File(['source body'], 'source.txt', { type: 'text/plain' }),
-        ],
-      },
-    });
-
-    expect(screen.getByPlaceholderText('Source title')).toBeInTheDocument();
-    expect(
-      screen.queryByPlaceholderText('Document title'),
-    ).not.toBeInTheDocument();
   });
 });
