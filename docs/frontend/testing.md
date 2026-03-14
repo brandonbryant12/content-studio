@@ -53,13 +53,15 @@ flowchart LR
    Replace container tests that only prove a child callback forwards into `navigate(...)`, `setState(...)`, or another pass-through prop with a branch that has unique behavioral value.
 3. Fragmented render-state tests:
    When one dialog or async surface has a small state machine, prefer a few scenario tests that cover pending, error, confirm, and recovery paths instead of a separate test for each text fragment.
-4. Low-level event overuse:
+4. Styling-only assertions:
+   Avoid tests that only assert utility class names (for example `bg-*`, `text-*`, `break-words`) without a user-visible behavior branch.
+5. Low-level event overuse:
    Use `fireEvent` only for interactions `userEvent` cannot model well, such as image `error`.
-5. Shared interaction state:
+6. Shared interaction state:
    Call `userEvent.setup()` inside each test so keyboard and pointer state never leaks across cases.
-6. Shared query cache:
+7. Shared query cache:
    `renderWithQuery(...)` should use a fresh `QueryClient` per test. Preserve the default test utility behavior and keep retries disabled in error-path tests unless retry logic is the thing under test.
-7. Mixed mocking seams:
+8. Mixed mocking seams:
    Use MSW when transport behavior matters, or `vi.mock(...)` when isolating hooks/containers/components. Avoid mixing both in one test unless the extra seam is required by the assertion.
 
 ## Test Types

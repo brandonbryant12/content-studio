@@ -2,6 +2,7 @@ import { describe, it, expect } from 'vitest';
 import type { UIMessage } from 'ai';
 import { ChatMessage } from '@/shared/components/chat-message';
 import { render, screen } from '@/test-utils';
+import { CHAT_CONTROL_TOKENS } from '@/shared/lib/chat-control';
 
 const userMessage: UIMessage = {
   id: 'msg-1',
@@ -16,40 +17,46 @@ const assistantMessage: UIMessage = {
 };
 
 describe('ChatMessage', () => {
-  it('renders user message text', () => {
+  it('renders user and assistant text content', () => {
     render(<ChatMessage message={userMessage} isStreaming={false} />);
     expect(screen.getByText('Research AI in healthcare')).toBeInTheDocument();
-  });
-
-  it('renders assistant message text', () => {
     render(<ChatMessage message={assistantMessage} isStreaming={false} />);
     expect(
       screen.getByText('Great topic! What aspect interests you?'),
     ).toBeInTheDocument();
   });
 
-  it('applies primary styling to user messages', () => {
-    const { container } = render(
-      <ChatMessage message={userMessage} isStreaming={false} />,
-    );
-    const bubble = container.querySelector('.bg-primary');
-    expect(bubble).toBeInTheDocument();
-  });
+  it('strips assistant control tokens and hides token-only messages', () => {
+    const controlTokenMessage: UIMessage = {
+      id: 'msg-3',
+      role: 'assistant',
+      parts: [
+        {
+          type: 'text',
+          text: `Great, starting now ${CHAT_CONTROL_TOKENS.startResearch}`,
+        },
+      ],
+    };
 
-  it('applies wrapping classes to user text', () => {
-    const { container } = render(
-      <ChatMessage message={userMessage} isStreaming={false} />,
+    const { rerender, container } = render(
+      <ChatMessage message={controlTokenMessage} isStreaming={false} />,
     );
-    const text = container.querySelector('p');
-    expect(text).toHaveClass('break-words');
-  });
+    expect(screen.getByText('Great, starting now')).toBeInTheDocument();
+    expect(
+      screen.queryByText(CHAT_CONTROL_TOKENS.startResearch),
+    ).not.toBeInTheDocument();
 
-  it('applies muted styling to assistant messages', () => {
-    const { container } = render(
-      <ChatMessage message={assistantMessage} isStreaming={false} />,
+    rerender(
+      <ChatMessage
+        message={{
+          id: 'msg-4',
+          role: 'assistant',
+          parts: [{ type: 'text', text: CHAT_CONTROL_TOKENS.startResearch }],
+        }}
+        isStreaming={false}
+      />,
     );
-    const bubble = container.querySelector('.bg-muted');
-    expect(bubble).toBeInTheDocument();
+    expect(container.firstChild).toBeNull();
   });
 
   it.each([

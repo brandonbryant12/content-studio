@@ -35,6 +35,22 @@
     "eventFile": "events/2026-03.jsonl"
   },
   {
+    "id": "2026-03-14-feature-delivery-frontend-test-hygiene-chat-message-suite-consolidation",
+    "date": "2026-03-14",
+    "month": "2026-03",
+    "workflow": "Feature Delivery",
+    "title": "Frontend test hygiene: chat-message suite consolidation",
+    "severity": "low",
+    "status": "completed",
+    "tags": [
+      "frontend",
+      "test-hygiene",
+      "skill:test-surface-steward",
+      "skill:periodic-scans"
+    ],
+    "eventFile": "events/2026-03.jsonl"
+  },
+  {
     "id": "2026-03-14-feature-delivery-frontend-test-hygiene-consolidated-confirmation-dialog-coverage",
     "date": "2026-03-14",
     "month": "2026-03",
