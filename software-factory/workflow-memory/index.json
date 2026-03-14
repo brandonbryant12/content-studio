@@ -105,6 +105,22 @@
     "eventFile": "events/2026-03.jsonl"
   },
   {
+    "id": "2026-03-14-feature-delivery-frontend-test-hygiene-remove-low-signal-podcast-settings-copy-te",
+    "date": "2026-03-14",
+    "month": "2026-03",
+    "workflow": "Feature Delivery",
+    "title": "Frontend test hygiene: remove low-signal podcast-settings copy test",
+    "severity": "low",
+    "status": "applied",
+    "tags": [
+      "workflow:feature-delivery",
+      "skill:test-surface-steward",
+      "skill:periodic-scans",
+      "area:web-tests"
+    ],
+    "eventFile": "events/2026-03.jsonl"
+  },
+  {
     "id": "2026-03-14-feature-delivery-frontend-test-hygiene-remove-low-signal-quick-start-guide-unit-s",
     "date": "2026-03-14",
     "month": "2026-03",
