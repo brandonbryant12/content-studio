@@ -36,6 +36,22 @@
     "eventFile": "events/2026-03.jsonl"
   },
   {
+    "id": "2026-03-14-feature-delivery-research-chat-dialog-hygiene",
+    "date": "2026-03-14",
+    "month": "2026-03",
+    "workflow": "Feature Delivery",
+    "title": "Consolidate fragmented deep-research dialog tests",
+    "severity": "low",
+    "status": "done",
+    "tags": [
+      "frontend",
+      "test-hygiene",
+      "skill:test-surface-steward",
+      "skill:periodic-scans"
+    ],
+    "eventFile": "events/2026-03.jsonl"
+  },
+  {
     "id": "2026-03-13-feature-delivery-dashboard-quick-create-toolbar-persistence",
     "date": "2026-03-13",
     "month": "2026-03",
