@@ -30,7 +30,6 @@ function renderSectionContent({
 }: Omit<ConfigPanelProps, 'userId' | 'isPendingGeneration'>) {
   switch (section) {
     case 'voice':
-    case 'instructions':
       return (
         <PodcastSettings
           podcast={podcast}

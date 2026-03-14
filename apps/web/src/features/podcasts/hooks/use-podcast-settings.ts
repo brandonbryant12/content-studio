@@ -201,7 +201,6 @@ export function usePodcastSettings({
 
   const hasScriptSettingsChanges =
     state.targetDuration !== serverValues.targetDuration ||
-    state.instructions !== serverValues.instructions ||
     state.hostPersonaId !== serverValues.hostPersonaId ||
     state.coHostPersonaId !== serverValues.coHostPersonaId;
 
@@ -241,7 +240,6 @@ export function usePodcastSettings({
       coHostVoice: state.coHostVoice,
       coHostVoiceName: coHostVoiceInfo?.name,
       targetDurationMinutes: state.targetDuration,
-      promptInstructions: state.instructions || undefined,
       hostPersonaId: state.hostPersonaId,
       coHostPersonaId: state.coHostPersonaId,
     });

@@ -6,11 +6,6 @@ import {
   MAX_DURATION,
   type UsePodcastSettingsReturn,
 } from '../../hooks/use-podcast-settings';
-import {
-  INSTRUCTION_CHAR_LIMIT,
-  INSTRUCTION_PRESETS,
-  getInstructionPresetLabel,
-} from '../../lib/instruction-presets';
 import { PersonaPicker } from './persona-picker';
 import { VoiceSelector as VoiceGrid } from '@/shared/components/voice-selector';
 import {
@@ -34,23 +29,8 @@ export function PodcastSettings({
   section,
 }: PodcastSettingsProps) {
   const isConversation = podcast.format === 'conversation';
-  const activePreset = getInstructionPresetLabel(settings.instructions);
 
-  const handlePresetClick = (preset: (typeof INSTRUCTION_PRESETS)[number]) => {
-    if (activePreset === preset.label) {
-      settings.setInstructions('');
-      return;
-    }
-
-    settings.setInstructions(preset.value);
-  };
-
-  const handleInstructionsChange = (value: string) => {
-    const nextValue = value.slice(0, INSTRUCTION_CHAR_LIMIT);
-    settings.setInstructions(nextValue);
-  };
-
-  if (section === 'voice') {
+  if (section !== 'duration') {
     const hostVoiceLocked = !!settings.hostPersonaVoiceId;
     const coHostVoiceLocked = !!settings.coHostPersonaVoiceId;
     const hostEffectiveVoice =
@@ -60,7 +40,6 @@ export function PodcastSettings({
 
     return (
       <div className={`mixer-section ${disabled ? 'disabled' : ''}`}>
-        {/* Persona assignment */}
         <div className="space-y-4 mb-6">
           <div className="rounded-lg border border-primary/15 bg-primary/5 px-4 py-3">
             <p className="text-xs leading-relaxed text-muted-foreground">
@@ -122,7 +101,6 @@ export function PodcastSettings({
           </div>
         </div>
 
-        {/* Voice grid — host */}
         {!hostVoiceLocked && (
           <div className="mb-6">
             {isConversation && (
@@ -139,7 +117,6 @@ export function PodcastSettings({
           </div>
         )}
 
-        {/* Voice grid — co-host */}
         {isConversation && !coHostVoiceLocked && (
           <div>
             <h3 className="text-xs font-medium uppercase tracking-wider text-muted-foreground mb-3">
@@ -164,66 +141,28 @@ export function PodcastSettings({
     );
   }
 
-  if (section === 'duration') {
-    return (
-      <div className={`mixer-section ${disabled ? 'disabled' : ''}`}>
-        <div className="mixer-duration-slider">
-          <span className="mixer-duration-range-label">{MIN_DURATION}</span>
-          <Slider
-            value={[settings.targetDuration]}
-            onValueChange={([value]) =>
-              value && settings.setTargetDuration(value)
-            }
-            min={MIN_DURATION}
-            max={MAX_DURATION}
-            step={1}
-            disabled={disabled}
-            aria-label="Target duration in minutes"
-          />
-          <span className="mixer-duration-range-label">{MAX_DURATION}</span>
-        </div>
-        <div className="mixer-duration-readout">
-          <span className="mixer-duration-readout-value">
-            {settings.targetDuration}
-          </span>
-          <span className="mixer-duration-readout-unit">min</span>
-        </div>
-      </div>
-    );
-  }
-
-  // section === 'instructions'
   return (
     <div className={`mixer-section ${disabled ? 'disabled' : ''}`}>
-      <div className="mixer-direction">
-        <p className="mixer-direction-hint">
-          Guide the AI on what to change in the next script draft. You can still
-          edit lines manually in the script editor.
-        </p>
-        <div className="mixer-direction-presets">
-          {INSTRUCTION_PRESETS.map((preset) => (
-            <button
-              key={preset.label}
-              type="button"
-              onClick={() => handlePresetClick(preset)}
-              className={`mixer-direction-preset ${activePreset === preset.label ? 'active' : ''}`}
-              disabled={disabled}
-            >
-              {preset.label}
-            </button>
-          ))}
-        </div>
-        <textarea
-          value={settings.instructions}
-          onChange={(e) => handleInstructionsChange(e.target.value)}
+      <div className="mixer-duration-slider">
+        <span className="mixer-duration-range-label">{MIN_DURATION}</span>
+        <Slider
+          value={[settings.targetDuration]}
+          onValueChange={([value]) =>
+            value && settings.setTargetDuration(value)
+          }
+          min={MIN_DURATION}
+          max={MAX_DURATION}
+          step={1}
           disabled={disabled}
-          placeholder="Tell the AI how to adjust the script\u2026"
-          className="mixer-direction-textarea"
-          aria-label="Script direction"
+          aria-label="Target duration in minutes"
         />
-        <p className="setup-char-count">
-          {settings.instructions.length} / {INSTRUCTION_CHAR_LIMIT}
-        </p>
+        <span className="mixer-duration-range-label">{MAX_DURATION}</span>
+      </div>
+      <div className="mixer-duration-readout">
+        <span className="mixer-duration-readout-value">
+          {settings.targetDuration}
+        </span>
+        <span className="mixer-duration-readout-unit">min</span>
       </div>
     </div>
   );

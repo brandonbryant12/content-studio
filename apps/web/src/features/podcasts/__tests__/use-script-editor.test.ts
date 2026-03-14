@@ -1,24 +1,11 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { renderHook, act } from '@testing-library/react';
 import { createElement, type ReactNode } from 'react';
-import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { describe, it, expect, beforeEach } from 'vitest';
 import {
   useScriptEditor,
   type ScriptSegment,
 } from '../hooks/use-script-editor';
-
-vi.mock('@/clients/apiClient', () => ({
-  apiClient: {
-    podcasts: {
-      saveChanges: {
-        mutationOptions: (options: Record<string, unknown>) => ({
-          mutationFn: vi.fn(async () => ({})),
-          ...options,
-        }),
-      },
-    },
-  },
-}));
 
 function createSegment(
   index: number,
@@ -209,6 +196,35 @@ describe('useScriptEditor', () => {
     });
 
     expect(result.current.segments).toEqual(savedSegments);
+    expect(result.current.hasChanges).toBe(false);
+  });
+
+  it('replaceSegments applies an unsaved assistant draft and preserves the original baseline', () => {
+    const initialSegments = [
+      createSegment(0, { speaker: 'Alex', line: 'Original intro' }),
+      createSegment(1, { speaker: 'Blair', line: 'Original response' }),
+    ];
+
+    const { result } = renderScriptEditor(initialSegments);
+
+    act(() => {
+      result.current.replaceSegments([
+        { speaker: 'Host', line: 'Rewritten intro', index: 5 },
+        { speaker: 'Co-host', line: 'Rewritten response', index: 9 },
+      ]);
+    });
+
+    expect(result.current.segments).toEqual([
+      { speaker: 'Host', line: 'Rewritten intro', index: 0 },
+      { speaker: 'Co-host', line: 'Rewritten response', index: 1 },
+    ]);
+    expect(result.current.hasChanges).toBe(true);
+
+    act(() => {
+      result.current.discardChanges();
+    });
+
+    expect(result.current.segments).toEqual(initialSegments);
     expect(result.current.hasChanges).toBe(false);
   });
 });

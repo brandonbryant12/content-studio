@@ -1,11 +1,7 @@
-import {
-  FileTextIcon,
-  // Pencil2Icon, — re-enable with Direction tab
-  SpeakerLoudIcon,
-} from '@radix-ui/react-icons';
+import { FileTextIcon, SpeakerLoudIcon } from '@radix-ui/react-icons';
 import type { ElementType } from 'react';
 
-export type ConfigSection = 'voice' | 'instructions' | 'sources';
+export type ConfigSection = 'voice' | 'sources';
 
 type IconComponent = ElementType<{
   className?: string;
@@ -32,16 +28,6 @@ export const configSectionDefinitions: ReadonlyArray<ConfigSectionDefinition> =
       Icon: SpeakerLoudIcon,
       iconVariant: 'voice',
     },
-    // Direction tab — commented out, can re-enable later
-    // {
-    //   value: 'instructions',
-    //   label: 'Direction',
-    //   title: 'Script Direction',
-    //   description:
-    //     'Adjust custom instructions that shape tone, framing, and emphasis.',
-    //   Icon: Pencil2Icon,
-    //   iconVariant: 'direction',
-    // },
     {
       value: 'sources',
       label: 'Sources',

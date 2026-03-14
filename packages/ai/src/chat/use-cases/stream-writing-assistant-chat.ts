@@ -1,10 +1,4 @@
-import {
-  jsonSchema,
-  tool,
-  type ToolChoice,
-  type UIMessage,
-  type ToolSet,
-} from 'ai';
+import { jsonSchema, tool, type ToolChoice, type UIMessage } from 'ai';
 import { Effect } from 'effect';
 import { LLM } from '../../llm/service';
 import { chatWritingAssistantSystemPrompt } from '../../prompt-registry/prompts/chat-writing-assistant-system';
@@ -12,7 +6,7 @@ import { renderPrompt } from '../../prompt-registry/render';
 import { withAIUsageScope } from '../../usage/scope';
 import { getMessageText } from './chat-message-utils';
 
-const WRITING_ASSISTANT_TRANSCRIPT_MAX_CONTEXT_CHARS = 12_000;
+const WRITING_ASSISTANT_DRAFT_MAX_CONTEXT_CHARS = 12_000;
 const DIRECT_REWRITE_REQUEST_PATTERNS = [
   /\b(rewrite|redraft|rework|revise|edit|polish|tighten|trim|shorten|condense|simplify|streamline|expand|lengthen|smooth(?:\s+out)?|sharpen|strengthen|soften|clarify|clean up|fix|improve|punch up)\b/i,
   /\b(write|draft|change|adjust|make|turn|convert)\b/i,
@@ -29,70 +23,166 @@ const DISCUSSION_ONLY_REQUEST_PATTERNS = [
   /\bexplain\b/i,
 ] as const;
 
-export interface WritingAssistantTranscriptWriteInput {
-  readonly transcript: string;
+export interface WritingAssistantDraftWriteInput {
+  readonly draft: string;
 }
 
-export interface WritingAssistantTranscriptWriteResult {
+export interface WritingAssistantDraftWriteResult {
   readonly status: 'applied';
-  readonly appliedTranscript: string;
+  readonly appliedDraft: string;
 }
 
-const writingAssistantTools = {
-  updateVoiceoverText: tool<
-    WritingAssistantTranscriptWriteInput,
-    WritingAssistantTranscriptWriteResult
+export interface WritingAssistantPodcastScriptSegment {
+  readonly speaker: string;
+  readonly line: string;
+  readonly index: number;
+}
+
+export interface WritingAssistantPodcastScriptWriteInput {
+  readonly segments: WritingAssistantPodcastScriptSegment[];
+}
+
+export interface WritingAssistantPodcastScriptWriteResult {
+  readonly status: 'applied';
+  readonly appliedSegments: WritingAssistantPodcastScriptSegment[];
+}
+
+const DRAFT_WRITE_TOOL = 'updateDraftText' as const;
+const PODCAST_WRITE_TOOL = 'updatePodcastScript' as const;
+
+const voiceoverWritingAssistantTools = {
+  [DRAFT_WRITE_TOOL]: tool<
+    WritingAssistantDraftWriteInput,
+    WritingAssistantDraftWriteResult
   >({
-    description:
-      'Write the full updated transcript text directly to the voiceover editor.',
-    inputSchema: jsonSchema<WritingAssistantTranscriptWriteInput>({
+    description: 'Write the full updated draft text directly to the editor.',
+    inputSchema: jsonSchema<WritingAssistantDraftWriteInput>({
       type: 'object',
       additionalProperties: false,
       properties: {
-        transcript: {
+        draft: {
           type: 'string',
           description:
-            'The complete transcript text that should replace the editor contents.',
+            'The complete draft text that should replace the editor contents.',
         },
       },
-      required: ['transcript'],
+      required: ['draft'],
     }),
-    outputSchema: jsonSchema<WritingAssistantTranscriptWriteResult>({
+    outputSchema: jsonSchema<WritingAssistantDraftWriteResult>({
       type: 'object',
       additionalProperties: false,
       properties: {
         status: { type: 'string', enum: ['applied'] },
-        appliedTranscript: {
+        appliedDraft: {
           type: 'string',
-          description:
-            'Transcript text written to the editor after the tool call.',
+          description: 'Draft text written to the editor after the tool call.',
         },
       },
-      required: ['status', 'appliedTranscript'],
+      required: ['status', 'appliedDraft'],
     }),
   }),
-} as const satisfies ToolSet;
+} as const;
 
 export interface StreamWritingAssistantChatInput {
   readonly messages: UIMessage[];
-  readonly transcript: string;
+  readonly documentKind: 'voiceover' | 'podcast';
+  readonly draft: string;
+  readonly speakerNames?: readonly string[];
 }
 
-function normalizeTranscriptForPrompt(transcript: string) {
-  const trimmedTranscript = transcript.trim();
-  if (trimmedTranscript.length === 0) {
-    return '[Transcript is currently empty]';
+function createPodcastWritingAssistantTools(
+  speakerNames: readonly string[],
+) {
+  const speakerSchema =
+    speakerNames.length > 0
+      ? {
+          type: 'string' as const,
+          enum: [...speakerNames],
+          description: 'Use one of the exact speaker labels from the draft.',
+        }
+      : {
+          type: 'string' as const,
+          description: 'Speaker label for this segment.',
+        };
+
+  return {
+    [PODCAST_WRITE_TOOL]: tool<
+      WritingAssistantPodcastScriptWriteInput,
+      WritingAssistantPodcastScriptWriteResult
+    >({
+      description:
+        'Write the full updated podcast script directly to the editor as ordered segments.',
+      inputSchema: jsonSchema<WritingAssistantPodcastScriptWriteInput>({
+        type: 'object',
+        additionalProperties: false,
+        properties: {
+          segments: {
+            type: 'array',
+            description:
+              'The complete ordered podcast script after applying the rewrite.',
+            items: {
+              type: 'object',
+              additionalProperties: false,
+              properties: {
+                speaker: speakerSchema,
+                line: {
+                  type: 'string',
+                  description:
+                    'Dialogue text for this segment. Keep inline punctuation and colon text inside the line.',
+                },
+                index: {
+                  type: 'integer',
+                  description:
+                    'Zero-based position of the segment in the rewritten script.',
+                },
+              },
+              required: ['speaker', 'line', 'index'],
+            },
+          },
+        },
+        required: ['segments'],
+      }),
+      outputSchema: jsonSchema<WritingAssistantPodcastScriptWriteResult>({
+        type: 'object',
+        additionalProperties: false,
+        properties: {
+          status: { type: 'string', enum: ['applied'] },
+          appliedSegments: {
+            type: 'array',
+            description: 'Segments written to the editor after the tool call.',
+            items: {
+              type: 'object',
+              additionalProperties: false,
+              properties: {
+                speaker: { type: 'string' },
+                line: { type: 'string' },
+                index: { type: 'integer' },
+              },
+              required: ['speaker', 'line', 'index'],
+            },
+          },
+        },
+        required: ['status', 'appliedSegments'],
+      }),
+    }),
+  } as const;
+}
+
+function normalizeDraftForPrompt(draft: string) {
+  const trimmedDraft = draft.trim();
+  if (trimmedDraft.length === 0) {
+    return '[Draft is currently empty]';
   }
 
-  const truncatedTranscript = trimmedTranscript.slice(
+  const truncatedDraft = trimmedDraft.slice(
     0,
-    WRITING_ASSISTANT_TRANSCRIPT_MAX_CONTEXT_CHARS,
+    WRITING_ASSISTANT_DRAFT_MAX_CONTEXT_CHARS,
   );
-  if (truncatedTranscript === trimmedTranscript) {
-    return trimmedTranscript;
+  if (truncatedDraft === trimmedDraft) {
+    return trimmedDraft;
   }
 
-  return `${truncatedTranscript}\n\n[Transcript truncated for context length]`;
+  return `${truncatedDraft}\n\n[Draft truncated for context length]`;
 }
 
 function getCurrentTurnUserMessageText(messages: readonly UIMessage[]) {
@@ -111,30 +201,47 @@ function matchesAnyPattern(
   return patterns.some((pattern) => pattern.test(value));
 }
 
-function selectWritingAssistantToolChoice(
-  messages: readonly UIMessage[],
-): ToolChoice<typeof writingAssistantTools> | undefined {
+function shouldForceRewriteTool(messages: readonly UIMessage[]) {
   const latestUserMessageText = getCurrentTurnUserMessageText(messages).trim();
   if (latestUserMessageText.length === 0) {
-    return undefined;
+    return false;
   }
 
   if (
     matchesAnyPattern(latestUserMessageText, DISCUSSION_ONLY_REQUEST_PATTERNS)
   ) {
+    return false;
+  }
+
+  return matchesAnyPattern(
+    latestUserMessageText,
+    DIRECT_REWRITE_REQUEST_PATTERNS,
+  );
+}
+
+function selectVoiceoverToolChoice(messages: readonly UIMessage[]) {
+  if (!shouldForceRewriteTool(messages)) {
     return undefined;
   }
 
-  if (
-    matchesAnyPattern(latestUserMessageText, DIRECT_REWRITE_REQUEST_PATTERNS)
-  ) {
-    return {
-      type: 'tool',
-      toolName: 'updateVoiceoverText',
-    };
+  return {
+    type: 'tool',
+    toolName: DRAFT_WRITE_TOOL,
+  } satisfies ToolChoice<typeof voiceoverWritingAssistantTools>;
+}
+
+function selectPodcastToolChoice(
+  messages: readonly UIMessage[],
+  tools: ReturnType<typeof createPodcastWritingAssistantTools>,
+) {
+  if (!shouldForceRewriteTool(messages)) {
+    return undefined;
   }
 
-  return undefined;
+  return {
+    type: 'tool',
+    toolName: PODCAST_WRITE_TOOL,
+  } satisfies ToolChoice<typeof tools>;
 }
 
 export const streamWritingAssistantChat = (
@@ -142,14 +249,36 @@ export const streamWritingAssistantChat = (
 ) =>
   Effect.gen(function* () {
     const llm = yield* LLM;
-    const promptTranscript = normalizeTranscriptForPrompt(input.transcript);
-    const toolChoice = selectWritingAssistantToolChoice(input.messages);
+    const promptDraft = normalizeDraftForPrompt(input.draft);
+
+    if (input.documentKind === 'podcast') {
+      const tools = createPodcastWritingAssistantTools(input.speakerNames ?? []);
+      const toolChoice = selectPodcastToolChoice(input.messages, tools);
+
+      return yield* llm.streamText({
+        system: renderPrompt(chatWritingAssistantSystemPrompt, {
+          documentKind: input.documentKind,
+          draft: promptDraft,
+          speakerNames: input.speakerNames ?? [],
+        }),
+        messages: input.messages,
+        tools,
+        toolChoice,
+        maxTokens: 1024,
+        temperature: 0.7,
+      });
+    }
+
+    const toolChoice = selectVoiceoverToolChoice(input.messages);
+
     return yield* llm.streamText({
       system: renderPrompt(chatWritingAssistantSystemPrompt, {
-        transcript: promptTranscript,
+        documentKind: input.documentKind,
+        draft: promptDraft,
+        speakerNames: input.speakerNames ?? [],
       }),
       messages: input.messages,
-      tools: writingAssistantTools,
+      tools: voiceoverWritingAssistantTools,
       toolChoice,
       maxTokens: 1024,
       temperature: 0.7,
@@ -159,7 +288,9 @@ export const streamWritingAssistantChat = (
     Effect.withSpan('useCase.streamWritingAssistantChat', {
       attributes: {
         'chat.messageCount': input.messages.length,
-        'chat.transcriptChars': input.transcript.length,
+        'chat.documentKind': input.documentKind,
+        'chat.draftChars': input.draft.length,
+        'chat.speakerCount': input.speakerNames?.length ?? 0,
       },
     }),
   );

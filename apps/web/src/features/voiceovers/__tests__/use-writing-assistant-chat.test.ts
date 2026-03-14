@@ -23,9 +23,9 @@ vi.mock('@/clients/apiClient', () => ({
   },
 }));
 
-function transcriptWriteMessage(
+function draftWriteMessage(
   toolCallId: string,
-  transcript: string,
+  draft: string,
   state: 'input-available' | 'output-available' = 'input-available',
 ): UIMessage {
   return {
@@ -34,23 +34,23 @@ function transcriptWriteMessage(
     parts: [
       state === 'output-available'
         ? {
-            type: 'tool-updateVoiceoverText',
+            type: 'tool-updateDraftText',
             toolCallId,
             state,
             input: {
-              transcript,
+              draft,
             },
             output: {
               status: 'applied',
-              appliedTranscript: transcript,
+              appliedDraft: draft,
             },
           }
         : {
-            type: 'tool-updateVoiceoverText',
+            type: 'tool-updateDraftText',
             toolCallId,
             state,
             input: {
-              transcript,
+              draft,
             },
           },
     ],
@@ -75,12 +75,10 @@ describe('useWritingAssistantChat', () => {
   });
 
   it('keeps the confirmation bubble after the tool call advances to output-available', async () => {
-    const onApplyTranscriptEdit = vi.fn();
-    const updatedTranscript = 'Updated transcript for stronger pacing.';
+    const onApplyDraftEdit = vi.fn();
+    const updatedDraft = 'Updated transcript for stronger pacing.';
     const chatState = {
-      messages: [
-        transcriptWriteMessage('tool-1', updatedTranscript, 'input-available'),
-      ],
+      messages: [draftWriteMessage('tool-1', updatedDraft, 'input-available')],
       sendMessage: sendMessageSpy,
       status: 'ready',
       error: undefined,
@@ -90,37 +88,33 @@ describe('useWritingAssistantChat', () => {
 
     addToolResultSpy.mockImplementation(async ({ toolCallId, output }) => {
       chatState.messages = [
-        transcriptWriteMessage(
-          toolCallId,
-          output.appliedTranscript,
-          'output-available',
-        ),
+        draftWriteMessage(toolCallId, output.appliedDraft, 'output-available'),
       ];
     });
 
     useChatMock.mockImplementation(() => chatState);
 
     const { result } = renderHook(() =>
-      useWritingAssistantChat(
-        'Current transcript context',
-        onApplyTranscriptEdit,
-      ),
+      useWritingAssistantChat('Current transcript context', onApplyDraftEdit),
     );
 
     await waitFor(() => {
-      expect(onApplyTranscriptEdit).toHaveBeenCalledWith(updatedTranscript);
+      expect(onApplyDraftEdit).toHaveBeenCalledWith(updatedDraft);
     });
 
     expect(addToolResultSpy).toHaveBeenCalledWith({
-      tool: 'updateVoiceoverText',
+      tool: 'updateDraftText',
       toolCallId: 'tool-1',
       output: {
         status: 'applied',
-        appliedTranscript: updatedTranscript,
+        appliedDraft: updatedDraft,
       },
     });
     expect(sendMessageSpy).toHaveBeenCalledWith(undefined, {
-      body: { transcript: updatedTranscript },
+      body: {
+        documentKind: 'voiceover',
+        draft: updatedDraft,
+      },
     });
 
     await waitFor(() => {
@@ -139,13 +133,10 @@ describe('useWritingAssistantChat', () => {
     });
   });
 
-  it('applies transcript writes from tool calls and acknowledges the tool output', async () => {
-    const onApplyTranscriptEdit = vi.fn();
+  it('applies draft writes from tool calls and acknowledges the tool output', async () => {
+    const onApplyDraftEdit = vi.fn();
     const initialMessages = [
-      transcriptWriteMessage(
-        'tool-1',
-        'Updated transcript for stronger pacing.',
-      ),
+      draftWriteMessage('tool-1', 'Updated transcript for stronger pacing.'),
     ];
 
     useChatMock.mockReturnValue({
@@ -158,28 +149,28 @@ describe('useWritingAssistantChat', () => {
     });
 
     const { result } = renderHook(() =>
-      useWritingAssistantChat(
-        'Current transcript context',
-        onApplyTranscriptEdit,
-      ),
+      useWritingAssistantChat('Current transcript context', onApplyDraftEdit),
     );
 
     await waitFor(() => {
-      expect(onApplyTranscriptEdit).toHaveBeenCalledWith(
+      expect(onApplyDraftEdit).toHaveBeenCalledWith(
         'Updated transcript for stronger pacing.',
       );
     });
 
     expect(addToolResultSpy).toHaveBeenCalledWith({
-      tool: 'updateVoiceoverText',
+      tool: 'updateDraftText',
       toolCallId: 'tool-1',
       output: {
         status: 'applied',
-        appliedTranscript: 'Updated transcript for stronger pacing.',
+        appliedDraft: 'Updated transcript for stronger pacing.',
       },
     });
     expect(sendMessageSpy).toHaveBeenCalledWith(undefined, {
-      body: { transcript: 'Updated transcript for stronger pacing.' },
+      body: {
+        documentKind: 'voiceover',
+        draft: 'Updated transcript for stronger pacing.',
+      },
     });
 
     await waitFor(() => {
@@ -198,7 +189,7 @@ describe('useWritingAssistantChat', () => {
     });
   });
 
-  it('sends user messages with transcript context', async () => {
+  it('sends user messages with voiceover draft context', async () => {
     const { result } = renderHook(() =>
       useWritingAssistantChat('Current transcript context', vi.fn()),
     );
@@ -209,7 +200,12 @@ describe('useWritingAssistantChat', () => {
 
     expect(sendMessageSpy).toHaveBeenCalledWith(
       { text: 'Try a warmer tone.' },
-      { body: { transcript: 'Current transcript context' } },
+      {
+        body: {
+          documentKind: 'voiceover',
+          draft: 'Current transcript context',
+        },
+      },
     );
   });
 

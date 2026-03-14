@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import type * as FileDownloadModule from '@/shared/lib/file-download';
+import type { ReactNode } from 'react';
 import { PodcastDetailContainer } from '../components/podcast-detail-container';
 import { useApprovePodcast } from '../hooks/use-approve-podcast';
 import { usePodcast } from '../hooks/use-podcast';
@@ -14,7 +15,7 @@ import {
   useSessionGuard,
 } from '@/shared/hooks';
 import { useIsAdmin } from '@/shared/hooks/use-is-admin';
-import { act, render, waitFor } from '@/test-utils';
+import { act, render, screen, waitFor } from '@/test-utils';
 
 const PODCAST_UPDATED_AT = '2026-02-20T14:00:00.000Z';
 
@@ -61,12 +62,20 @@ vi.mock('../lib/status', () => ({
 vi.mock('../components/podcast-detail', () => ({
   PodcastDetail: (props: Record<string, unknown>) => {
     podcastDetailSpy(props);
-    return <div data-testid="podcast-detail" />;
+    return (
+      <div data-testid="podcast-detail">
+        {(props.assistantPanel as ReactNode | undefined) ?? null}
+      </div>
+    );
   },
 }));
 
 vi.mock('../components/setup', () => ({
   SetupWizard: () => <div data-testid="setup-wizard" />,
+}));
+
+vi.mock('../components/workbench/writing-assistant-container', () => ({
+  WritingAssistantContainer: () => <div data-testid="writing-assistant" />,
 }));
 
 vi.mock('@/shared/components/confirmation-dialog/confirmation-dialog', () => ({
@@ -112,6 +121,7 @@ function createMockPodcast(overrides: Partial<Record<string, unknown>> = {}) {
     duration: null,
     summary: null,
     updatedAt: PODCAST_UPDATED_AT,
+    format: 'voice_over',
     ...overrides,
   };
 }
@@ -122,12 +132,11 @@ function createMockScriptEditor(
   return {
     segments: [],
     hasChanges: false,
-    isSaving: false,
     updateSegment: vi.fn(),
     addSegment: vi.fn(),
     removeSegment: vi.fn(),
     reorderSegments: vi.fn(),
-    saveChanges: vi.fn(),
+    replaceSegments: vi.fn(),
     discardChanges: vi.fn(),
     resetToSegments: vi.fn(),
     ...overrides,
@@ -249,6 +258,15 @@ describe('PodcastDetailContainer', () => {
     expect(vi.mocked(useNavigationBlock)).toHaveBeenLastCalledWith({
       shouldBlock,
     });
+  });
+
+  it('injects the writing assistant into the podcast workbench', () => {
+    renderContainer();
+
+    expect(screen.getByTestId('writing-assistant')).toBeInTheDocument();
+    expect(
+      getLastPodcastDetailProps<{ assistantPanel?: unknown }>()?.assistantPanel,
+    ).toBeDefined();
   });
 
   it('enables save shortcut in failed state with unsaved changes', () => {

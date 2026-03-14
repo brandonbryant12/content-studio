@@ -4,7 +4,9 @@ import type { UIMessage, UIMessageChunk } from 'ai';
 const ChatMessagesInput = type<{ messages: UIMessage[] }>();
 const WritingAssistantInput = type<{
   messages: UIMessage[];
-  transcript: string;
+  documentKind: 'voiceover' | 'podcast';
+  draft: string;
+  speakerNames?: string[];
 }>();
 const ChatStreamOutput = eventIterator(type<UIMessageChunk>());
 

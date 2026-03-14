@@ -1,4 +1,9 @@
-import { ArrowLeftIcon, DownloadIcon, TrashIcon } from '@radix-ui/react-icons';
+import {
+  ArrowLeftIcon,
+  ChatBubbleIcon,
+  DownloadIcon,
+  TrashIcon,
+} from '@radix-ui/react-icons';
 import { Badge } from '@repo/ui/components/badge';
 import { Button } from '@repo/ui/components/button';
 import {
@@ -33,6 +38,7 @@ interface WorkbenchLayoutProps {
     icon: ReactNode;
     content: ReactNode;
   }>;
+  rightPanel?: ReactNode;
   audioStrip?: ReactNode;
   actionBar?: ReactNode;
   onDelete: () => void;
@@ -52,6 +58,7 @@ interface WorkbenchLayoutProps {
 export function WorkbenchLayout({
   podcast,
   tabs,
+  rightPanel,
   audioStrip,
   actionBar,
   onDelete,
@@ -75,6 +82,8 @@ export function WorkbenchLayout({
   const handleCopyTranscript = onCopyTranscript ?? (() => {});
   const [activeTab, setActiveTab] = useState(tabs[0]?.value ?? 'script');
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+  const [assistantOpen, setAssistantOpen] = useState(false);
+
   const selectedTab = tabs.some((tab) => tab.value === activeTab)
     ? activeTab
     : (tabs[0]?.value ?? 'script');
@@ -85,157 +94,191 @@ export function WorkbenchLayout({
   }, [onDelete]);
 
   return (
-    <div className="workbench">
-      <header className="workbench-header">
-        <div className="workbench-header-content">
-          <div className="workbench-header-row">
-            <Link
-              to="/podcasts"
-              className="workbench-back-btn"
-              aria-label="Back to podcasts"
-            >
-              <ArrowLeftIcon />
-            </Link>
+    <>
+      <div className="workbench">
+        <header className="workbench-header">
+          <div className="workbench-header-content">
+            <div className="workbench-header-row">
+              <Link
+                to="/podcasts"
+                className="workbench-back-btn"
+                aria-label="Back to podcasts"
+              >
+                <ArrowLeftIcon />
+              </Link>
 
-            <div className="workbench-title-group">
-              <PodcastIcon format={podcast.format} status={podcast.status} />
-              <div className="min-w-0 flex-1">
-                <div className="flex items-center gap-2">
-                  <h1 className="workbench-title">{podcast.title}</h1>
-                  {statusConfig && (
-                    <Badge
-                      variant={statusConfig.badgeVariant}
-                      className="shrink-0"
+              <div className="workbench-title-group">
+                <PodcastIcon format={podcast.format} status={podcast.status} />
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-center gap-2">
+                    <h1 className="workbench-title">{podcast.title}</h1>
+                    {statusConfig && (
+                      <Badge
+                        variant={statusConfig.badgeVariant}
+                        className="shrink-0"
+                      >
+                        {isGenerating && <Spinner className="w-3 h-3" />}
+                        {statusConfig.label}
+                      </Badge>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              <div className="workbench-meta">
+                {podcast.duration && (
+                  <div className="workbench-duration">
+                    <svg
+                      className="w-4 h-4"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                      strokeWidth={1.5}
+                      aria-hidden="true"
                     >
-                      {isGenerating && <Spinner className="w-3 h-3" />}
-                      {statusConfig.label}
-                    </Badge>
-                  )}
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z"
+                      />
+                    </svg>
+                    {formatDuration(podcast.duration)}
+                  </div>
+                )}
+
+                <div className="flex items-center gap-3 mr-3">
+                  <ApproveButton
+                    isApproved={isApproved}
+                    isAdmin={isAdmin}
+                    onApprove={onApprove}
+                    onRevoke={onRevoke}
+                    isPending={isApprovalPending}
+                  />
                 </div>
-              </div>
-            </div>
 
-            <div className="workbench-meta">
-              {podcast.duration && (
-                <div className="workbench-duration">
-                  <svg
-                    className="w-4 h-4"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                    strokeWidth={1.5}
-                    aria-hidden="true"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z"
-                    />
-                  </svg>
-                  {formatDuration(podcast.duration)}
-                </div>
-              )}
-
-              <div className="flex items-center gap-3 mr-3">
-                <ApproveButton
-                  isApproved={isApproved}
-                  isAdmin={isAdmin}
-                  onApprove={onApprove}
-                  onRevoke={onRevoke}
-                  isPending={isApprovalPending}
-                />
-              </div>
-
-              <div className="workbench-actions">
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
+                <div className="workbench-actions">
+                  {rightPanel && (
                     <Button
-                      variant="ghost"
+                      variant={assistantOpen ? 'secondary' : 'ghost'}
                       size="icon"
-                      disabled={!canExport}
-                      aria-label="Export podcast"
+                      onClick={() => setAssistantOpen((prev) => !prev)}
+                      aria-label={
+                        assistantOpen
+                          ? 'Hide writing assistant'
+                          : 'Show writing assistant'
+                      }
+                      aria-pressed={assistantOpen}
                     >
-                      <DownloadIcon className="w-4 h-4" />
+                      <ChatBubbleIcon className="w-4 h-4" />
                     </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end">
-                    <DropdownMenuItem
-                      onClick={handleExportAudio}
-                      disabled={!canExportAudio}
-                    >
-                      Download Audio
-                    </DropdownMenuItem>
-                    <DropdownMenuItem
-                      onClick={handleExportScript}
-                      disabled={!canExportScript}
-                    >
-                      Download Script
-                    </DropdownMenuItem>
-                    <DropdownMenuItem
-                      onClick={handleCopyTranscript}
-                      disabled={!canExportScript}
-                    >
-                      Copy Transcript
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => setDeleteConfirmOpen(true)}
-                  disabled={isDeleting || isGenerating}
-                  className="workbench-delete-btn"
-                  aria-label="Delete podcast"
-                >
-                  {isDeleting ? (
-                    <Spinner className="w-4 h-4" />
-                  ) : (
-                    <TrashIcon className="w-4 h-4" />
                   )}
-                </Button>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        disabled={!canExport}
+                        aria-label="Export podcast"
+                      >
+                        <DownloadIcon className="w-4 h-4" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      <DropdownMenuItem
+                        onClick={handleExportAudio}
+                        disabled={!canExportAudio}
+                      >
+                        Download Audio
+                      </DropdownMenuItem>
+                      <DropdownMenuItem
+                        onClick={handleExportScript}
+                        disabled={!canExportScript}
+                      >
+                        Download Script
+                      </DropdownMenuItem>
+                      <DropdownMenuItem
+                        onClick={handleCopyTranscript}
+                        disabled={!canExportScript}
+                      >
+                        Copy Transcript
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => setDeleteConfirmOpen(true)}
+                    disabled={isDeleting || isGenerating}
+                    className="workbench-delete-btn"
+                    aria-label="Delete podcast"
+                  >
+                    {isDeleting ? (
+                      <Spinner className="w-4 h-4" />
+                    ) : (
+                      <TrashIcon className="w-4 h-4" />
+                    )}
+                  </Button>
+                </div>
               </div>
             </div>
           </div>
-        </div>
-      </header>
+        </header>
 
-      <Tabs
-        value={selectedTab}
-        onValueChange={setActiveTab}
-        className="workbench-v3-tabs-root"
-      >
-        <TabsList
-          className="workbench-v3-tabs flex h-auto flex-wrap justify-start gap-2"
-          aria-label="Podcast workbench"
+        <Tabs
+          value={selectedTab}
+          onValueChange={setActiveTab}
+          className="workbench-v3-tabs-root"
         >
-          {tabs.map((tab) => (
-            <TabsTrigger
-              key={tab.value}
-              value={tab.value}
-              className={`workbench-v3-tab ${selectedTab === tab.value ? 'active' : ''}`}
-            >
-              {tab.icon}
-              <span>{tab.label}</span>
-            </TabsTrigger>
-          ))}
-        </TabsList>
+          <TabsList
+            className="workbench-v3-tabs flex h-auto flex-wrap justify-start gap-2"
+            aria-label="Podcast workbench"
+          >
+            {tabs.map((tab) => (
+              <TabsTrigger
+                key={tab.value}
+                value={tab.value}
+                className={`workbench-v3-tab ${selectedTab === tab.value ? 'active' : ''}`}
+              >
+                {tab.icon}
+                <span>{tab.label}</span>
+              </TabsTrigger>
+            ))}
+          </TabsList>
 
-        <div className="workbench-main">
-          {tabs.map((tab) => (
-            <TabsContent
-              key={tab.value}
-              value={tab.value}
-              className="workbench-v3-content flex-1 min-h-0"
-            >
-              {tab.content}
-            </TabsContent>
-          ))}
-        </div>
-      </Tabs>
+          <div className="workbench-main">
+            {tabs.map((tab) => (
+              <TabsContent
+                key={tab.value}
+                value={tab.value}
+                className="workbench-v3-content flex-1 min-h-0"
+              >
+                {tab.content}
+              </TabsContent>
+            ))}
+          </div>
+        </Tabs>
 
-      {/* Audio player + Action bar — pinned to bottom */}
-      {audioStrip && <div className="workbench-audio-strip">{audioStrip}</div>}
-      {actionBar}
+        {audioStrip && (
+          <div className="workbench-audio-strip">{audioStrip}</div>
+        )}
+        {actionBar}
+      </div>
+
+      {rightPanel && (
+        <>
+          <div
+            className={`assistant-overlay ${assistantOpen ? 'open' : ''}`}
+            onClick={() => setAssistantOpen(false)}
+            aria-hidden="true"
+          />
+          <aside
+            className={`assistant-slideout ${assistantOpen ? 'open' : ''}`}
+            aria-label="Writing assistant"
+          >
+            {rightPanel}
+          </aside>
+        </>
+      )}
 
       <ConfirmationDialog
         open={deleteConfirmOpen}
@@ -247,6 +290,6 @@ export function WorkbenchLayout({
         isLoading={isDeleting}
         onConfirm={handleDeleteConfirm}
       />
-    </div>
+    </>
   );
 }

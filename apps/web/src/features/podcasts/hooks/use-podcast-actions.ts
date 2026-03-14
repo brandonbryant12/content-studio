@@ -78,7 +78,6 @@ export function usePodcastActions({
   const needsFullRegeneration =
     sourceSelection.hasChanges || settings.hasScriptSettingsChanges;
 
-  // Combined save handler for script, voice, and source changes
   const handleSave = useCallback(async () => {
     if (
       saveChangesMutation.isPending ||
@@ -88,10 +87,8 @@ export function usePodcastActions({
       return;
     }
 
-    // If sources or script-affecting settings changed, we need full regeneration (script + audio)
     if (needsFullRegeneration) {
       try {
-        // First, save sources and any settings changes
         await updateMutation.mutateAsync({
           id: podcast.id,
           sourceIds: sourceSelection.hasChanges
@@ -101,33 +98,32 @@ export function usePodcastActions({
           hostVoice: settings.hostVoice,
           coHostVoice: settings.coHostVoice,
           targetDurationMinutes: settings.targetDuration,
-          promptInstructions: settings.instructions,
           hostPersonaId: settings.hostPersonaId,
           coHostPersonaId: settings.coHostPersonaId,
         });
 
-        // Then trigger full regeneration
         generateMutation.mutate(
           { id: podcast.id },
           {
             onSuccess: () => {
               const message = sourceSelection.hasChanges
-                ? 'Regenerating podcast with new sources...'
-                : 'Regenerating script with new settings...';
+                ? 'Regenerating podcast with updated sources...'
+                : 'Regenerating podcast with updated settings...';
               toast.success(message);
             },
           },
         );
       } catch {
-        // Error already handled by mutation
+        return;
       }
+
       return;
     }
 
-    // No source or script settings changes - just save script/voice and regenerate audio
     const segmentsToSave = scriptEditor.hasChanges
       ? scriptEditor.segments
       : undefined;
+
     saveChangesMutation.mutate(
       {
         id: podcast.id,
@@ -137,7 +133,6 @@ export function usePodcastActions({
       },
       {
         onSuccess: () => {
-          // Reset script editor to saved segments so hasChanges becomes false
           if (segmentsToSave) {
             scriptEditor.resetToSegments(segmentsToSave);
           }

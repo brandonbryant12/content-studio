@@ -96,12 +96,15 @@ export const saveChanges = (input: SaveChangesInput) =>
       user.id,
     );
 
-    if (podcast.status !== VersionStatus.READY) {
+    if (
+      podcast.status !== VersionStatus.READY &&
+      podcast.status !== VersionStatus.FAILED
+    ) {
       yield* Effect.fail(
         new InvalidSaveError({
           podcastId: podcast.id,
           currentStatus: podcast.status,
-          message: `Cannot save changes when status is '${podcast.status}'. Podcast must be in '${VersionStatus.READY}' status.`,
+          message: `Cannot save changes when status is '${podcast.status}'. Podcast must be in '${VersionStatus.READY}' or '${VersionStatus.FAILED}' status.`,
         }),
       );
     }

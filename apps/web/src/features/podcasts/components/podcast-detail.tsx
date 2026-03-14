@@ -1,9 +1,9 @@
 import { FileTextIcon } from '@radix-ui/react-icons';
-import { VersionStatus } from '@repo/api/contracts';
 import type { UsePodcastSettingsReturn } from '../hooks/use-podcast-settings';
 import type { UseScriptEditorReturn } from '../hooks/use-script-editor';
 import type { UseSourceSelectionReturn } from '../hooks/use-source-selection';
 import type { RouterOutput } from '@repo/api/client';
+import type { ReactNode } from 'react';
 import {
   WorkbenchLayout,
   ScriptPanel,
@@ -41,6 +41,7 @@ interface PodcastDetailProps {
   settings: UsePodcastSettingsReturn;
   sourceSelection: UseSourceSelectionReturn;
   displayAudio: DisplayAudio | null;
+  assistantPanel?: ReactNode;
   workbenchState: PodcastWorkbenchState;
   approvalState: PodcastApprovalState;
   onSave: () => void;
@@ -62,6 +63,7 @@ export function PodcastDetail({
   settings,
   sourceSelection,
   displayAudio,
+  assistantPanel,
   workbenchState,
   approvalState,
   onSave,
@@ -83,6 +85,7 @@ export function PodcastDetail({
     isDeleting,
   } = workbenchState;
   const { isApproved, isAdmin, isApprovalPending } = approvalState;
+
   const tabs = [
     {
       value: 'script',
@@ -93,8 +96,8 @@ export function PodcastDetail({
           segments={scriptEditor.segments}
           summary={podcast.summary ?? null}
           hasChanges={scriptEditor.hasChanges}
-          isSaving={scriptEditor.isSaving}
-          disabled={podcast.status !== VersionStatus.READY}
+          isSaving={isSaving}
+          disabled={isGenerating}
           onUpdateSegment={scriptEditor.updateSegment}
           onRemoveSegment={scriptEditor.removeSegment}
           onAddSegment={scriptEditor.addSegment}
@@ -124,6 +127,7 @@ export function PodcastDetail({
     <WorkbenchLayout
       podcast={podcast}
       tabs={tabs}
+      rightPanel={assistantPanel}
       onDelete={onDelete}
       isDeleting={isDeleting}
       isApproved={isApproved}

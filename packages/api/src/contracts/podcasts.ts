@@ -205,14 +205,14 @@ const podcastContract = oc
         ),
       ),
 
-    // Save changes and regenerate audio (requires ready status)
+    // Save changes and regenerate audio (requires ready or failed status)
     saveChanges: oc
       .route({
         method: 'POST',
         path: '/{id}/save-changes',
         summary: 'Save changes and regenerate audio',
         description:
-          'Update script segments and/or voice settings, then regenerate audio. Only allowed when podcast is in ready status.',
+          'Update script segments and/or voice settings, then regenerate audio. Only allowed when podcast is in ready or failed status.',
       })
       .errors({ ...podcastErrors, ...jobErrors, ...saveChangesErrors })
       .input(

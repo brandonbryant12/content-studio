@@ -36,7 +36,9 @@ const chatRouter = {
       bindEffectProtocol({ context, errors }).stream(
         streamWritingAssistantChat({
           messages: input.messages,
-          transcript: input.transcript,
+          documentKind: input.documentKind,
+          draft: input.draft,
+          speakerNames: input.speakerNames,
         }),
       ),
   ),

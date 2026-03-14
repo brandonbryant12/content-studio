@@ -2,7 +2,7 @@ export const PODCAST_DEFINITION =
   'Podcasts turn your sources into an AI-generated script and audio draft you can review, edit, and regenerate.';
 
 export const PODCAST_LIST_SUPPORT =
-  'Start with one or more sources, optionally assign personas for recurring hosts, then guide the AI with duration and script direction.';
+  'Start with one or more sources, optionally assign personas for recurring hosts, then refine the script with line edits or the Writing Assistant before regenerating audio.';
 
 export const PODCAST_FLOW_STEPS = [
   {
@@ -18,12 +18,15 @@ export const PODCAST_FLOW_STEPS = [
   {
     title: 'Generate, edit, iterate',
     description:
-      'The first script draft is AI-generated. Edit lines manually or update script direction to tell AI what to change before regenerating.',
+      'The first script draft is AI-generated. Edit lines manually or use the Writing Assistant to rewrite sections in your local draft before saving and regenerating audio.',
   },
 ] as const;
 
 export const PODCAST_SCRIPT_HELP =
-  'This script starts as an AI-generated draft from your selected sources and settings. You can edit any line manually, then save to regenerate audio, or update script direction to tell AI how the next draft should change.';
+  'This script starts as an AI-generated draft from your selected sources and settings. You can edit any line manually or use the Writing Assistant for rewrites, then click Save & Regenerate when you want those changes to persist and regenerate audio.';
+
+export const PODCAST_WRITING_ASSISTANT_HELP =
+  'The Writing Assistant uses your current podcast draft as context. Ask it to rewrite exchanges, strengthen transitions, shorten sections, or sharpen the opening without immediately saving those edits.';
 
 export const VOICEOVER_DEFINITION =
   'Voiceovers turn written narration into spoken audio with your chosen voice.';

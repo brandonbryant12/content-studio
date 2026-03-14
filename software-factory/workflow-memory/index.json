@@ -35,6 +35,23 @@
     "eventFile": "events/2026-03.jsonl"
   },
   {
+    "id": "2026-03-14-feature-delivery-consolidate-podcast-writing-assistant-edit-path",
+    "date": "2026-03-14",
+    "month": "2026-03",
+    "workflow": "Feature Delivery",
+    "title": "Consolidate podcast writing assistant edit path",
+    "severity": "medium",
+    "status": "completed",
+    "tags": [
+      "skill:feature-delivery",
+      "skill:code-simplifier",
+      "podcasts",
+      "writing-assistant",
+      "regression-prevention"
+    ],
+    "eventFile": "events/2026-03.jsonl"
+  },
+  {
     "id": "2026-03-14-feature-delivery-dashboard-frontend-test-hygiene-slice",
     "date": "2026-03-14",
     "month": "2026-03",

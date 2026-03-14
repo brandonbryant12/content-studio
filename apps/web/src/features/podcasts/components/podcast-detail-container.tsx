@@ -13,6 +13,7 @@ import {
 import { isSetupMode } from '../lib/status';
 import { PodcastDetail } from './podcast-detail';
 import { SetupWizard } from './setup';
+import { WritingAssistantContainer } from './workbench/writing-assistant-container';
 import { ConfirmationDialog } from '@/shared/components/confirmation-dialog/confirmation-dialog';
 import { UnsavedChangesDialog } from '@/shared/components/unsaved-changes-dialog';
 import {
@@ -194,6 +195,14 @@ export function PodcastDetailContainer({
         settings={settings}
         sourceSelection={sourceSelection}
         displayAudio={displayAudio}
+        assistantPanel={
+          <WritingAssistantContainer
+            podcastId={podcastId}
+            format={podcast.format}
+            segments={scriptEditor.segments}
+            onReplaceSegments={scriptEditor.replaceSegments}
+          />
+        }
         workbenchState={workbenchState}
         approvalState={approvalState}
         onSave={handleSave}

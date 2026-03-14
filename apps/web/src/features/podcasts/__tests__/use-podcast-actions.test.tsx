@@ -94,8 +94,8 @@ function createScriptEditor(overrides: Partial<Record<string, unknown>> = {}) {
   return {
     segments: [{ speaker: 'host', line: 'Hello world', index: 0 }],
     hasChanges: false,
-    isSaving: false,
     resetToSegments: vi.fn(),
+    replaceSegments: vi.fn(),
     ...overrides,
   } as never;
 }
@@ -153,7 +153,7 @@ describe('usePodcastActions', () => {
     }) as never);
   });
 
-  it('treats script-affecting settings edits as full regeneration changes', async () => {
+  it('treats script-affecting settings edits as full regeneration changes without clearing the saved plan', async () => {
     const { result } = renderHook(
       () =>
         usePodcastActions({
@@ -183,7 +183,6 @@ describe('usePodcastActions', () => {
       hostVoice: 'Aoede',
       coHostVoice: 'Charon',
       targetDurationMinutes: 5,
-      promptInstructions: 'Tighten the pacing.',
       hostPersonaId: null,
       coHostPersonaId: null,
     });

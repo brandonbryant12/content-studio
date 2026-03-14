@@ -1,8 +1,4 @@
-import { useMutation } from '@tanstack/react-query';
 import { useState, useCallback, useMemo } from 'react';
-import { toast } from 'sonner';
-import { apiClient } from '@/clients/apiClient';
-import { getErrorMessage } from '@/shared/lib/errors';
 
 export interface ScriptSegment {
   speaker: string;
@@ -18,12 +14,11 @@ interface UseScriptEditorOptions {
 export interface UseScriptEditorReturn {
   segments: ScriptSegment[];
   hasChanges: boolean;
-  isSaving: boolean;
   updateSegment: (index: number, data: Partial<ScriptSegment>) => void;
   addSegment: (afterIndex: number, data: Omit<ScriptSegment, 'index'>) => void;
   removeSegment: (index: number) => void;
   reorderSegments: (fromIndex: number, toIndex: number) => void;
-  saveChanges: () => void;
+  replaceSegments: (segments: ScriptSegment[]) => void;
   discardChanges: () => void;
   resetToSegments: (segments: ScriptSegment[]) => void;
 }
@@ -63,6 +58,27 @@ function segmentsEqual(a: ScriptSegment[], b: ScriptSegment[]): boolean {
   return true;
 }
 
+function normalizeExternalSegments(
+  segments: readonly ScriptSegment[],
+): ScriptSegment[] {
+  return segments
+    .map((segment, originalIndex) => ({
+      speaker: segment.speaker.trim(),
+      line: segment.line.trim(),
+      index: Number.isFinite(segment.index) ? segment.index : originalIndex,
+      originalIndex,
+    }))
+    .filter((segment) => segment.line.length > 0)
+    .sort(
+      (left, right) =>
+        left.index - right.index || left.originalIndex - right.originalIndex,
+    )
+    .map(({ originalIndex: _originalIndex, ...segment }, index) => ({
+      ...segment,
+      index,
+    }));
+}
+
 export function useScriptEditor({
   podcastId,
   initialSegments,
@@ -74,9 +90,14 @@ export function useScriptEditor({
     Record<string, OptimisticSavedEntry>
   >({});
 
-  const initialSegmentsHash = useMemo(
-    () => serializeSegments(initialSegments),
+  const normalizedInitialSegments = useMemo(
+    () => normalizeExternalSegments(initialSegments),
     [initialSegments],
+  );
+
+  const initialSegmentsHash = useMemo(
+    () => serializeSegments(normalizedInitialSegments),
+    [normalizedInitialSegments],
   );
 
   const optimisticSaved = optimisticSavedByPodcastId[podcastId];
@@ -85,7 +106,7 @@ export function useScriptEditor({
       ? optimisticSaved.segments
       : undefined;
 
-  const baselineSegments = optimisticSegments ?? initialSegments;
+  const baselineSegments = optimisticSegments ?? normalizedInitialSegments;
   const draftSegments = draftByPodcastId[podcastId];
   const segments = draftSegments ?? baselineSegments;
 
@@ -109,14 +130,6 @@ export function useScriptEditor({
       });
     },
     [podcastId, baselineSegments],
-  );
-
-  const saveChangesMutation = useMutation(
-    apiClient.podcasts.saveChanges.mutationOptions({
-      onError: (error) => {
-        toast.error(getErrorMessage(error, 'Failed to save script'));
-      },
-    }),
   );
 
   const updateSegment = useCallback(
@@ -175,38 +188,29 @@ export function useScriptEditor({
     [setDraftSegments],
   );
 
+  const replaceSegments = useCallback(
+    (nextSegments: ScriptSegment[]) => {
+      const normalizedSegments = normalizeExternalSegments(nextSegments);
+      setDraftSegments(() => normalizedSegments);
+    },
+    [setDraftSegments],
+  );
+
   const saveCurrentAsBaseline = useCallback(
     (nextSegments: ScriptSegment[]) => {
+      const normalizedSegments = normalizeExternalSegments(nextSegments);
+
       setDraftByPodcastId((prev) => removeRecordKey(prev, podcastId));
       setOptimisticSavedByPodcastId((prev) => ({
         ...prev,
         [podcastId]: {
-          segments: nextSegments,
+          segments: normalizedSegments,
           baseServerHash: initialSegmentsHash,
         },
       }));
     },
     [podcastId, initialSegmentsHash],
   );
-
-  const saveChanges = useCallback(() => {
-    saveChangesMutation.mutate(
-      {
-        id: podcastId,
-        segments: segments.map((segment) => ({
-          speaker: segment.speaker,
-          line: segment.line,
-          index: segment.index,
-        })),
-      },
-      {
-        onSuccess: () => {
-          toast.success('Script saved. Regenerating audio...');
-          saveCurrentAsBaseline(segments);
-        },
-      },
-    );
-  }, [podcastId, segments, saveChangesMutation, saveCurrentAsBaseline]);
 
   const discardChanges = useCallback(
     () => setDraftByPodcastId((prev) => removeRecordKey(prev, podcastId)),
@@ -216,12 +220,11 @@ export function useScriptEditor({
   return {
     segments,
     hasChanges,
-    isSaving: saveChangesMutation.isPending,
     updateSegment,
     addSegment,
     removeSegment,
     reorderSegments,
-    saveChanges,
+    replaceSegments,
     discardChanges,
     resetToSegments: saveCurrentAsBaseline,
   };

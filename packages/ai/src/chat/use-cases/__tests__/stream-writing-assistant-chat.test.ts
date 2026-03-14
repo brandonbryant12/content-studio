@@ -12,7 +12,7 @@ const MockLLMLayer: Layer.Layer<LLM> = Layer.succeed(LLM, {
   streamText: mockStreamText,
 } satisfies LLMService);
 
-const transcript =
+const draft =
   'Welcome to our show. Today we cover practical AI delivery for teams.';
 
 function createUserMessage(text: string): UIMessage {
@@ -24,7 +24,7 @@ function createUserMessage(text: string): UIMessage {
 }
 
 describe('streamWritingAssistantChat', () => {
-  it.effect('forces the transcript write tool for direct edit requests', () =>
+  it.effect('forces the draft write tool for direct edit requests', () =>
     Effect.gen(function* () {
       const mockStream = new ReadableStream();
       mockStreamText.mockReturnValueOnce(Effect.succeed(mockStream));
@@ -34,7 +34,8 @@ describe('streamWritingAssistantChat', () => {
 
       const result = yield* streamWritingAssistantChat({
         messages,
-        transcript,
+        documentKind: 'voiceover',
+        draft,
       });
 
       expect(mockStreamText).toHaveBeenCalledWith(
@@ -42,17 +43,63 @@ describe('streamWritingAssistantChat', () => {
           system: expect.stringContaining('voiceover narration'),
           messages,
           tools: expect.objectContaining({
-            updateVoiceoverText: expect.any(Object),
+            updateDraftText: expect.any(Object),
           }),
           toolChoice: {
             type: 'tool',
-            toolName: 'updateVoiceoverText',
+            toolName: 'updateDraftText',
           },
           maxTokens: 1024,
           temperature: 0.7,
         }),
       );
       expect(result).toBe(mockStream);
+    }).pipe(Effect.provide(MockLLMLayer)),
+  );
+
+  it.effect('includes podcast-specific speaker guidance when requested', () =>
+    Effect.gen(function* () {
+      const mockStream = new ReadableStream();
+      mockStreamText.mockReturnValueOnce(Effect.succeed(mockStream));
+      const messages = [
+        createUserMessage(
+          'Rewrite the host intro and tighten the co-host response.',
+        ),
+      ];
+
+      yield* streamWritingAssistantChat({
+        messages,
+        documentKind: 'podcast',
+        draft: '[Alex]\nKick us off.\n\n[Blair]\nReact to the setup.',
+        speakerNames: ['Alex', 'Blair'],
+      });
+
+      expect(mockStreamText).toHaveBeenCalledWith(
+        expect.objectContaining({
+          system: expect.stringContaining('podcast script'),
+          tools: expect.objectContaining({
+            updatePodcastScript: expect.any(Object),
+          }),
+          toolChoice: {
+            type: 'tool',
+            toolName: 'updatePodcastScript',
+          },
+        }),
+      );
+      expect(mockStreamText).toHaveBeenCalledWith(
+        expect.objectContaining({
+          system: expect.stringContaining(
+            'Use only these exact speaker labels in `segments[].speaker`: Alex, Blair.',
+          ),
+        }),
+      );
+      expect(mockStreamText).toHaveBeenCalledWith(
+        expect.objectContaining({
+          system: expect.stringContaining(
+            'Keep inline text like `Key statistic: Revenue rose 20%.` inside `line`',
+          ),
+        }),
+      );
     }).pipe(Effect.provide(MockLLMLayer)),
   );
 
@@ -66,7 +113,8 @@ describe('streamWritingAssistantChat', () => {
 
       yield* streamWritingAssistantChat({
         messages,
-        transcript,
+        documentKind: 'voiceover',
+        draft,
       });
 
       expect(mockStreamText).toHaveBeenCalledWith(
@@ -89,7 +137,8 @@ describe('streamWritingAssistantChat', () => {
 
       const exit = yield* streamWritingAssistantChat({
         messages,
-        transcript,
+        documentKind: 'voiceover',
+        draft,
       }).pipe(Effect.exit);
 
       expect(exit._tag).toBe('Failure');
