@@ -35,6 +35,21 @@
     "eventFile": "events/2026-03.jsonl"
   },
   {
+    "id": "2026-03-14-feature-delivery-frontend-test-hygiene-remove-low-signal-quick-start-guide-unit-s",
+    "date": "2026-03-14",
+    "month": "2026-03",
+    "workflow": "Feature Delivery",
+    "title": "Frontend test hygiene: remove low-signal quick-start guide unit suite",
+    "severity": "low",
+    "status": "done",
+    "tags": [
+      "quality:test-hygiene",
+      "skill:test-surface-steward",
+      "skill:periodic-scans"
+    ],
+    "eventFile": "events/2026-03.jsonl"
+  },
+  {
     "id": "2026-03-14-feature-delivery-frontend-testing-docs-now-call-out-copy-locking-and-fragmented-d",
     "date": "2026-03-14",
     "month": "2026-03",
