@@ -1,5 +1,6 @@
 import * as fs from 'node:fs';
 import * as path from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { Command } from '@effect/cli';
 import { VOICES, GoogleTTSLive, previewVoice } from '@repo/ai/tts';
 import { Console, Effect } from 'effect';
@@ -17,9 +18,11 @@ const FRONTEND_VOICE_IDS = [
   'Orus',
 ] as const;
 
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+
 /** Directory where downloaded voice .wav files are stored */
 const VOICES_DIR = path.resolve(
-  import.meta.dirname,
+  __dirname,
   '../../../../packages/ai/voice-previews',
 );
 
@@ -79,7 +82,7 @@ const run = Effect.gen(function* () {
     }
 
     // Write to local file
-    fs.writeFileSync(filePath, result.right.audioContent);
+    fs.writeFileSync(filePath, Uint8Array.from(result.right.audioContent));
     const sizeKb = (result.right.audioContent.length / 1024).toFixed(1);
     yield* Console.log(`  OK    ${name} — ${sizeKb} KB → ${filePath}`);
     downloaded++;

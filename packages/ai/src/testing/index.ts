@@ -1,5 +1,5 @@
 import { Layer } from 'effect';
-import type { AI } from '..';
+import type { AI } from '../google-ai';
 import {
   MockDeepResearchLive,
   MockDeepResearchWithLatency,
@@ -8,6 +8,8 @@ import { MockImageGenLive, MockImageGenWithLatency } from './image-gen';
 import { MockLLMLive, MockLLMWithLatency } from './llm';
 import { MockTTSLive, MockTTSWithLatency } from './tts';
 
+// Keep this barrel free of `vitest` imports because apps/server and apps/worker
+// load the mock AI layer at runtime when USE_MOCK_AI=true.
 export * from './llm';
 export * from './tts';
 export * from './image-gen';

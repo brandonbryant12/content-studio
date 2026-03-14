@@ -1,12 +1,12 @@
-import { Layer, Effect } from 'effect';
+import { Effect, Layer } from 'effect';
 import type { UIMessageChunk } from 'ai';
+import { LLMError, type LLMRateLimitError } from '../errors';
 import {
   LLM,
-  type LLMService,
+  type GenerateOptions,
   type GenerateResult,
-  LLMError,
-  type LLMRateLimitError,
-} from '..';
+  type LLMService,
+} from '../llm/service';
 
 export const DEFAULT_MOCK_SCRIPT = {
   title: 'Test Podcast Title',
@@ -33,6 +33,18 @@ export const DEFAULT_MOCK_SCRIPT = {
   ],
 };
 
+export interface MockLLMGenerateInput {
+  readonly system?: string;
+  readonly prompt: string;
+  readonly model?: string;
+  readonly maxTokens?: number;
+  readonly temperature?: number;
+}
+
+export type MockLLMGenerate = (
+  options: MockLLMGenerateInput,
+) => Effect.Effect<GenerateResult<unknown>, LLMError | LLMRateLimitError>;
+
 export interface MockLLMOptions {
   delay?: number;
   response?: unknown;
@@ -43,9 +55,11 @@ export interface MockLLMOptions {
     totalTokens: number;
   };
   errorMessage?: string;
+  generate?: MockLLMGenerate;
+  streamText?: LLMService['streamText'];
 }
 
-export function createMockLLM(options: MockLLMOptions = {}): Layer.Layer<LLM> {
+export function createMockLLMService(options: MockLLMOptions = {}): LLMService {
   const stream =
     options.stream ??
     new ReadableStream<UIMessageChunk>({
@@ -54,47 +68,71 @@ export function createMockLLM(options: MockLLMOptions = {}): Layer.Layer<LLM> {
       },
     });
 
-  const service: LLMService = {
-    generate: <T>(): Effect.Effect<
-      GenerateResult<T>,
-      LLMError | LLMRateLimitError
-    > =>
-      Effect.gen(function* () {
-        if (options.delay) {
-          yield* Effect.sleep(options.delay);
-        }
+  const defaultGenerate = <T>(): Effect.Effect<
+    GenerateResult<T>,
+    LLMError | LLMRateLimitError
+  > =>
+    Effect.gen(function* () {
+      if (options.delay) {
+        yield* Effect.sleep(options.delay);
+      }
 
-        if (options.errorMessage) {
-          return yield* Effect.fail(
-            new LLMError({ message: options.errorMessage }),
-          );
-        }
+      if (options.errorMessage) {
+        return yield* Effect.fail(
+          new LLMError({ message: options.errorMessage }),
+        );
+      }
 
-        return {
-          object: (options.response ?? DEFAULT_MOCK_SCRIPT) as T,
-          usage: options.usage ?? {
-            inputTokens: 100,
-            outputTokens: 200,
-            totalTokens: 300,
-          },
-        };
-      }),
-    streamText: () =>
-      Effect.gen(function* () {
-        if (options.delay) {
-          yield* Effect.sleep(options.delay);
-        }
+      return {
+        object: (options.response ?? DEFAULT_MOCK_SCRIPT) as T,
+        usage: options.usage ?? {
+          inputTokens: 100,
+          outputTokens: 200,
+          totalTokens: 300,
+        },
+      };
+    });
 
-        if (options.errorMessage) {
-          return yield* Effect.fail(
-            new LLMError({ message: options.errorMessage }),
-          );
-        }
+  const defaultStreamText = () =>
+    Effect.gen(function* () {
+      if (options.delay) {
+        yield* Effect.sleep(options.delay);
+      }
 
-        return stream;
-      }),
+      if (options.errorMessage) {
+        return yield* Effect.fail(
+          new LLMError({ message: options.errorMessage }),
+        );
+      }
+
+      return stream;
+    });
+
+  return {
+    generate: options.generate
+      ? <T>(generateOptions: GenerateOptions<T>) =>
+          options.generate!({
+            system: generateOptions.system,
+            prompt: generateOptions.prompt,
+            model: generateOptions.model,
+            maxTokens: generateOptions.maxTokens,
+            temperature: generateOptions.temperature,
+          }).pipe(
+            Effect.map(
+              (result) =>
+                ({
+                  object: result.object as T,
+                  usage: result.usage,
+                }) satisfies GenerateResult<T>,
+            ),
+          )
+      : defaultGenerate,
+    streamText: options.streamText ?? defaultStreamText,
   };
+}
 
+export function createMockLLM(options: MockLLMOptions = {}): Layer.Layer<LLM> {
+  const service = createMockLLMService(options);
   return Layer.succeed(LLM, service);
 }
 

@@ -14,8 +14,9 @@ import { expectEffectFailure } from '@repo/testing';
 import { Effect, Exit } from 'effect';
 import { describe, expect } from 'vitest';
 import { TTSError, TTSQuotaExceededError } from '../../errors';
-import { GoogleTTSLive, TTS } from '../../tts';
-import { VOICES, FEMALE_VOICES, MALE_VOICES } from '../../tts/voices';
+import { GoogleTTSLive } from '../../providers/google/tts';
+import { TTS } from '../../tts/service';
+import { FEMALE_VOICES, MALE_VOICES, VOICES } from '../../tts/voices';
 import { liveTestEnv } from './env';
 
 const GEMINI_API_KEY = liveTestEnv.GEMINI_API_KEY;

@@ -114,11 +114,15 @@ describe('infographic router', () => {
     const readyInfographic = await insertTestInfographic(ctx, memberUser.id, {
       status: 'ready',
     });
-    const approvedInfographic = await insertTestInfographic(ctx, memberUser.id, {
-      status: 'ready',
-      approvedBy: adminUser.id,
-      approvedAt: new Date(),
-    });
+    const approvedInfographic = await insertTestInfographic(
+      ctx,
+      memberUser.id,
+      {
+        status: 'ready',
+        approvedBy: adminUser.id,
+        approvedAt: new Date(),
+      },
+    );
 
     const context = createMockContext(runtime, member);
     const calls: Array<() => Promise<unknown>> = [

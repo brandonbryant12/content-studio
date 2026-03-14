@@ -10,7 +10,8 @@ import { inspect } from 'node:util';
 import { it } from '@effect/vitest';
 import { Effect, Exit, Schema } from 'effect';
 import { describe, expect } from 'vitest';
-import { GoogleLive, LLM } from '../../llm';
+import { LLM } from '../../llm/service';
+import { GoogleLive } from '../../providers/google/llm';
 import { liveTestEnv } from './env';
 
 const GEMINI_API_KEY = liveTestEnv.GEMINI_API_KEY;

@@ -1,11 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { StepSources } from '../components/setup/steps/step-sources';
-import {
-  renderWithQuery,
-  screen,
-  userEvent,
-  waitFor,
-} from '@/test-utils';
+import { renderWithQuery, screen, userEvent, waitFor } from '@/test-utils';
 
 const { mockUploadMutationFn, mockFromUrlMutationFn, mockUseSources } =
   vi.hoisted(() => ({

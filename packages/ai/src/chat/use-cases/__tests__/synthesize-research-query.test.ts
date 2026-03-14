@@ -1,19 +1,10 @@
 import { it } from '@effect/vitest';
-import { Effect, Layer } from 'effect';
+import { Effect } from 'effect';
 import { describe, expect, vi } from 'vitest';
 import type { UIMessage } from 'ai';
 import { LLMError } from '../../../errors';
-import { LLM, type LLMService } from '../../../llm/service';
+import { createMockLLM, type MockLLMGenerate } from '../../../testing/llm';
 import { synthesizeResearchQuery } from '../synthesize-research-query';
-
-const mockModel = { modelId: 'mock-model' };
-
-function makeLayer(generate: LLMService['generate']) {
-  return Layer.succeed(LLM, {
-    model: mockModel,
-    generate,
-  } as unknown as LLMService);
-}
 
 function makeConversation(): UIMessage[] {
   return [
@@ -39,7 +30,7 @@ function makeConversation(): UIMessage[] {
 
 describe('synthesizeResearchQuery', () => {
   it.effect('strips control tokens from synthesis prompt', () => {
-    const generate = vi.fn().mockReturnValue(
+    const generate = vi.fn<MockLLMGenerate>().mockReturnValue(
       Effect.succeed({
         object: {
           query: 'AI in healthcare policy shifts from 2024 to 2026.',
@@ -51,14 +42,13 @@ describe('synthesizeResearchQuery', () => {
     return Effect.gen(function* () {
       const result = yield* synthesizeResearchQuery({
         messages: makeConversation(),
-      }).pipe(
-        Effect.provide(
-          makeLayer(generate as unknown as LLMService['generate']),
-        ),
-      );
+      }).pipe(Effect.provide(createMockLLM({ generate })));
 
       const firstCall = generate.mock.calls[0]?.[0];
-      expect(firstCall?.prompt).toBeDefined();
+      expect(firstCall).toBeDefined();
+      if (!firstCall) {
+        return;
+      }
       expect(firstCall.prompt).not.toContain('[[START_RESEARCH]]');
       expect(result.title).toBe('AI Healthcare Policy Trends');
     });
@@ -67,7 +57,7 @@ describe('synthesizeResearchQuery', () => {
   it.effect('retries with compact context after LLMError', () =>
     Effect.gen(function* () {
       const generate = vi
-        .fn()
+        .fn<MockLLMGenerate>()
         .mockReturnValueOnce(
           Effect.fail(
             new LLMError({
@@ -87,11 +77,7 @@ describe('synthesizeResearchQuery', () => {
 
       const result = yield* synthesizeResearchQuery({
         messages: makeConversation(),
-      }).pipe(
-        Effect.provide(
-          makeLayer(generate as unknown as LLMService['generate']),
-        ),
-      );
+      }).pipe(Effect.provide(createMockLLM({ generate })));
 
       expect(generate).toHaveBeenCalledTimes(2);
       const firstPrompt = generate.mock.calls[0]?.[0]?.prompt as string;

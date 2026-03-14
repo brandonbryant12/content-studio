@@ -1,8 +1,9 @@
 import { Effect } from 'effect';
 import type { UIMessage } from 'ai';
 import { LLM } from '../../llm/service';
-import { chatPersonaSystemPrompt, renderPrompt } from '../../prompt-registry';
-import { withAIUsageScope } from '../../usage';
+import { chatPersonaSystemPrompt } from '../../prompt-registry/prompts/chat-persona-system';
+import { renderPrompt } from '../../prompt-registry/render';
+import { withAIUsageScope } from '../../usage/scope';
 
 export interface StreamPersonaChatInput {
   readonly messages: UIMessage[];

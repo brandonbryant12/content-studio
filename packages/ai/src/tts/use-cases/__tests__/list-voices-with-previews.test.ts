@@ -1,38 +1,29 @@
 import { it } from '@effect/vitest';
 import { Storage, StorageError, type StorageService } from '@repo/storage';
+import { createInMemoryStorage } from '@repo/storage/testing';
 import { Effect, Layer } from 'effect';
 import { describe, expect } from 'vitest';
-import { TTS, type TTSService, VOICES } from '../../index';
+import { expectTaggedFailure } from '../../../testing/assertions';
+import { createMockTTS } from '../../../testing/tts';
+import { VOICES } from '../../voices';
 import { listVoicesWithPreviews } from '../list-voices-with-previews';
 
-// =============================================================================
-// Mock Services
-// =============================================================================
+const createPreviewStorageLayer = () => {
+  const storage = createInMemoryStorage({
+    baseUrl: 'https://storage.example.com/',
+  });
 
-const createMockTTSService = (): TTSService => ({
-  listVoices: (options) =>
-    Effect.succeed(
-      options?.gender
-        ? VOICES.filter((v) => v.gender === options.gender)
-        : VOICES,
-    ),
-  previewVoice: () => Effect.die('Not implemented in mock'),
-  synthesize: () => Effect.die('Not implemented in mock'),
-});
+  storage.getStore().set('voice-previews/Charon.wav', {
+    data: Buffer.from('charon-preview'),
+    contentType: 'audio/wav',
+  });
+  storage.getStore().set('voice-previews/Kore.wav', {
+    data: Buffer.from('kore-preview'),
+    contentType: 'audio/wav',
+  });
 
-const createMockStorageService = (
-  existingKeys: Set<string> = new Set(),
-): StorageService => ({
-  upload: () => Effect.die('Not implemented in mock'),
-  download: () => Effect.die('Not implemented in mock'),
-  delete: () => Effect.die('Not implemented in mock'),
-  exists: (key) => Effect.succeed(existingKeys.has(key)),
-  getUrl: (key) => Effect.succeed(`https://storage.example.com/${key}`),
-});
-
-// =============================================================================
-// Tests
-// =============================================================================
+  return storage.layer;
+};
 
 describe('listVoicesWithPreviews', () => {
   it.effect(
@@ -42,12 +33,13 @@ describe('listVoicesWithPreviews', () => {
         const result = yield* listVoicesWithPreviews({});
 
         expect(result).toHaveLength(VOICES.length);
-        expect(result.every((v) => v.previewUrl === null)).toBe(true);
+        expect(result.every((voice) => voice.previewUrl === null)).toBe(true);
       }).pipe(
         Effect.provide(
           Layer.merge(
-            Layer.succeed(TTS, createMockTTSService()),
-            Layer.succeed(Storage, createMockStorageService()),
+            createMockTTS({ voices: VOICES }),
+            createInMemoryStorage({ baseUrl: 'https://storage.example.com/' })
+              .layer,
           ),
         ),
       ),
@@ -57,29 +49,23 @@ describe('listVoicesWithPreviews', () => {
     Effect.gen(function* () {
       const result = yield* listVoicesWithPreviews({});
 
-      const charon = result.find((v) => v.id === 'Charon');
+      const charon = result.find((voice) => voice.id === 'Charon');
       expect(charon?.previewUrl).toBe(
         'https://storage.example.com/voice-previews/Charon.wav',
       );
 
-      const kore = result.find((v) => v.id === 'Kore');
+      const kore = result.find((voice) => voice.id === 'Kore');
       expect(kore?.previewUrl).toBe(
         'https://storage.example.com/voice-previews/Kore.wav',
       );
 
-      // Voices without previews should have null
-      const aoede = result.find((v) => v.id === 'Aoede');
+      const aoede = result.find((voice) => voice.id === 'Aoede');
       expect(aoede?.previewUrl).toBeNull();
     }).pipe(
       Effect.provide(
         Layer.merge(
-          Layer.succeed(TTS, createMockTTSService()),
-          Layer.succeed(
-            Storage,
-            createMockStorageService(
-              new Set(['voice-previews/Charon.wav', 'voice-previews/Kore.wav']),
-            ),
-          ),
+          createMockTTS({ voices: VOICES }),
+          createPreviewStorageLayer(),
         ),
       ),
     ),
@@ -90,12 +76,13 @@ describe('listVoicesWithPreviews', () => {
       const result = yield* listVoicesWithPreviews({ gender: 'female' });
 
       expect(result.length).toBeGreaterThan(0);
-      expect(result.every((v) => v.gender === 'female')).toBe(true);
+      expect(result.every((voice) => voice.gender === 'female')).toBe(true);
     }).pipe(
       Effect.provide(
         Layer.merge(
-          Layer.succeed(TTS, createMockTTSService()),
-          Layer.succeed(Storage, createMockStorageService()),
+          createMockTTS({ voices: VOICES }),
+          createInMemoryStorage({ baseUrl: 'https://storage.example.com/' })
+            .layer,
         ),
       ),
     ),
@@ -105,27 +92,23 @@ describe('listVoicesWithPreviews', () => {
     'fails when storage errors occur during preview metadata lookup',
     () =>
       Effect.gen(function* () {
-        const result = yield* listVoicesWithPreviews({}).pipe(Effect.either);
+        const exit = yield* listVoicesWithPreviews({}).pipe(Effect.exit);
+        const error = expectTaggedFailure(exit, 'StorageError');
 
-        expect(result._tag).toBe('Left');
-        if (result._tag === 'Left') {
-          expect(result.left._tag).toBe('StorageError');
-          expect((result.left as StorageError).message).toBe(
-            'Connection failed',
-          );
-        }
+        expect(error.message).toBe('Connection failed');
       }).pipe(
         Effect.provide(
           Layer.merge(
-            Layer.succeed(TTS, createMockTTSService()),
+            createMockTTS({ voices: VOICES }),
             Layer.succeed(Storage, {
-              upload: () => Effect.die('Not implemented'),
-              download: () => Effect.die('Not implemented'),
-              delete: () => Effect.die('Not implemented'),
+              upload: () => Effect.succeed('https://storage.example.com/mock'),
+              download: () => Effect.succeed(Buffer.from('unused')),
+              delete: () => Effect.void,
               exists: () =>
                 Effect.fail(new StorageError({ message: 'Connection failed' })),
-              getUrl: () => Effect.die('Not implemented'),
-            }),
+              getUrl: () =>
+                Effect.succeed('https://storage.example.com/unused'),
+            } satisfies StorageService),
           ),
         ),
       ),

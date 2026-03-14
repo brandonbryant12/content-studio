@@ -7,11 +7,9 @@ import {
 } from 'ai';
 import { Effect } from 'effect';
 import { LLM } from '../../llm/service';
-import {
-  chatWritingAssistantSystemPrompt,
-  renderPrompt,
-} from '../../prompt-registry';
-import { withAIUsageScope } from '../../usage';
+import { chatWritingAssistantSystemPrompt } from '../../prompt-registry/prompts/chat-writing-assistant-system';
+import { renderPrompt } from '../../prompt-registry/render';
+import { withAIUsageScope } from '../../usage/scope';
 import { getMessageText } from './chat-message-utils';
 
 const WRITING_ASSISTANT_TRANSCRIPT_MAX_CONTEXT_CHARS = 12_000;

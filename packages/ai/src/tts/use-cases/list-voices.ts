@@ -1,5 +1,6 @@
 import { Effect } from 'effect';
-import { TTS, type VoiceInfo, type VoiceGender } from '../index';
+import type { VoiceGender, VoiceInfo } from '../voices';
+import { TTS } from '../service';
 
 // =============================================================================
 // Types

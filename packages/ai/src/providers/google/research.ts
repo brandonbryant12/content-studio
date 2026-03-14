@@ -1,6 +1,5 @@
 import { GoogleGenAI } from '@google/genai';
 import { Effect, Layer, Schedule } from 'effect';
-import type { JsonValue } from '@repo/db/schema';
 import { ResearchError } from '../../errors';
 import {
   DeepResearch,
@@ -8,7 +7,8 @@ import {
   type ResearchResult,
   type ResearchSource,
 } from '../../research/service';
-import { recordAIUsageIfConfigured } from '../../usage';
+import { recordAIUsageIfConfigured } from '../../usage/record';
+import { matchesTransientProviderFailure } from '../retry';
 import { PROVIDER_TIMEOUTS_MS } from '../timeouts';
 import {
   GoogleApiError,
@@ -16,6 +16,15 @@ import {
   isGoogleRateLimit,
 } from './error-parser';
 import { DEEP_RESEARCH_MODEL } from './models';
+import {
+  asRecord,
+  compactJsonRecord,
+  getBooleanField,
+  getNumberField,
+  getObjectField,
+  getStringField,
+  recordProviderCallIfConfigured,
+} from './shared';
 
 /**
  * Configuration for Google Deep Research provider.
@@ -36,7 +45,6 @@ interface OutputBlock {
   result?: Array<{ title?: string; url?: string; rendered_content?: string }>;
 }
 
-const RETRYABLE_STATUS_CODES = new Set([429, 500, 502, 503, 504]);
 const RETRYABLE_STATUS_NAMES = new Set([
   'RESOURCE_EXHAUSTED',
   'UNAVAILABLE',
@@ -44,71 +52,6 @@ const RETRYABLE_STATUS_NAMES = new Set([
   'INTERNAL',
   'ABORTED',
 ]);
-const RETRYABLE_NETWORK_CODES = new Set([
-  'ECONNRESET',
-  'ECONNREFUSED',
-  'ETIMEDOUT',
-  'ECONNABORTED',
-  'ENOTFOUND',
-  'EAI_AGAIN',
-  'UND_ERR_CONNECT_TIMEOUT',
-  'UND_ERR_HEADERS_TIMEOUT',
-  'UND_ERR_SOCKET',
-]);
-
-const TRANSIENT_MESSAGE_TOKENS = [
-  '429',
-  '500',
-  '502',
-  '503',
-  '504',
-  'rate limit',
-  'resource exhausted',
-  'temporarily unavailable',
-  'timeout',
-  'timed out',
-  'network',
-  'socket hang up',
-] as const;
-
-function asRecord(value: unknown): Record<string, unknown> | undefined {
-  if (typeof value !== 'object' || value === null) {
-    return undefined;
-  }
-
-  return value as Record<string, unknown>;
-}
-
-function getStringField(value: unknown, field: string): string | undefined {
-  const record = asRecord(value);
-  const maybeValue = record?.[field];
-  return typeof maybeValue === 'string' ? maybeValue : undefined;
-}
-
-function getNumberField(value: unknown, field: string): number | undefined {
-  const record = asRecord(value);
-  const maybeValue = record?.[field];
-  return typeof maybeValue === 'number' ? maybeValue : undefined;
-}
-
-function getObjectField(
-  value: unknown,
-  field: string,
-): Record<string, unknown> | undefined {
-  const record = asRecord(value);
-  const maybeValue = record?.[field];
-  if (typeof maybeValue !== 'object' || maybeValue === null) {
-    return undefined;
-  }
-
-  return maybeValue as Record<string, unknown>;
-}
-
-function getBooleanField(value: unknown, field: string): boolean | undefined {
-  const record = asRecord(value);
-  const maybeValue = record?.[field];
-  return typeof maybeValue === 'boolean' ? maybeValue : undefined;
-}
 
 function extractInteractionDiagnostics(interaction: unknown): {
   interactionId: string | undefined;
@@ -157,11 +100,12 @@ function extractResearchErrorDiagnostics(error: ResearchError): {
   causeCode: string | undefined;
 } {
   const details = getGoogleApiErrorDetails(error.cause);
+  const causeRecord = asRecord(error.cause);
   const statusCode =
     error.cause instanceof GoogleApiError
       ? error.cause.statusCode
-      : (getNumberField(error.cause, 'statusCode') ??
-        getNumberField(error.cause, 'status'));
+      : (getNumberField(causeRecord, 'statusCode') ??
+        getNumberField(causeRecord, 'status'));
 
   return {
     message: error.message,
@@ -175,40 +119,31 @@ function extractResearchErrorDiagnostics(error: ResearchError): {
 
 function isTransientResearchCause(cause: unknown): boolean {
   const details = getGoogleApiErrorDetails(cause);
+  const causeRecord = asRecord(cause);
   const statusCode =
     cause instanceof GoogleApiError
       ? cause.statusCode
-      : (getNumberField(cause, 'statusCode') ??
-        getNumberField(cause, 'status'));
+      : (getNumberField(causeRecord, 'statusCode') ??
+        getNumberField(causeRecord, 'status'));
 
   if (
-    (statusCode !== undefined && RETRYABLE_STATUS_CODES.has(statusCode)) ||
+    matchesTransientProviderFailure({
+      statusCode,
+      statusName: details?.status ?? getStringField(cause, 'status'),
+      networkCode: getStringField(cause, 'code'),
+      message:
+        details?.message ??
+        (cause instanceof Error
+          ? cause.message
+          : getStringField(cause, 'message')),
+      additionalStatusNames: [...RETRYABLE_STATUS_NAMES],
+    }) ||
     isGoogleRateLimit(details, statusCode)
   ) {
     return true;
   }
 
-  const statusName = (
-    details?.status ?? getStringField(cause, 'status')
-  )?.toUpperCase();
-  if (statusName && RETRYABLE_STATUS_NAMES.has(statusName)) {
-    return true;
-  }
-
-  const networkCode = getStringField(cause, 'code')?.toUpperCase();
-  if (networkCode && RETRYABLE_NETWORK_CODES.has(networkCode)) {
-    return true;
-  }
-
-  const message = (
-    details?.message ??
-    (cause instanceof Error ? cause.message : getStringField(cause, 'message'))
-  )?.toLowerCase();
-  if (!message) {
-    return false;
-  }
-
-  return TRANSIENT_MESSAGE_TOKENS.some((token) => message.includes(token));
+  return false;
 }
 
 const retryTransientResearch = <A, R>(
@@ -268,51 +203,46 @@ const makeGoogleDeepResearchService = (
 ): DeepResearchService => {
   const genAI = new GoogleGenAI({ apiKey: config.apiKey });
   const modelId = DEEP_RESEARCH_MODEL;
-  const compactJsonRecord = (
-    record: Record<string, JsonValue | undefined>,
-  ): Record<string, JsonValue> =>
-    Object.fromEntries(
-      Object.entries(record).filter(([, value]) => value !== undefined),
-    ) as Record<string, JsonValue>;
   const provider = 'google' as const;
   const getResultUsageMetadata = (interactionId: string) => ({ interactionId });
 
   return {
     startResearch: (query: string) =>
-      Effect.tryPromise({
-        try: async () => {
-          const interaction = await genAI.interactions.create(
-            {
-              agent: modelId,
-              input: query,
-              background: true,
-              agent_config: {
-                type: 'deep-research',
+      recordProviderCallIfConfigured(
+        Effect.tryPromise({
+          try: async () => {
+            const interaction = await genAI.interactions.create(
+              {
+                agent: modelId,
+                input: query,
+                background: true,
+                agent_config: {
+                  type: 'deep-research',
+                },
               },
-            },
-            {
-              // Per-attempt timeout budget: Effect retry starts a fresh request.
-              timeout: PROVIDER_TIMEOUTS_MS.deepResearchStart,
-              maxRetries: 0,
-              signal: AbortSignal.timeout(
-                PROVIDER_TIMEOUTS_MS.deepResearchStart,
-              ),
-            },
-          );
+              {
+                // Per-attempt timeout budget: Effect retry starts a fresh request.
+                timeout: PROVIDER_TIMEOUTS_MS.deepResearchStart,
+                maxRetries: 0,
+                signal: AbortSignal.timeout(
+                  PROVIDER_TIMEOUTS_MS.deepResearchStart,
+                ),
+              },
+            );
 
-          return { interactionId: interaction.id };
-        },
-        catch: (error) =>
-          new ResearchError({
-            message:
-              error instanceof Error
-                ? error.message
-                : 'Failed to start research',
-            cause: error,
-          }),
-      }).pipe(
-        Effect.tap((result) =>
-          recordAIUsageIfConfigured({
+            return { interactionId: interaction.id };
+          },
+          catch: (error) =>
+            new ResearchError({
+              message:
+                error instanceof Error
+                  ? error.message
+                  : 'Failed to start research',
+              cause: error,
+            }),
+        }),
+        {
+          onSuccess: (result) => ({
             modality: 'deep_research',
             provider,
             providerOperation: 'startResearch',
@@ -322,9 +252,7 @@ const makeGoogleDeepResearchService = (
             usage: { researchRunCount: 1, queryChars: query.length },
             metadata: { queryChars: query.length },
           }),
-        ),
-        Effect.tapError((error) =>
-          recordAIUsageIfConfigured({
+          onError: (error) => ({
             modality: 'deep_research',
             provider,
             providerOperation: 'startResearch',
@@ -334,7 +262,8 @@ const makeGoogleDeepResearchService = (
             usage: { researchRunCount: 1, queryChars: query.length },
             metadata: { queryChars: query.length },
           }),
-        ),
+        },
+      ).pipe(
         retryTransientResearch,
         Effect.tapError((error) =>
           Effect.logError({
@@ -353,31 +282,32 @@ const makeGoogleDeepResearchService = (
 
     getResult: (interactionId: string) =>
       Effect.gen(function* () {
-        const interaction = yield* Effect.tryPromise({
-          try: () =>
-            genAI.interactions.get(
-              interactionId,
-              {},
-              {
-                // Per-attempt timeout budget: Effect retry starts a fresh request.
-                timeout: PROVIDER_TIMEOUTS_MS.deepResearchGet,
-                maxRetries: 0,
-                signal: AbortSignal.timeout(
-                  PROVIDER_TIMEOUTS_MS.deepResearchGet,
-                ),
-              },
-            ),
-          catch: (error) =>
-            new ResearchError({
-              message:
-                error instanceof Error
-                  ? error.message
-                  : 'Failed to get research result',
-              cause: error,
-            }),
-        }).pipe(
-          Effect.tapError((error) =>
-            recordAIUsageIfConfigured({
+        const interaction = yield* recordProviderCallIfConfigured(
+          Effect.tryPromise({
+            try: () =>
+              genAI.interactions.get(
+                interactionId,
+                {},
+                {
+                  // Per-attempt timeout budget: Effect retry starts a fresh request.
+                  timeout: PROVIDER_TIMEOUTS_MS.deepResearchGet,
+                  maxRetries: 0,
+                  signal: AbortSignal.timeout(
+                    PROVIDER_TIMEOUTS_MS.deepResearchGet,
+                  ),
+                },
+              ),
+            catch: (error) =>
+              new ResearchError({
+                message:
+                  error instanceof Error
+                    ? error.message
+                    : 'Failed to get research result',
+                cause: error,
+              }),
+          }),
+          {
+            onError: (error) => ({
               modality: 'deep_research',
               provider,
               providerOperation: 'getResult',
@@ -387,7 +317,8 @@ const makeGoogleDeepResearchService = (
               providerResponseId: interactionId,
               metadata: getResultUsageMetadata(interactionId),
             }),
-          ),
+          },
+        ).pipe(
           retryTransientResearch,
           Effect.tapError((error) =>
             Effect.logError({

@@ -1,9 +1,7 @@
 import { describe, expect, it } from 'vitest';
-import {
-  podcastPlanSystemPrompt,
-  podcastScriptSystemPrompt,
-  podcastScriptUserPrompt,
-} from '../prompts';
+import { podcastPlanSystemPrompt } from '../prompts/podcast-plan-system';
+import { podcastScriptSystemPrompt } from '../prompts/podcast-script-system';
+import { podcastScriptUserPrompt } from '../prompts/podcast-script-user';
 import { renderPrompt } from '../render';
 
 describe('podcast runtime guidance prompts', () => {

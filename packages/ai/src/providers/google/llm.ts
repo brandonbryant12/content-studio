@@ -2,12 +2,11 @@ import { createGoogleGenerativeAI } from '@ai-sdk/google';
 import {
   convertToModelMessages,
   generateObject,
-  jsonSchema,
   streamText,
   type LanguageModelUsage,
   type ToolSet,
 } from 'ai';
-import { Effect, Layer, JSONSchema, Schedule } from 'effect';
+import { Effect, Layer, Schedule } from 'effect';
 import { mapError, shouldRetryLLMError } from '../../llm/map-error';
 import {
   LLM,
@@ -18,14 +17,16 @@ import {
 } from '../../llm/service';
 import { estimateTokenPricedModelCostUsdMicros } from '../../pricing/model-catalog';
 import {
-  AIUsageRecorder,
   createAsyncAIUsageRecorder,
   getAIUsageErrorTag,
-  getAIUsageScope,
   recordAIUsageIfConfigured,
-} from '../../usage';
+} from '../../usage/record';
+import { AIUsageRecorder } from '../../usage/recorder';
+import { getAIUsageScope } from '../../usage/scope';
 import { PROVIDER_TIMEOUTS_MS } from '../timeouts';
 import { getGoogleLLMModel, type GoogleLLMModelId, LLM_MODEL } from './models';
+import { effectSchemaToAISDKJsonSchema } from './schema-adapter';
+import { recordProviderCallIfConfigured } from './shared';
 
 /**
  * Configuration for Google AI provider via AI SDK.
@@ -160,34 +161,33 @@ const makeGoogleService = (config: GoogleConfig): LLMService => {
         options.model ?? config.model,
       );
       const metadata = buildGenerateMetadata(options);
-      const attempt = Effect.tryPromise({
-        try: async () => {
-          const effectJsonSchema = JSONSchema.make(options.schema);
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          const aiSchema = jsonSchema<T>(effectJsonSchema as any);
+      const attempt = recordProviderCallIfConfigured(
+        Effect.tryPromise({
+          try: async () => {
+            const result = await generateObject({
+              model,
+              system: options.system,
+              prompt: options.prompt,
+              schema: effectSchemaToAISDKJsonSchema(options.schema),
+              maxOutputTokens: options.maxTokens,
+              temperature: options.temperature ?? 0.7,
+              maxRetries: 0,
+              abortSignal: AbortSignal.timeout(
+                PROVIDER_TIMEOUTS_MS.llmGenerate,
+              ),
+              experimental_repairText: async ({ text }) =>
+                stripMarkdownCodeFence(text),
+            });
 
-          const result = await generateObject({
-            model,
-            system: options.system,
-            prompt: options.prompt,
-            schema: aiSchema,
-            maxOutputTokens: options.maxTokens,
-            temperature: options.temperature ?? 0.7,
-            maxRetries: 0,
-            abortSignal: AbortSignal.timeout(PROVIDER_TIMEOUTS_MS.llmGenerate),
-            experimental_repairText: async ({ text }) =>
-              stripMarkdownCodeFence(text),
-          });
-
-          return {
-            object: result.object as T,
-            usage: result.usage,
-          };
-        },
-        catch: mapError,
-      }).pipe(
-        Effect.tap((result) =>
-          recordAIUsageIfConfigured({
+            return {
+              object: result.object as T,
+              usage: result.usage,
+            };
+          },
+          catch: mapError,
+        }),
+        {
+          onSuccess: (result) => ({
             modality: 'llm',
             provider: 'google',
             providerOperation: 'generateObject',
@@ -201,9 +201,7 @@ const makeGoogleService = (config: GoogleConfig): LLMService => {
               result.usage,
             ),
           }),
-        ),
-        Effect.tapError((error) =>
-          recordAIUsageIfConfigured({
+          onError: (error) => ({
             modality: 'llm',
             provider: 'google',
             providerOperation: 'generateObject',
@@ -212,7 +210,8 @@ const makeGoogleService = (config: GoogleConfig): LLMService => {
             errorTag: error._tag,
             metadata,
           }),
-        ),
+        },
+      ).pipe(
         Effect.map(
           (result) =>
             ({

@@ -1,12 +1,10 @@
 import { Effect, Layer } from 'effect';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { VoiceNotFoundError } from '../../errors';
+import type { PersistAIUsageInput } from '../../usage/types';
 import { TTS } from '../../tts/service';
-import {
-  AIUsageRecorder,
-  type PersistAIUsageInput,
-  withAIUsageScope,
-} from '../../usage';
+import { AIUsageRecorder } from '../../usage/recorder';
+import { withAIUsageScope } from '../../usage/scope';
 import { GoogleTTSLive } from './tts';
 
 vi.mock('../retry', () => ({

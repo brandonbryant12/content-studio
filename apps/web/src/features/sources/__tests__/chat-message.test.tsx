@@ -1,8 +1,8 @@
 import { describe, it, expect } from 'vitest';
 import type { UIMessage } from 'ai';
 import { ChatMessage } from '@/shared/components/chat-message';
-import { render, screen } from '@/test-utils';
 import { CHAT_CONTROL_TOKENS } from '@/shared/lib/chat-control';
+import { render, screen } from '@/test-utils';
 
 const userMessage: UIMessage = {
   id: 'msg-1',

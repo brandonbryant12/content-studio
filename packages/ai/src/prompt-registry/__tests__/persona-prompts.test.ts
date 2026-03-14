@@ -1,9 +1,7 @@
 import { describe, expect, it } from 'vitest';
-import {
-  chatPersonaSystemPrompt,
-  chatSynthesizePersonaSystemPrompt,
-  renderPrompt,
-} from '../index';
+import { chatPersonaSystemPrompt } from '../prompts/chat-persona-system';
+import { chatSynthesizePersonaSystemPrompt } from '../prompts/chat-synthesize-persona-system';
+import { renderPrompt } from '../render';
 
 describe('persona prompts', () => {
   it('guides conversational persona intake toward podcast-ready hosts and co-hosts', () => {

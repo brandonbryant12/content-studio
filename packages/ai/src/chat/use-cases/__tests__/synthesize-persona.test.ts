@@ -1,12 +1,10 @@
 import { it } from '@effect/vitest';
-import { Effect, Layer } from 'effect';
+import { Effect } from 'effect';
 import { describe, expect, vi } from 'vitest';
 import type { UIMessage } from 'ai';
 import { LLMError } from '../../../errors';
-import { LLM, type LLMService } from '../../../llm/service';
+import { createMockLLM, type MockLLMGenerate } from '../../../testing/llm';
 import { synthesizePersona } from '../synthesize-persona';
-
-const mockModel = { modelId: 'mock-model' };
 
 const basePersona = {
   name: 'Jordan Vale',
@@ -17,13 +15,6 @@ const basePersona = {
   voiceId: 'Puck',
   voiceName: 'Puck',
 } as const;
-
-function makeLayer(generate: LLMService['generate']) {
-  return Layer.succeed(LLM, {
-    model: mockModel,
-    generate,
-  } as unknown as LLMService);
-}
 
 function makeLongConversation(): UIMessage[] {
   const messages: UIMessage[] = [];
@@ -69,7 +60,7 @@ function makeLongConversation(): UIMessage[] {
 
 describe('synthesizePersona', () => {
   it.effect('removes honorifics and credentials from synthesized names', () => {
-    const generate = vi.fn().mockReturnValue(
+    const generate = vi.fn<MockLLMGenerate>().mockReturnValue(
       Effect.succeed({
         object: {
           ...basePersona,
@@ -92,18 +83,14 @@ describe('synthesizePersona', () => {
             ],
           },
         ],
-      }).pipe(
-        Effect.provide(
-          makeLayer(generate as unknown as LLMService['generate']),
-        ),
-      );
+      }).pipe(Effect.provide(createMockLLM({ generate })));
 
       expect(result.name).toBe('James Naismith');
     });
   });
 
   it.effect('forces voice sex to match explicit conversation cues', () => {
-    const generate = vi.fn().mockReturnValue(
+    const generate = vi.fn<MockLLMGenerate>().mockReturnValue(
       Effect.succeed({
         object: {
           ...basePersona,
@@ -128,14 +115,14 @@ describe('synthesizePersona', () => {
             ],
           },
         ],
-      }).pipe(
-        Effect.provide(
-          makeLayer(generate as unknown as LLMService['generate']),
-        ),
-      );
+      }).pipe(Effect.provide(createMockLLM({ generate })));
 
       const firstCall = generate.mock.calls[0]?.[0];
-      expect(firstCall?.prompt).toContain(
+      expect(firstCall).toBeDefined();
+      if (!firstCall) {
+        return;
+      }
+      expect(firstCall.prompt).toContain(
         'should use a female voice. Select only from the available female voices',
       );
       expect(result.voiceId).toBe('Aoede');
@@ -144,7 +131,7 @@ describe('synthesizePersona', () => {
   });
 
   it.effect('strips control tokens from synthesis prompt', () => {
-    const generate = vi.fn().mockReturnValue(
+    const generate = vi.fn<MockLLMGenerate>().mockReturnValue(
       Effect.succeed({
         object: basePersona,
       }),
@@ -169,14 +156,13 @@ describe('synthesizePersona', () => {
             ],
           },
         ],
-      }).pipe(
-        Effect.provide(
-          makeLayer(generate as unknown as LLMService['generate']),
-        ),
-      );
+      }).pipe(Effect.provide(createMockLLM({ generate })));
 
       const firstCall = generate.mock.calls[0]?.[0];
-      expect(firstCall?.prompt).toBeDefined();
+      expect(firstCall).toBeDefined();
+      if (!firstCall) {
+        return;
+      }
       expect(firstCall.prompt).not.toContain('[[CREATE_PERSONA]]');
       expect(firstCall.temperature).toBe(0.5);
       expect(result.name).toBe(basePersona.name);
@@ -186,7 +172,7 @@ describe('synthesizePersona', () => {
   it.effect('retries synthesis with compact context after LLMError', () =>
     Effect.gen(function* () {
       const generate = vi
-        .fn()
+        .fn<MockLLMGenerate>()
         .mockReturnValueOnce(
           Effect.fail(
             new LLMError({
@@ -203,11 +189,7 @@ describe('synthesizePersona', () => {
 
       const result = yield* synthesizePersona({
         messages: makeLongConversation(),
-      }).pipe(
-        Effect.provide(
-          makeLayer(generate as unknown as LLMService['generate']),
-        ),
-      );
+      }).pipe(Effect.provide(createMockLLM({ generate })));
 
       expect(generate).toHaveBeenCalledTimes(2);
       expect(generate.mock.calls[0]?.[0]?.temperature).toBe(0.5);

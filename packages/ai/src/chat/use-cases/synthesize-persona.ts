@@ -1,17 +1,15 @@
 import { Effect, Schema } from 'effect';
 import type { UIMessage } from 'ai';
 import { LLM } from '../../llm/service';
-import {
-  chatSynthesizePersonaSystemPrompt,
-  renderPrompt,
-} from '../../prompt-registry';
+import { chatSynthesizePersonaSystemPrompt } from '../../prompt-registry/prompts/chat-synthesize-persona-system';
+import { renderPrompt } from '../../prompt-registry/render';
 import {
   VOICES,
   getVoiceGender,
   isValidVoiceId,
   type VoiceGender,
 } from '../../tts/voices';
-import { withAIUsageScope } from '../../usage';
+import { withAIUsageScope } from '../../usage/scope';
 import {
   buildSynthesisPrompts,
   getMessageText,

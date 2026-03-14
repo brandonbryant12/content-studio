@@ -1,5 +1,6 @@
 import * as fs from 'node:fs';
 import * as path from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { Command } from '@effect/cli';
 import { Storage, S3StorageLive } from '@repo/storage';
 import { Console, Effect } from 'effect';
@@ -18,9 +19,11 @@ const FRONTEND_VOICE_IDS = [
   'Orus',
 ] as const;
 
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+
 /** Directory where downloaded voice .wav files are stored */
 const VOICES_DIR = path.resolve(
-  import.meta.dirname,
+  __dirname,
   '../../../../packages/ai/voice-previews',
 );
 

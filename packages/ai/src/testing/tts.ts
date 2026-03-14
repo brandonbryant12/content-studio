@@ -2,16 +2,14 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { Layer, Effect } from 'effect';
+import type { VoiceInfo } from '../tts/voices';
+import { TTSError, VoiceNotFoundError } from '../errors';
 import {
   TTS,
-  type TTSService,
-  type VoiceInfo,
-  type SynthesizeResult,
   type PreviewVoiceResult,
-  TTSError,
-  type TTSQuotaExceededError,
-  VoiceNotFoundError,
-} from '..';
+  type SynthesizeResult,
+  type TTSService,
+} from '../tts/service';
 
 export const MOCK_VOICES: readonly VoiceInfo[] = [
   {
@@ -102,78 +100,80 @@ export interface MockTTSOptions {
   /** Use the sample-podcast.wav fixture instead of generated silence. Defaults to true. */
   useSampleAudio?: boolean;
   errorMessage?: string;
+  listVoices?: TTSService['listVoices'];
+  previewVoice?: TTSService['previewVoice'];
+  synthesize?: TTSService['synthesize'];
 }
 
-export function createMockTTS(options: MockTTSOptions = {}): Layer.Layer<TTS> {
+export function createMockTTSService(options: MockTTSOptions = {}): TTSService {
   const useSampleAudio = options.useSampleAudio ?? true;
   const audioBuffer = useSampleAudio
     ? loadSampleAudio()
     : createSilentAudioBuffer(options.audioDurationSeconds ?? 30);
   const availableVoices = options.voices ?? MOCK_VOICES;
 
-  const service: TTSService = {
-    listVoices: () =>
-      Effect.gen(function* () {
-        if (options.delay) {
-          yield* Effect.sleep(options.delay);
-        }
-        return availableVoices;
-      }),
+  const defaultListVoices: TTSService['listVoices'] = (listOptions) =>
+    Effect.gen(function* () {
+      if (options.delay) {
+        yield* Effect.sleep(options.delay);
+      }
+      return listOptions?.gender
+        ? availableVoices.filter((voice) => voice.gender === listOptions.gender)
+        : availableVoices;
+    });
 
-    previewVoice: ({
-      voiceId,
-    }): Effect.Effect<
-      PreviewVoiceResult,
-      TTSError | TTSQuotaExceededError | VoiceNotFoundError
-    > =>
-      Effect.gen(function* () {
-        if (options.delay) {
-          yield* Effect.sleep(options.delay);
-        }
+  const defaultPreviewVoice: TTSService['previewVoice'] = ({ voiceId }) =>
+    Effect.gen(function* () {
+      if (options.delay) {
+        yield* Effect.sleep(options.delay);
+      }
 
-        const voiceExists = availableVoices.some(
-          (voice) => voice.id === voiceId,
+      const voiceExists = availableVoices.some((voice) => voice.id === voiceId);
+      if (!voiceExists) {
+        return yield* Effect.fail(new VoiceNotFoundError({ voiceId }));
+      }
+
+      if (options.errorMessage) {
+        return yield* Effect.fail(
+          new TTSError({ message: options.errorMessage }),
         );
-        if (!voiceExists) {
-          return yield* Effect.fail(new VoiceNotFoundError({ voiceId }));
-        }
+      }
 
-        if (options.errorMessage) {
-          return yield* Effect.fail(
-            new TTSError({ message: options.errorMessage }),
-          );
-        }
+      return {
+        audioContent: createSilentAudioBuffer(2),
+        audioEncoding: 'LINEAR16' as const,
+        voiceId,
+      } satisfies PreviewVoiceResult;
+    });
 
-        return {
-          audioContent: createSilentAudioBuffer(2),
-          audioEncoding: 'LINEAR16' as const,
-          voiceId,
-        } satisfies PreviewVoiceResult;
-      }),
+  const defaultSynthesize: TTSService['synthesize'] = () =>
+    Effect.gen(function* () {
+      if (options.delay) {
+        yield* Effect.sleep(options.delay);
+      }
 
-    synthesize: (): Effect.Effect<
-      SynthesizeResult,
-      TTSError | TTSQuotaExceededError
-    > =>
-      Effect.gen(function* () {
-        if (options.delay) {
-          yield* Effect.sleep(options.delay);
-        }
+      if (options.errorMessage) {
+        return yield* Effect.fail(
+          new TTSError({ message: options.errorMessage }),
+        );
+      }
 
-        if (options.errorMessage) {
-          return yield* Effect.fail(
-            new TTSError({ message: options.errorMessage }),
-          );
-        }
+      return {
+        audioContent: audioBuffer,
+        audioEncoding: 'LINEAR16' as const,
+        mimeType: 'audio/wav',
+      } satisfies SynthesizeResult;
+    });
 
-        return {
-          audioContent: audioBuffer,
-          audioEncoding: 'LINEAR16' as const,
-          mimeType: 'audio/wav',
-        } satisfies SynthesizeResult;
-      }),
+  return {
+    listVoices: options.listVoices ?? defaultListVoices,
+    previewVoice: options.previewVoice ?? defaultPreviewVoice,
+    synthesize: options.synthesize ?? defaultSynthesize,
   };
+}
 
+export function createMockTTS(options: MockTTSOptions = {}): Layer.Layer<TTS> {
+  const service = createMockTTSService(options);
   return Layer.succeed(TTS, service);
 }
 

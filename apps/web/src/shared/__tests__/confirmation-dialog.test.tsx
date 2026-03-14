@@ -21,9 +21,7 @@ describe('ConfirmationDialog', () => {
   it('renders the dialog and closes when cancel is clicked', async () => {
     const user = userEvent.setup();
     const onOpenChange = vi.fn();
-    render(
-      <ConfirmationDialog {...baseProps} onOpenChange={onOpenChange} />,
-    );
+    render(<ConfirmationDialog {...baseProps} onOpenChange={onOpenChange} />);
 
     expect(screen.getByText('Test Title')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Cancel' })).toBeInTheDocument();

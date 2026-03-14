@@ -14,7 +14,8 @@ import { expectEffectFailure } from '@repo/testing';
 import { Effect, Exit, Schema } from 'effect';
 import { describe, expect } from 'vitest';
 import { LLMError, LLMRateLimitError } from '../../errors';
-import { GoogleLive, LLM } from '../../llm';
+import { LLM } from '../../llm/service';
+import { GoogleLive } from '../../providers/google/llm';
 import { liveTestEnv } from './env';
 
 const GEMINI_API_KEY = liveTestEnv.GEMINI_API_KEY;

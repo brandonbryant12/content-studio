@@ -1,6 +1,5 @@
 import { GoogleGenAI } from '@google/genai';
 import { Effect, Layer } from 'effect';
-import type { JsonValue } from '@repo/db/schema';
 import { mapError } from '../../image-gen/map-error';
 import {
   ImageGen,
@@ -9,7 +8,6 @@ import {
   type GenerateImageResult,
 } from '../../image-gen/service';
 import { estimateTokenPricedModelCostUsdMicros } from '../../pricing/model-catalog';
-import { recordAIUsageIfConfigured } from '../../usage';
 import { retryTransientProvider } from '../retry';
 import { PROVIDER_TIMEOUTS_MS } from '../timeouts';
 import {
@@ -17,6 +15,14 @@ import {
   type GoogleImageGenModelId,
   IMAGE_GEN_MODEL,
 } from './models';
+import {
+  compactJsonRecord,
+  getNumberField,
+  getObjectField,
+  getStringField,
+  recordProviderCallIfConfigured,
+  toBillableTokenUsageFromUsageMetadata,
+} from './shared';
 
 /**
  * Configuration for Google Image Gen provider.
@@ -35,44 +41,6 @@ const FORMAT_HINTS: Record<GenerateImageOptions['format'], string> = {
   square: '1080x1080 square aspect ratio (1:1)',
   landscape: '1920x1080 landscape aspect ratio (16:9)',
   og_card: '1200x630 wide landscape aspect ratio (approximately 1.9:1)',
-};
-
-const compactJsonRecord = (
-  record: Record<string, JsonValue | undefined>,
-): Record<string, JsonValue> =>
-  Object.fromEntries(
-    Object.entries(record).filter(([, value]) => value !== undefined),
-  ) as Record<string, JsonValue>;
-
-const getObjectField = (
-  value: unknown,
-  field: string,
-): Record<string, unknown> | undefined => {
-  if (typeof value !== 'object' || value === null) {
-    return undefined;
-  }
-
-  const maybeValue = (value as Record<string, unknown>)[field];
-  return typeof maybeValue === 'object' && maybeValue !== null
-    ? (maybeValue as Record<string, unknown>)
-    : undefined;
-};
-
-const getStringField = (value: unknown, field: string): string | undefined => {
-  if (typeof value !== 'object' || value === null) {
-    return undefined;
-  }
-
-  const maybeValue = (value as Record<string, unknown>)[field];
-  return typeof maybeValue === 'string' ? maybeValue : undefined;
-};
-
-const getNumberField = (
-  value: Record<string, unknown> | undefined,
-  field: string,
-): number | undefined => {
-  const maybeValue = value?.[field];
-  return typeof maybeValue === 'number' ? maybeValue : undefined;
 };
 
 const buildImageUsage = (input: {
@@ -95,11 +63,6 @@ const buildImageUsage = (input: {
       'cachedContentTokenCount',
     ),
   });
-
-const toBillableTokenUsage = (usageMetadata?: Record<string, unknown>) => ({
-  inputTokens: getNumberField(usageMetadata, 'promptTokenCount'),
-  outputTokens: getNumberField(usageMetadata, 'candidatesTokenCount'),
-});
 
 /**
  * Create Google Image Gen service implementation via native SDK.
@@ -124,64 +87,65 @@ const makeGoogleImageGenService = (
           referenceImageBytes,
         });
 
-        return Effect.tryPromise({
-          try: async () => {
-            // Build multimodal content when a reference image is provided
-            const contents = options.referenceImage
-              ? [
-                  {
-                    inlineData: {
-                      data: options.referenceImage.data.toString('base64'),
-                      mimeType: options.referenceImage.mimeType,
+        return recordProviderCallIfConfigured(
+          Effect.tryPromise({
+            try: async () => {
+              // Build multimodal content when a reference image is provided
+              const contents = options.referenceImage
+                ? [
+                    {
+                      inlineData: {
+                        data: options.referenceImage.data.toString('base64'),
+                        mimeType: options.referenceImage.mimeType,
+                      },
                     },
-                  },
-                  { text: fullPrompt },
-                ]
-              : fullPrompt;
+                    { text: fullPrompt },
+                  ]
+                : fullPrompt;
 
-            const response = await genAI.models.generateContent({
-              model: modelId,
-              contents,
-              config: {
-                responseModalities: ['IMAGE', 'TEXT'],
-                // Per-attempt timeout budget: retries re-run generateContent.
-                httpOptions: { timeout: PROVIDER_TIMEOUTS_MS.imageGenerate },
-                abortSignal: AbortSignal.timeout(
-                  PROVIDER_TIMEOUTS_MS.imageGenerate,
-                ),
-              },
-            });
+              const response = await genAI.models.generateContent({
+                model: modelId,
+                contents,
+                config: {
+                  responseModalities: ['IMAGE', 'TEXT'],
+                  // Per-attempt timeout budget: retries re-run generateContent.
+                  httpOptions: { timeout: PROVIDER_TIMEOUTS_MS.imageGenerate },
+                  abortSignal: AbortSignal.timeout(
+                    PROVIDER_TIMEOUTS_MS.imageGenerate,
+                  ),
+                },
+              });
 
-            const parts = response.candidates?.[0]?.content?.parts;
-            if (!parts || parts.length === 0) {
-              throw new Error('No content in image generation response');
-            }
+              const parts = response.candidates?.[0]?.content?.parts;
+              if (!parts || parts.length === 0) {
+                throw new Error('No content in image generation response');
+              }
 
-            const imagePart = parts.find((part) => part.inlineData);
-            if (!imagePart?.inlineData) {
-              throw new Error(
-                'No image data in response — the model may have returned text only',
-              );
-            }
+              const imagePart = parts.find((part) => part.inlineData);
+              if (!imagePart?.inlineData) {
+                throw new Error(
+                  'No image data in response — the model may have returned text only',
+                );
+              }
 
-            const { data, mimeType } = imagePart.inlineData;
-            if (!data) {
-              throw new Error('Image data is empty');
-            }
+              const { data, mimeType } = imagePart.inlineData;
+              if (!data) {
+                throw new Error('Image data is empty');
+              }
 
-            return {
-              result: {
-                imageData: Buffer.from(data, 'base64'),
-                mimeType: mimeType ?? 'image/png',
-              } satisfies GenerateImageResult,
-              responseId: getStringField(response, 'responseId'),
-              usageMetadata: getObjectField(response, 'usageMetadata'),
-            };
-          },
-          catch: mapError,
-        }).pipe(
-          Effect.tap(({ result, responseId, usageMetadata }) =>
-            recordAIUsageIfConfigured({
+              return {
+                result: {
+                  imageData: Buffer.from(data, 'base64'),
+                  mimeType: mimeType ?? 'image/png',
+                } satisfies GenerateImageResult,
+                responseId: getStringField(response, 'responseId'),
+                usageMetadata: getObjectField(response, 'usageMetadata'),
+              };
+            },
+            catch: mapError,
+          }),
+          {
+            onSuccess: ({ result, responseId, usageMetadata }) => ({
               modality: 'image_generation',
               provider: 'google',
               providerOperation: 'generateImage',
@@ -198,12 +162,10 @@ const makeGoogleImageGenService = (
               rawUsage: usageMetadata ?? null,
               estimatedCostUsdMicros: estimateTokenPricedModelCostUsdMicros(
                 modelDefinition,
-                toBillableTokenUsage(usageMetadata),
+                toBillableTokenUsageFromUsageMetadata(usageMetadata),
               ),
             }),
-          ),
-          Effect.tapError((error) =>
-            recordAIUsageIfConfigured({
+            onError: (error) => ({
               modality: 'image_generation',
               provider: 'google',
               providerOperation: 'generateImage',
@@ -212,9 +174,8 @@ const makeGoogleImageGenService = (
               errorTag: error._tag,
               metadata,
             }),
-          ),
-          Effect.map(({ result }) => result),
-        );
+          },
+        ).pipe(Effect.map(({ result }) => result));
       })().pipe(
         retryTransientProvider,
         Effect.withSpan('imageGen.generate', {

@@ -1,8 +1,9 @@
 import { Effect } from 'effect';
 import type { UIMessage } from 'ai';
 import { LLM } from '../../llm/service';
-import { chatResearchSystemPrompt, renderPrompt } from '../../prompt-registry';
-import { withAIUsageScope } from '../../usage';
+import { chatResearchSystemPrompt } from '../../prompt-registry/prompts/chat-research-system';
+import { renderPrompt } from '../../prompt-registry/render';
+import { withAIUsageScope } from '../../usage/scope';
 
 export interface StreamResearchChatInput {
   readonly messages: UIMessage[];

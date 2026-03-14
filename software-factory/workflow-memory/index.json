@@ -1,5 +1,24 @@
 [
   {
+    "id": "2026-03-14-feature-delivery-ai-package-cleanup-guardrails-and-direct-imports",
+    "date": "2026-03-14",
+    "month": "2026-03",
+    "workflow": "Feature Delivery",
+    "title": "AI package cleanup guardrails and direct imports",
+    "severity": "medium",
+    "status": "done",
+    "tags": [
+      "workflow:feature-delivery",
+      "package:ai",
+      "skill:feature-delivery",
+      "skill:test-surface-steward",
+      "guardrail:type-safety",
+      "guardrail:imports"
+    ],
+    "confidence": 0.88,
+    "eventFile": "events/2026-03.jsonl"
+  },
+  {
     "id": "2026-03-14-feature-delivery-dashboard-frontend-test-hygiene-slice",
     "date": "2026-03-14",
     "month": "2026-03",

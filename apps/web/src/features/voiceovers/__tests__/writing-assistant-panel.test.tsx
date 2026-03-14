@@ -55,5 +55,4 @@ describe('WritingAssistantPanel', () => {
 
     expect(onReset).toHaveBeenCalled();
   });
-
 });

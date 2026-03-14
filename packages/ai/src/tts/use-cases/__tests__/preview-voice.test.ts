@@ -1,59 +1,19 @@
 import { it } from '@effect/vitest';
-import { Effect, Layer } from 'effect';
-import { describe, expect } from 'vitest';
+import { Effect } from 'effect';
+import { describe, expect, vi } from 'vitest';
+import type { PreviewVoiceResult, TTSService } from '../../service';
 import {
   TTSError,
   TTSQuotaExceededError,
   VoiceNotFoundError,
 } from '../../../errors';
-import { TTS, type TTSService, type PreviewVoiceResult } from '../../index';
+import { expectTaggedFailure } from '../../../testing/assertions';
+import { createMockTTS } from '../../../testing/tts';
+import { VOICES } from '../../voices';
 import { previewVoice } from '../preview-voice';
 
-// =============================================================================
-// Mock TTS Service
-// =============================================================================
-
-interface MockConfig {
-  shouldFail?: 'tts-error' | 'quota-exceeded' | 'voice-not-found';
-  previewResult?: PreviewVoiceResult;
-}
-
-const createMockTTSService = (config: MockConfig = {}): TTSService => ({
-  listVoices: () => Effect.die('Not implemented in mock'),
-
-  previewVoice: (options) => {
-    if (config.shouldFail === 'tts-error') {
-      return Effect.fail(new TTSError({ message: 'TTS service unavailable' }));
-    }
-    if (config.shouldFail === 'quota-exceeded') {
-      return Effect.fail(
-        new TTSQuotaExceededError({ message: 'Quota exceeded' }),
-      );
-    }
-    if (config.shouldFail === 'voice-not-found') {
-      return Effect.fail(new VoiceNotFoundError({ voiceId: options.voiceId }));
-    }
-    return Effect.succeed(
-      config.previewResult ?? {
-        audioContent: Buffer.from('test audio content'),
-        audioEncoding: 'LINEAR16' as const,
-        voiceId: options.voiceId,
-      },
-    );
-  },
-
-  synthesize: () => Effect.die('Not implemented in mock'),
-});
-
-const createMockTTSLayer = (config: MockConfig = {}): Layer.Layer<TTS> =>
-  Layer.succeed(TTS, createMockTTSService(config));
-
-// =============================================================================
-// Tests
-// =============================================================================
-
 describe('previewVoice', () => {
-  it.layer(createMockTTSLayer())('successful preview', (it) => {
+  it.layer(createMockTTS({ voices: VOICES }))('successful preview', (it) => {
     it.effect('generates audio preview for valid voice ID', () =>
       Effect.gen(function* () {
         const result = yield* previewVoice({ voiceId: 'Charon' });
@@ -63,24 +23,47 @@ describe('previewVoice', () => {
       }),
     );
 
-    it.effect('passes custom text to TTS service', () =>
+    it.effect('passes custom text to the TTS service', () =>
       Effect.gen(function* () {
+        const previewVoiceSpy = vi.fn<TTSService['previewVoice']>(
+          ({ voiceId }) =>
+            Effect.succeed({
+              audioContent: Buffer.from('custom preview'),
+              audioEncoding: 'LINEAR16' as const,
+              voiceId,
+            } satisfies PreviewVoiceResult),
+        );
+
         const result = yield* previewVoice({
           voiceId: 'Kore',
           text: 'Custom preview text',
-        });
+        }).pipe(
+          Effect.provide(
+            createMockTTS({
+              voices: VOICES,
+              previewVoice: previewVoiceSpy,
+            }),
+          ),
+        );
+
         expect(result.voiceId).toBe('Kore');
+        expect(previewVoiceSpy).toHaveBeenCalledWith({
+          voiceId: 'Kore',
+          text: 'Custom preview text',
+        });
       }),
     );
   });
 
   it.layer(
-    createMockTTSLayer({
-      previewResult: {
-        audioContent: Buffer.from('wav audio'),
-        audioEncoding: 'LINEAR16',
-        voiceId: 'Charon',
-      },
+    createMockTTS({
+      voices: VOICES,
+      previewVoice: (options) =>
+        Effect.succeed({
+          audioContent: Buffer.from('wav audio'),
+          audioEncoding: 'LINEAR16',
+          voiceId: options.voiceId,
+        } satisfies PreviewVoiceResult),
     }),
   )('audio encoding', (it) => {
     it.effect('returns LINEAR16 encoding from the TTS service', () =>
@@ -99,19 +82,17 @@ describe('previewVoice', () => {
         const exit = yield* previewVoice({ voiceId: 'InvalidVoice' }).pipe(
           Effect.exit,
         );
-        expect(exit._tag).toBe('Failure');
-        if (exit._tag === 'Failure') {
-          const error = exit.cause;
-          expect(error._tag).toBe('Fail');
-          if (error._tag === 'Fail') {
-            expect(error.error._tag).toBe('VoiceNotFoundError');
-            expect((error.error as VoiceNotFoundError).voiceId).toBe(
-              'InvalidVoice',
-            );
-          }
-        }
+        const error = expectTaggedFailure(exit, 'VoiceNotFoundError');
+
+        expect(error.voiceId).toBe('InvalidVoice');
       }).pipe(
-        Effect.provide(createMockTTSLayer({ shouldFail: 'voice-not-found' })),
+        Effect.provide(
+          createMockTTS({
+            voices: VOICES,
+            previewVoice: (options) =>
+              Effect.fail(new VoiceNotFoundError({ voiceId: options.voiceId })),
+          }),
+        ),
       ),
     );
 
@@ -147,8 +128,16 @@ describe('previewVoice', () => {
         const exit = yield* previewVoice({ voiceId: 'Charon' }).pipe(
           Effect.exit,
         );
-        expect(exit._tag).toBe('Failure');
-      }).pipe(Effect.provide(createMockTTSLayer({ shouldFail: 'tts-error' }))),
+        expectTaggedFailure(exit, 'TTSError');
+      }).pipe(
+        Effect.provide(
+          createMockTTS({
+            voices: VOICES,
+            previewVoice: () =>
+              Effect.fail(new TTSError({ message: 'TTS service unavailable' })),
+          }),
+        ),
+      ),
     );
 
     it.effect('propagates TTSQuotaExceededError from service', () =>
@@ -156,9 +145,17 @@ describe('previewVoice', () => {
         const exit = yield* previewVoice({ voiceId: 'Charon' }).pipe(
           Effect.exit,
         );
-        expect(exit._tag).toBe('Failure');
+        expectTaggedFailure(exit, 'TTSQuotaExceededError');
       }).pipe(
-        Effect.provide(createMockTTSLayer({ shouldFail: 'quota-exceeded' })),
+        Effect.provide(
+          createMockTTS({
+            voices: VOICES,
+            previewVoice: () =>
+              Effect.fail(
+                new TTSQuotaExceededError({ message: 'Quota exceeded' }),
+              ),
+          }),
+        ),
       ),
     );
   });
@@ -178,7 +175,7 @@ describe('previewVoice', () => {
         Effect.gen(function* () {
           const result = yield* previewVoice({ voiceId });
           expect(result.voiceId).toBe(voiceId);
-        }).pipe(Effect.provide(createMockTTSLayer())),
+        }).pipe(Effect.provide(createMockTTS({ voices: VOICES }))),
       );
     }
   });

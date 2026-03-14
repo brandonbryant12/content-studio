@@ -69,12 +69,13 @@ const buildPersistAIUsageInput = (
   scope: AIUsageScope,
   input: AIUsageRecordInput,
 ): PersistAIUsageInput => {
+  const { scope: _inputScope, ...persistableInput } = input;
   const mergedScope = input.scope
     ? mergeAIUsageScope(scope, input.scope)
     : scope;
 
   return {
-    ...input,
+    ...persistableInput,
     userId: mergedScope.userId ?? null,
     requestId: mergedScope.requestId ?? null,
     jobId: mergedScope.jobId ?? null,

@@ -1,6 +1,7 @@
 import { Storage } from '@repo/storage';
 import { Effect } from 'effect';
-import { TTS, type VoiceGender, type VoiceInfo } from '../index';
+import type { VoiceGender, VoiceInfo } from '../voices';
+import { TTS } from '../service';
 
 // =============================================================================
 // Types

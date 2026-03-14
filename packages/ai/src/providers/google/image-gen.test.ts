@@ -1,11 +1,9 @@
 import { Effect, Layer } from 'effect';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+import type { PersistAIUsageInput } from '../../usage/types';
 import { ImageGen } from '../../image-gen/service';
-import {
-  AIUsageRecorder,
-  type PersistAIUsageInput,
-  withAIUsageScope,
-} from '../../usage';
+import { AIUsageRecorder } from '../../usage/recorder';
+import { withAIUsageScope } from '../../usage/scope';
 import { PROVIDER_TIMEOUTS_MS } from '../timeouts';
 import { GoogleImageGenLive } from './image-gen';
 

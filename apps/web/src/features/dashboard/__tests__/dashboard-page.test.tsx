@@ -77,7 +77,11 @@ describe('DashboardPage', () => {
   it('exposes research entrypoint without duplicate quick toolbar shortcut', () => {
     render(<DashboardPage {...createProps()} />);
 
-    expect(screen.getByRole('button', { name: /try it now/i })).toBeInTheDocument();
-    expect(screen.queryByText(/Research\s*→\s*Podcast/i)).not.toBeInTheDocument();
+    expect(
+      screen.getByRole('button', { name: /try it now/i }),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByText(/Research\s*→\s*Podcast/i),
+    ).not.toBeInTheDocument();
   });
 });

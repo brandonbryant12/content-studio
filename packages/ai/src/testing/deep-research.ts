@@ -1,13 +1,15 @@
 import { Layer, Effect } from 'effect';
 import {
   DeepResearch,
-  type DeepResearchService,
   type ResearchResult,
-} from '..';
+  type DeepResearchService,
+} from '../research/service';
 
 export interface MockDeepResearchOptions {
   delay?: number;
   content?: string;
+  startResearch?: DeepResearchService['startResearch'];
+  getResult?: DeepResearchService['getResult'];
 }
 
 const MOCK_RESEARCH_CONTENT = `# Mock Research Results
@@ -33,51 +35,61 @@ a comprehensive overview of the topic.`;
 export function createMockDeepResearch(
   options: MockDeepResearchOptions = {},
 ): Layer.Layer<DeepResearch> {
+  const service = createMockDeepResearchService(options);
+  return Layer.succeed(DeepResearch, service);
+}
+
+export function createMockDeepResearchService(
+  options: MockDeepResearchOptions = {},
+): DeepResearchService {
   const { delay = 0, content = MOCK_RESEARCH_CONTENT } = options;
 
   // Track interactions to simulate async polling
   const completedInteractions = new Map<string, ResearchResult>();
   let counter = 0;
 
-  const service: DeepResearchService = {
-    startResearch: (_query: string) =>
-      Effect.gen(function* () {
-        if (delay > 0) {
-          yield* Effect.sleep(delay);
-        }
+  const defaultStartResearch: DeepResearchService['startResearch'] = (
+    _query: string,
+  ) =>
+    Effect.gen(function* () {
+      if (delay > 0) {
+        yield* Effect.sleep(delay);
+      }
 
-        const interactionId = `mock-research-${++counter}`;
+      const interactionId = `mock-research-${++counter}`;
 
-        // Pre-compute the result for when getResult is called
-        const wordCount = content
-          .split(/\s+/)
-          .filter((w) => w.length > 0).length;
+      // Pre-compute the result for when getResult is called
+      const wordCount = content.split(/\s+/).filter((w) => w.length > 0).length;
 
-        completedInteractions.set(interactionId, {
-          content,
-          sources: [
-            { title: 'Mock Source 1', url: 'https://example.com/source-1' },
-            { title: 'Mock Source 2', url: 'https://example.com/source-2' },
-            { title: 'Mock Source 3', url: 'https://example.com/source-3' },
-          ],
-          wordCount,
-        });
+      completedInteractions.set(interactionId, {
+        content,
+        sources: [
+          { title: 'Mock Source 1', url: 'https://example.com/source-1' },
+          { title: 'Mock Source 2', url: 'https://example.com/source-2' },
+          { title: 'Mock Source 3', url: 'https://example.com/source-3' },
+        ],
+        wordCount,
+      });
 
-        return { interactionId };
-      }),
+      return { interactionId };
+    });
 
-    getResult: (interactionId: string) =>
-      Effect.gen(function* () {
-        if (delay > 0) {
-          yield* Effect.sleep(delay);
-        }
+  const defaultGetResult: DeepResearchService['getResult'] = (
+    interactionId: string,
+  ) =>
+    Effect.gen(function* () {
+      if (delay > 0) {
+        yield* Effect.sleep(delay);
+      }
 
-        // Always return completed for mocks (no pending state)
-        return completedInteractions.get(interactionId) ?? null;
-      }),
+      // Always return completed for mocks (no pending state)
+      return completedInteractions.get(interactionId) ?? null;
+    });
+
+  return {
+    startResearch: options.startResearch ?? defaultStartResearch,
+    getResult: options.getResult ?? defaultGetResult,
   };
-
-  return Layer.succeed(DeepResearch, service);
 }
 
 export const MockDeepResearchLive = createMockDeepResearch();

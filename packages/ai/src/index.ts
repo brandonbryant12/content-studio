@@ -1,5 +1,3 @@
-import { Layer } from 'effect';
-
 // Model constants
 export {
   LLM_MODEL,
@@ -78,6 +76,8 @@ export {
   estimateTokenPricedModelCostUsdMicros,
   type TokenPricedModelDefinition,
 } from './pricing/model-catalog';
+
+export { GoogleAILive, type AI, type GoogleAIConfig } from './google-ai';
 
 // ImageGen
 export {
@@ -166,63 +166,3 @@ export {
   type AIUsageScope,
   type PersistAIUsageInput,
 } from './usage';
-
-// Import for combined layer
-import type { ImageGen } from './image-gen';
-import type { LLM } from './llm';
-import type {
-  GoogleImageGenModelId,
-  GoogleLLMModelId,
-  GoogleTTSModelId,
-} from './providers/google/models';
-import type { DeepResearch } from './research';
-import type { TTS } from './tts';
-import { GoogleImageGenLive } from './image-gen';
-import { GoogleLive } from './llm';
-import { GoogleDeepResearchLive } from './research';
-import { GoogleTTSLive } from './tts';
-
-// =============================================================================
-// Combined AI Layer
-// =============================================================================
-
-/**
- * All AI services bundled together.
- * Use this type in SharedServices instead of listing each service individually.
- */
-export type AI = LLM | TTS | ImageGen | DeepResearch;
-
-/**
- * Configuration for all Google AI services.
- * Defaults are defined in `models.ts`.
- */
-export interface GoogleAIConfig {
-  /** Gemini API key - required, should be passed from validated env.GEMINI_API_KEY */
-  readonly apiKey: string;
-  /** Override the default LLM model */
-  readonly llmModel?: GoogleLLMModelId;
-  /** Override the default TTS model */
-  readonly ttsModel?: GoogleTTSModelId;
-  /** Override the default image generation model */
-  readonly imageGenModel?: GoogleImageGenModelId;
-}
-
-/**
- * Combined layer for all Google AI services (LLM + TTS + ImageGen + DeepResearch).
- *
- * @example
- * ```typescript
- * // In runtime.ts
- * const aiLayer = GoogleAILive({ apiKey: env.GEMINI_API_KEY });
- * ```
- */
-export const GoogleAILive = (config: GoogleAIConfig): Layer.Layer<AI> =>
-  Layer.mergeAll(
-    GoogleLive({ apiKey: config.apiKey, model: config.llmModel }),
-    GoogleTTSLive({ apiKey: config.apiKey, model: config.ttsModel }),
-    GoogleImageGenLive({
-      apiKey: config.apiKey,
-      model: config.imageGenModel,
-    }),
-    GoogleDeepResearchLive({ apiKey: config.apiKey }),
-  );

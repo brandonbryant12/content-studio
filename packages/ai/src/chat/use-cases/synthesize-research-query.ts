@@ -1,11 +1,9 @@
 import { Effect, Schema } from 'effect';
 import type { UIMessage } from 'ai';
 import { LLM } from '../../llm/service';
-import {
-  chatSynthesizeResearchQuerySystemPrompt,
-  renderPrompt,
-} from '../../prompt-registry';
-import { withAIUsageScope } from '../../usage';
+import { chatSynthesizeResearchQuerySystemPrompt } from '../../prompt-registry/prompts/chat-synthesize-research-query-system';
+import { renderPrompt } from '../../prompt-registry/render';
+import { withAIUsageScope } from '../../usage/scope';
 import {
   buildSynthesisPrompts,
   getMessageText,

@@ -27,4 +27,42 @@ export default [
       ],
     },
   },
+  {
+    files: ['src/**/*.ts'],
+    ignores: [
+      'src/**/__tests__/**',
+      'src/**/*.test.ts',
+      'src/prompt-registry/**',
+      'src/testing/**',
+    ],
+    rules: {
+      'no-restricted-syntax': [
+        'error',
+        {
+          selector:
+            "CallExpression[callee.property.name='generate'] ObjectExpression > Property[key.name='system'][value.type=/^(Literal|TemplateLiteral)$/]",
+          message:
+            'Use prompt registry definitions instead of inline production system prompts.',
+        },
+        {
+          selector:
+            "CallExpression[callee.property.name='generate'] ObjectExpression > Property[key.name='prompt'][value.type=/^(Literal|TemplateLiteral)$/]",
+          message:
+            'Use prompt registry definitions or derived prompt variables instead of inline production prompt literals.',
+        },
+        {
+          selector:
+            "CallExpression[callee.property.name='streamText'] ObjectExpression > Property[key.name='system'][value.type=/^(Literal|TemplateLiteral)$/]",
+          message:
+            'Use prompt registry definitions instead of inline production system prompts.',
+        },
+        {
+          selector:
+            "CallExpression[callee.property.name='generateImage'] ObjectExpression > Property[key.name='prompt'][value.type=/^(Literal|TemplateLiteral)$/]",
+          message:
+            'Use prompt registry definitions or derived prompt variables instead of inline production prompt literals.',
+        },
+      ],
+    },
+  },
 ];

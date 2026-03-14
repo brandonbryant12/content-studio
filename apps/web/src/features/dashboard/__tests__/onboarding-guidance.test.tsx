@@ -23,7 +23,9 @@ describe('OnboardingGuidance', () => {
       '/podcasts',
     ]);
 
-    await user.click(screen.getByRole('button', { name: /dismiss onboarding guide/i }));
+    await user.click(
+      screen.getByRole('button', { name: /dismiss onboarding guide/i }),
+    );
     expect(onDismiss).toHaveBeenCalledOnce();
   });
 });

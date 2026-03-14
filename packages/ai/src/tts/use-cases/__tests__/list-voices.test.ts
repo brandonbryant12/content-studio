@@ -1,34 +1,15 @@
 import { layer } from '@effect/vitest';
-import { Effect, Layer } from 'effect';
+import { Effect } from 'effect';
 import { expect } from 'vitest';
-import { TTS, type TTSService, VOICES } from '../../index';
+import { createMockTTS } from '../../../testing/tts';
+import { VOICES } from '../../voices';
 import { listVoices } from '../list-voices';
-
-// =============================================================================
-// Mock TTS Service
-// =============================================================================
-
-const createMockTTSService = (): TTSService => ({
-  listVoices: (options) =>
-    Effect.succeed(
-      options?.gender
-        ? VOICES.filter((v) => v.gender === options.gender)
-        : VOICES,
-    ),
-  previewVoice: () => Effect.die('Not implemented in mock'),
-  synthesize: () => Effect.die('Not implemented in mock'),
-});
-
-const MockTTSLayer: Layer.Layer<TTS> = Layer.succeed(
-  TTS,
-  createMockTTSService(),
-);
 
 // =============================================================================
 // Tests
 // =============================================================================
 
-layer(MockTTSLayer)('listVoices', (it) => {
+layer(createMockTTS({ voices: VOICES }))('listVoices', (it) => {
   it.effect('returns all available voices', () =>
     Effect.gen(function* () {
       const result = yield* listVoices({});

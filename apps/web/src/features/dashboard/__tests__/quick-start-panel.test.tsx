@@ -39,12 +39,7 @@ function createProps(
 
 describe('QuickStartPanel', () => {
   it('shows add-sources card and quick-create toolbar when no documents exist', () => {
-    render(
-      <QuickStartPanel
-        {...createProps({
-        })}
-      />,
-    );
+    render(<QuickStartPanel {...createProps({})} />);
 
     expect(
       screen.getByRole('heading', { name: /add your first source/i }),

@@ -1,6 +1,6 @@
 import { Effect } from 'effect';
-import { withAIUsageScope } from '../../usage';
-import { TTS, type AudioEncoding } from '../index';
+import { withAIUsageScope } from '../../usage/scope';
+import { TTS, type AudioEncoding } from '../service';
 
 // =============================================================================
 // Types

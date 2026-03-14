@@ -115,7 +115,10 @@ describe('ResearchChatDialog', () => {
     expect(screen.getByText('Question 1 of 2')).toBeInTheDocument();
     expect(
       screen.getByRole('textbox', { name: 'Research topic' }),
-    ).toHaveAttribute('placeholder', 'Add more details or click Start Research...');
+    ).toHaveAttribute(
+      'placeholder',
+      'Add more details or click Start Research...',
+    );
 
     await user.click(screen.getByRole('button', { name: 'Start Research' }));
     expect(onStartResearch).toHaveBeenCalledTimes(1);
@@ -128,7 +131,9 @@ describe('ResearchChatDialog', () => {
       isStartingResearch: true,
     });
 
-    expect(screen.getByRole('textbox', { name: 'Research topic' })).toBeDisabled();
+    expect(
+      screen.getByRole('textbox', { name: 'Research topic' }),
+    ).toBeDisabled();
     expect(
       screen.getByRole('checkbox', {
         name: 'Create a podcast when research completes',

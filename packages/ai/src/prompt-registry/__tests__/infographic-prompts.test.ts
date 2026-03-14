@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { infographicTitleUserPrompt, renderPrompt } from '../index';
+import { infographicTitleUserPrompt } from '../prompts/infographic-title-user';
+import { renderPrompt } from '../render';
 
 describe('infographicTitleUserPrompt', () => {
   it('renders explicit title constraints', () => {
