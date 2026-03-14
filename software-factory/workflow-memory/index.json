@@ -35,6 +35,22 @@
     "eventFile": "events/2026-03.jsonl"
   },
   {
+    "id": "2026-03-14-feature-delivery-bounded-frontend-test-hygiene-removed-thin-podcast-creation-wiri",
+    "date": "2026-03-14",
+    "month": "2026-03",
+    "workflow": "Feature Delivery",
+    "title": "Bounded frontend test-hygiene removed thin podcast creation wiring test",
+    "severity": "low",
+    "status": "done",
+    "tags": [
+      "frontend",
+      "test-hygiene",
+      "skill:test-surface-steward",
+      "skill:periodic-scans"
+    ],
+    "eventFile": "events/2026-03.jsonl"
+  },
+  {
     "id": "2026-03-14-feature-delivery-consolidate-podcast-writing-assistant-edit-path",
     "date": "2026-03-14",
     "month": "2026-03",
