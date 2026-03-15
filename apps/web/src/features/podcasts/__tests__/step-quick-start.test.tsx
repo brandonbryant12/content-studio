@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { describe, expect, it } from 'vitest';
 import { StepQuickStart } from '../components/setup/steps/step-quick-start';
+import { INSTRUCTION_CHAR_LIMIT } from '../lib/instruction-presets';
 import { render, screen, userEvent } from '@/test-utils';
 
 function ControlledStepQuickStart() {
@@ -17,7 +18,7 @@ function ControlledStepQuickStart() {
 }
 
 describe('StepQuickStart', () => {
-  it('updates instructions through the controlled callback', async () => {
+  it('enforces the instruction character limit when typing long input', async () => {
     const user = userEvent.setup();
 
     render(<ControlledStepQuickStart />);
@@ -26,9 +27,12 @@ describe('StepQuickStart', () => {
       'Custom instructions for podcast generation',
     );
     await user.clear(field);
-    await user.type(field, 'Lead with what each charge means.');
+    await user.type(field, 'x'.repeat(INSTRUCTION_CHAR_LIMIT + 25));
 
-    expect(field).toHaveValue('Lead with what each charge means.');
+    expect(field).toHaveValue('x'.repeat(INSTRUCTION_CHAR_LIMIT));
+    expect(
+      screen.getByText(`${INSTRUCTION_CHAR_LIMIT} / ${INSTRUCTION_CHAR_LIMIT}`),
+    ).toBeInTheDocument();
   });
 
   it('toggles a preset on and off', async () => {

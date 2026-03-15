@@ -1,5 +1,21 @@
 [
   {
+    "id": "2026-03-14-feature-delivery-step-quick-start-test-hygiene-char-limit",
+    "date": "2026-03-15",
+    "month": "2026-03",
+    "workflow": "Feature Delivery",
+    "title": "Bounded frontend test-hygiene cleanup for StepQuickStart",
+    "severity": "low",
+    "status": "done",
+    "tags": [
+      "workflow:feature-delivery",
+      "automation:frontend-test-hygiene",
+      "skill:test-surface-steward",
+      "skill:periodic-scans"
+    ],
+    "eventFile": "events/2026-03.jsonl"
+  },
+  {
     "id": "2026-03-14-feature-delivery-ai-package-cleanup-guardrails-and-direct-imports",
     "date": "2026-03-14",
     "month": "2026-03",
